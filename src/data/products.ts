@@ -18,6 +18,18 @@ const defaultProducts: Product[] = [
     name: 'Smart Cube',
     cost: 77,
     sellingPrice: 149,
+  }, 
+  {
+    id: 'pixel-screen-16',
+    name: 'pixel screen 16',
+    cost: 80,
+    sellingPrice: 193,
+  },
+ {
+    id: 'pixel-screen-32',
+    name: 'pixel screen 32',
+    cost: 95,
+    sellingPrice: 229,
   },
 ];
 
