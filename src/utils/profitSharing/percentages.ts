@@ -11,9 +11,11 @@ export const getYassirPercentage = (productName: string): number => {
     case 'Smart Cube':
       return 0.1; // 10%
     case 'pixel screen 16':
-      return 0.1; // 10%
+      return 0.2; // 20%
     case 'pixel screen 32':
-      return 0.1; // 10%
+      return 0.2; // 20%
+    case 'ٍSmart PC Light':
+      return 0.2; // 20%
     default:
       return 1; // 100%
   }

@@ -29,20 +29,15 @@ const defaultProducts: Product[] = [
     id: 'pixel-screen-32',
     name: 'pixel screen 32',
     cost: 95,
-    sellingPrice: 229,
+    sellingPrice: 248,
   },
  {
-    id: 'pixel-screen-16',
-    name: 'pixel screen 16',
-    cost: 80,
-    sellingPrice: 193,
+    id: 'ٍSmart-PC-Light',
+    name: 'ٍSmart PC Light',
+    cost: 85,
+    sellingPrice: 145,
   },
- {
-    id: 'pixel-screen-32',
-    name: 'pixel screen 32',
-    cost: 95,
-    sellingPrice: 229,
-  },
+
 ];
 
 export const getProducts = (): Product[] => {
