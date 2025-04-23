@@ -43,6 +43,13 @@ const defaultProducts: Product[] = [
     sellingPrice: 179,
     owner: 'basim'  // Basim's product
   },
+  {
+    id: 'NEON ROPE',
+    name: 'NEON ROPE',
+    cost: 95,
+    sellingPrice: 139,
+    owner: 'basim'  // Basim's product
+  },
 ];
 
 export const getProducts = (): Product[] => {
