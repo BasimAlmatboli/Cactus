@@ -9,6 +9,13 @@ const defaultProducts: Product[] = [
     owner: 'yassir'  // Yassir's product
   },
   {
+    id: 'new-rgb-light',
+    name: 'NEW Lines RGB Light',
+    cost: 130,
+    sellingPrice: 215,
+    owner: 'yassir'  // Yassir's product
+  },
+  {
     id: 'mousepad',
     name: 'Mousepad',
     cost: 16,
