@@ -37,11 +37,11 @@ export const findProductInSystem = (
   return null;
 };
 
-export const createOrderItems = (
+export const createOrderItems = async (
   productIds: string[],
   productNames: string[],
   quantities: number[]
-): OrderItem[] => {
+): Promise<OrderItem[]> => {
   const systemProducts = getProducts();
   
   return productIds.map((productId, index) => {
@@ -51,7 +51,17 @@ export const createOrderItems = (
     const product = findProductInSystem(productId, productName, systemProducts);
     
     if (!product) {
-      throw new Error(`Product not found in system: ${productName}`);
+      console.warn(`Product not found in system: ${productName}. Creating placeholder.`);
+      return {
+        product: {
+          id: productId || `imported-${Date.now()}-${index}`,
+          name: productName,
+          cost: 0,
+          sellingPrice: 0,
+          owner: 'basim' // Default owner for imported products
+        },
+        quantity
+      };
     }
 
     return {

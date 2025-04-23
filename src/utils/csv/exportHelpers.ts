@@ -3,7 +3,7 @@ import { Order } from '../../types';
 export const createOrderCSVHeaders = (): string => {
   return [
     'Order Number',
-    'Date',
+    'Customer Name',
     'Product IDs',
     'Product Names',
     'Quantities',
@@ -33,7 +33,7 @@ export const createOrderCSVRow = (order: Order): string => {
 
   return [
     order.orderNumber,
-    new Date(order.date).toISOString(),
+    order.customerName || '',
     `"${productIds}"`,
     `"${productNames}"`,
     `"${quantities}"`,

@@ -2,6 +2,8 @@ import { Order } from '../../types';
 import { supabase } from '../../lib/supabase';
 import { createOrderCSVHeaders, createOrderCSVRow } from './exportHelpers';
 import { parseCSVRow, createOrderItems } from './importHelpers';
+import { generateUUID } from '../uuid';
+import { calculatePaymentFees } from '../calculateFees';
 
 export const exportOrdersToCSV = (orders: Order[]): string => {
   const headers = createOrderCSVHeaders();
@@ -28,7 +30,7 @@ export const importOrdersFromCSV = async (file: File): Promise<void> => {
       const quantities = getValue(4).split(';').map(q => parseInt(q, 10));
 
       // Create order items with proper product linking
-      const items = createOrderItems(productIds, productNames, quantities);
+      const items = await createOrderItems(productIds, productNames, quantities);
 
       const shippingMethod = {
         id: getValue(5).toLowerCase().replace(/\s+/g, '-'),
@@ -42,6 +44,16 @@ export const importOrdersFromCSV = async (file: File): Promise<void> => {
       };
 
       const isFreeShipping = getValue(10).toLowerCase() === 'true';
+      const subtotal = parseFloat(getValue(7));
+      const shippingCost = parseFloat(getValue(8));
+
+      // Calculate payment fees if not provided or invalid
+      let paymentFees = parseFloat(getValue(9));
+      if (isNaN(paymentFees) || paymentFees <= 0) {
+        const actualShippingCost = isFreeShipping ? 0 : shippingCost;
+        const totalBeforeFees = subtotal + actualShippingCost;
+        paymentFees = calculatePaymentFees(paymentMethod.id, totalBeforeFees);
+      }
 
       const discountType = getValue(11);
       const discountValue = parseFloat(getValue(12));
@@ -53,18 +65,38 @@ export const importOrdersFromCSV = async (file: File): Promise<void> => {
         code: discountCode || undefined
       } : null;
 
+      // Calculate total and net profit
+      const actualShippingCost = isFreeShipping ? 0 : shippingCost;
+      const discountAmount = discount
+        ? discount.type === 'percentage'
+          ? (subtotal * discount.value) / 100
+          : discount.value
+        : 0;
+
+      const total = subtotal + actualShippingCost - discountAmount;
+      
+      // Calculate total cost from items
+      const totalCost = items.reduce((sum, item) => 
+        sum + (item.product.cost * item.quantity), 
+        0
+      );
+
+      const netProfit = total - totalCost - shippingCost - paymentFees;
+
       const order = {
+        id: generateUUID(),
         order_number: getValue(0),
+        customer_name: getValue(1) || null,
         items,
         shipping_method: shippingMethod,
         payment_method: paymentMethod,
-        subtotal: parseFloat(getValue(7)),
-        shipping_cost: parseFloat(getValue(8)),
-        payment_fees: parseFloat(getValue(9)),
+        subtotal,
+        shipping_cost: shippingCost,
+        payment_fees: paymentFees,
         is_free_shipping: isFreeShipping,
         discount,
-        total: parseFloat(getValue(14)),
-        net_profit: parseFloat(getValue(15))
+        total,
+        net_profit: netProfit
       };
 
       const { error } = await supabase
