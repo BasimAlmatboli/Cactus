@@ -4,18 +4,37 @@
 
 export const getYassirPercentage = (productName: string): number => {
   switch (productName) {
-    case 'Lines RGB Light':
+    case 'Old RGB Light':
+      return 0.9; // 90%
+    case 'New RGB Light':
       return 0.9; // 90%
     case 'Mousepad':
       return 0.7; // 70%
     case 'Smart Cube':
       return 0.1; // 10%
-    case 'pixel screen 16':
+    case 'pixel 16':
       return 0.2; // 20%
-    case 'pixel screen 32':
+    case 'pixel 32':
       return 0.2; // 20%
-    case 'ٍSmart PC Light':
+    case 'pixel 64':
       return 0.2; // 20%
+    case 'PC Light 24':
+      return 0.2; // 20%
+    case 'PC Light 27':
+      return 0.2; // 20%
+    case 'PC Light 32':
+      return 0.2; // 20%
+    case 'PC Light 34':
+      return 0.2; // 20%
+    case 'NEON ROPE':
+      return 0.2; // 20%
+    case 'TV 40-50':
+      return 0.1; // 20%
+    case 'TV 55-65':
+      return 0.1; // 20%
+    case 'TV 75-85':
+      return 0.1; // 20%
+
     default:
       return 1; // 100%
   }

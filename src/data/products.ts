@@ -73,12 +73,34 @@ const defaultProducts: Product[] = [
   },
 
   {
+    id: 'TV 40-50',
+    name: 'TV 40-50',
+    cost: 132,
+    sellingPrice: 249,
+    owner: 'basim'  // Basim's product
+  }, 
+  {
+    id: 'TV 55-65',
+    name: 'TV 55-65',
+    cost: 135,
+    sellingPrice: 259,
+    owner: 'basim'  // Basim's product
+  }, 
+  {
+    id: 'TV 75-85',
+    name: 'TV 75-85',
+    cost: 139,
+    sellingPrice: 269,
+    owner: 'basim'  // Basim's product
+  }, 
+  {
     id: 'Smart Cube',
     name: 'Smart Cube',
     cost: 77,
     sellingPrice: 149,
     owner: 'basim'  // Basim's product
   }, 
+
   {
     id: 'NEON ROPE',
     name: 'NEON ROPE',
@@ -87,6 +109,7 @@ const defaultProducts: Product[] = [
     owner: 'basim'  // Basim's product
   },
 ];
+
 
 export const getProducts = (): Product[] => {
   const savedProducts = localStorage.getItem('products');
