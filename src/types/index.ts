@@ -1,6 +1,7 @@
 export interface Product {
   id: string;
   name: string;
+  sku: string;
   cost: number;
   sellingPrice: number;
   owner: 'yassir' | 'basim';

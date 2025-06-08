@@ -6,6 +6,7 @@ export const createOrderCSVHeaders = (): string => {
     'Customer Name',
     'Product IDs',
     'Product Names',
+    'Product SKUs',
     'Quantities',
     'Shipping Method',
     'Payment Method',
@@ -25,6 +26,7 @@ export const createOrderCSVRow = (order: Order): string => {
   // Separate product information for better importing
   const productIds = order.items.map(item => item.product.id).join(';');
   const productNames = order.items.map(item => item.product.name).join(';');
+  const productSKUs = order.items.map(item => item.product.sku || '').join(';');
   const quantities = order.items.map(item => item.quantity).join(';');
   
   const discount = order.discount 
@@ -36,6 +38,7 @@ export const createOrderCSVRow = (order: Order): string => {
     order.customerName || '',
     `"${productIds}"`,
     `"${productNames}"`,
+    `"${productSKUs}"`,
     `"${quantities}"`,
     order.shippingMethod.name,
     order.paymentMethod.name,

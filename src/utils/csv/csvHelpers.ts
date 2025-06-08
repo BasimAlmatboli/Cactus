@@ -27,37 +27,38 @@ export const importOrdersFromCSV = async (file: File): Promise<void> => {
       // Parse product information
       const productIds = getValue(2).split(';').filter(Boolean);
       const productNames = getValue(3).split(';').filter(Boolean);
-      const quantities = getValue(4).split(';').map(q => parseInt(q, 10));
+      const productSKUs = getValue(4).split(';').filter(Boolean);
+      const quantities = getValue(5).split(';').map(q => parseInt(q, 10));
 
       // Create order items with proper product linking
-      const items = await createOrderItems(productIds, productNames, quantities);
+      const items = await createOrderItems(productIds, productNames, productSKUs, quantities);
 
       const shippingMethod = {
-        id: getValue(5).toLowerCase().replace(/\s+/g, '-'),
-        name: getValue(5),
-        cost: parseFloat(getValue(8))
+        id: getValue(6).toLowerCase().replace(/\s+/g, '-'),
+        name: getValue(6),
+        cost: parseFloat(getValue(9))
       };
 
       const paymentMethod = {
-        id: getValue(6).toLowerCase() as 'mada' | 'visa' | 'tamara',
-        name: getValue(6)
+        id: getValue(7).toLowerCase() as 'mada' | 'visa' | 'tamara',
+        name: getValue(7)
       };
 
-      const isFreeShipping = getValue(10).toLowerCase() === 'true';
-      const subtotal = parseFloat(getValue(7));
-      const shippingCost = parseFloat(getValue(8));
+      const isFreeShipping = getValue(11).toLowerCase() === 'true';
+      const subtotal = parseFloat(getValue(8));
+      const shippingCost = parseFloat(getValue(9));
 
       // Calculate payment fees if not provided or invalid
-      let paymentFees = parseFloat(getValue(9));
+      let paymentFees = parseFloat(getValue(10));
       if (isNaN(paymentFees) || paymentFees <= 0) {
         const actualShippingCost = isFreeShipping ? 0 : shippingCost;
         const totalBeforeFees = subtotal + actualShippingCost;
         paymentFees = calculatePaymentFees(paymentMethod.id, totalBeforeFees);
       }
 
-      const discountType = getValue(11);
-      const discountValue = parseFloat(getValue(12));
-      const discountCode = getValue(13);
+      const discountType = getValue(12);
+      const discountValue = parseFloat(getValue(13));
+      const discountCode = getValue(14);
 
       const discount = discountType && !isNaN(discountValue) ? {
         type: discountType as 'percentage' | 'fixed',

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Check, Package, Lightbulb, MousePointer, Cpu, Monitor, X } from 'lucide-react';
+import { Plus, Check, Package, Lightbulb, MousePointer, Cpu, Monitor, X, Hash } from 'lucide-react';
 import { Product } from '../../types';
 
 interface ProductCardProps {
@@ -53,8 +53,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             }`}>
               <Icon />
             </div>
-            <div>
+            <div className="min-w-0 flex-1">
               <h3 className="font-medium text-sm text-gray-900 truncate">{product.name}</h3>
+              <div className="flex items-center gap-1 text-xs text-gray-500">
+                <Hash className="h-3 w-3" />
+                <span className="truncate">{product.sku}</span>
+              </div>
               {quantity > 0 && (
                 <span className="text-xs text-blue-600">
                   Quantity: {quantity}

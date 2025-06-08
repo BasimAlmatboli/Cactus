@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Package, Truck, CreditCard, Tag, Receipt, User } from 'lucide-react';
+import { X, Package, Truck, CreditCard, Tag, Receipt, User, Hash } from 'lucide-react';
 import { Order } from '../../types';
 import { calculateTotalProfitShare } from '../../utils/profitSharing';
 
@@ -73,9 +73,15 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onC
               </h3>
               <div className="bg-gray-50 rounded-lg p-4 space-y-4">
                 {order.items.map((item, index) => (
-                  <div key={index} className="flex justify-between items-center">
-                    <div>
+                  <div key={index} className="flex justify-between items-start">
+                    <div className="space-y-1">
                       <div className="font-medium">{item.product.name}</div>
+                      {item.product.sku && (
+                        <div className="flex items-center text-sm text-gray-500">
+                          <Hash className="h-3 w-3 mr-1" />
+                          <span>{item.product.sku}</span>
+                        </div>
+                      )}
                       <div className="text-sm text-gray-600">
                         Quantity: {item.quantity} × {item.product.sellingPrice} SAR
                       </div>
