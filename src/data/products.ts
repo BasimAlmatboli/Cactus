@@ -21,8 +21,8 @@ const defaultProducts: Product[] = [
     id: 'Mousepad',
     name: 'Mousepad',
     sku: 'MP-L-001',
-    cost: 16,
-    sellingPrice: 79,
+    cost: 19,
+    sellingPrice: 89,
     owner: 'yassir'
   },
   {
