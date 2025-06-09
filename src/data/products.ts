@@ -4,7 +4,7 @@ const defaultProducts: Product[] = [
   {
     id: 'Old RGB Light',
     name: 'Old RGB Light',
-    sku: 'RGB-OLD-001',
+    sku: 'RGB-001',
     cost: 130,
     sellingPrice: 199,
     owner: 'yassir'
@@ -20,7 +20,7 @@ const defaultProducts: Product[] = [
   {
     id: 'Mousepad',
     name: 'Mousepad',
-    sku: 'ACC-MP-001',
+    sku: 'MP-L-001',
     cost: 16,
     sellingPrice: 79,
     owner: 'yassir'
@@ -52,7 +52,7 @@ const defaultProducts: Product[] = [
   {
     id: 'PC Light 24',
     name: 'PC Light 24',
-    sku: 'PCL-24-001',
+    sku: 'PC-LIGHT-24',
     cost: 55,
     sellingPrice: 179,
     owner: 'basim'
@@ -60,7 +60,7 @@ const defaultProducts: Product[] = [
   {
     id: 'PC Light 27',
     name: 'PC Light 27',
-    sku: 'PCL-27-001',
+    sku: 'PC-LIGHT-27',
     cost: 58,
     sellingPrice: 189,
     owner: 'basim'
@@ -68,7 +68,7 @@ const defaultProducts: Product[] = [
   {
     id: 'PC Light 32',
     name: 'PC Light 32',
-    sku: 'PCL-32-001',
+    sku: 'PC-LIGHT-32',
     cost: 60,
     sellingPrice: 194,
     owner: 'basim'
@@ -76,7 +76,7 @@ const defaultProducts: Product[] = [
   {
     id: 'PC Light 34',
     name: 'PC Light 34',
-    sku: 'PCL-34-001',
+    sku: 'PC-LIGHT-34',
     cost: 61,
     sellingPrice: 199,
     owner: 'basim'
@@ -84,7 +84,7 @@ const defaultProducts: Product[] = [
   {
     id: 'TV 24',
     name: 'TV 24',
-    sku: 'TVL-24-001',
+    sku: 'TV-LIGHT-24',
     cost: 100,
     sellingPrice: 249,
     owner: 'basim'
@@ -92,7 +92,7 @@ const defaultProducts: Product[] = [
   {
     id: 'TV 27',
     name: 'TV 27',
-    sku: 'TVL-27-001',
+    sku: 'TV-LIGHT-27',
     cost: 102,
     sellingPrice: 259,
     owner: 'basim'
@@ -100,23 +100,31 @@ const defaultProducts: Product[] = [
   {
     id: 'TV 32',
     name: 'TV 32',
-    sku: 'TVL-32-001',
+    sku: 'TV-LIGHT-32',
     cost: 103,
     sellingPrice: 269,
     owner: 'basim'
   },
   {
-    id: 'TV 40-50',
-    name: 'TV 40-50',
-    sku: 'TVL-4050-001',
+    id: 'TV 34',
+    name: 'TV 34',
+    sku: 'TV-LIGHT-34',
     cost: 104,
     sellingPrice: 274,
     owner: 'basim'
   },
   {
+    id: 'TV 40-50',
+    name: 'TV 40-50',
+    sku: 'TV-LIGHT-40-50',
+    cost: 104,
+    sellingPrice: 279,
+    owner: 'basim'
+  },
+  {
     id: 'TV 55-65',
     name: 'TV 55-65',
-    sku: 'TVL-5565-001',
+    sku: 'TV-LIGHT-55-65',
     cost: 114,
     sellingPrice: 284,
     owner: 'basim'
@@ -124,7 +132,7 @@ const defaultProducts: Product[] = [
   {
     id: 'TV 75-85',
     name: 'TV 75-85',
-    sku: 'TVL-7585-001',
+    sku: 'TV-LIGHT-75-85',
     cost: 117,
     sellingPrice: 289,
     owner: 'basim'
