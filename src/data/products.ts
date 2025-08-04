@@ -141,7 +141,7 @@ const defaultProducts: Product[] = [
     id: 'Smart Cube',
     name: 'Smart Cube',
     sku: 'SMT-CUBE-001',
-    cost: 77,
+    cost: 95,
     sellingPrice: 149,
     owner: 'basim'
   },
