@@ -28,6 +28,14 @@ export const getYassirPercentage = (productName: string): number => {
       return 0.2; // 20%
     case 'NEON ROPE':
       return 0.2; // 20%
+    case 'TV 24':
+      return 0.1; // 10%
+    case 'TV 27':
+      return 0.1; // 10%
+    case 'TV 32':
+      return 0.1; // 10%
+    case 'TV 34':
+      return 0.1; // 10%
     case 'TV 40-50':
       return 0.1; // 20%
     case 'TV 55-65':
@@ -36,7 +44,7 @@ export const getYassirPercentage = (productName: string): number => {
       return 0.1; // 20%
 
     default:
-      return 1; // 100%
+      return 0; // 0%
   }
 };
 
