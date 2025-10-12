@@ -153,6 +153,14 @@ const defaultProducts: Product[] = [
     sellingPrice: 139,
     owner: 'basim'
   },
+  {
+    id: 'MUG',
+    name: 'MUG',
+    sku: 'MUG-001',
+    cost: 19,
+    sellingPrice: 47.4,
+    owner: 'basim'
+  },
 ];
 
 export const getProducts = (): Product[] => {

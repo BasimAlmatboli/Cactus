@@ -37,11 +37,13 @@ export const getYassirPercentage = (productName: string): number => {
     case 'TV 34':
       return 0.1; // 10%
     case 'TV 40-50':
-      return 0.1; // 20%
+      return 0.1; // 10%
     case 'TV 55-65':
-      return 0.1; // 20%
+      return 0.1; // 10%
     case 'TV 75-85':
-      return 0.1; // 20%
+      return 0.1; // 10%
+    case 'MUG':
+      return 0.3; // 30%
 
     default:
       return 0; // 0%
