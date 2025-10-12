@@ -42,6 +42,19 @@ export const useOrder = (initialOrder?: Order | null) => {
     }
   };
 
+  // Function to reset all order fields
+  const resetOrder = () => {
+    setCurrentOrderId(null);
+    setOrderNumber('');
+    setCustomerName('');
+    setOrderItems([]);
+    setShippingMethod(null);
+    setPaymentMethod(null);
+    setIsFreeShipping(false);
+    setDiscount(null);
+    setOrder(null);
+  };
+
   useEffect(() => {
     if (orderItems.length && shippingMethod && paymentMethod) {
       const subtotal = orderItems.reduce(
@@ -122,5 +135,6 @@ export const useOrder = (initialOrder?: Order | null) => {
     order,
     setInitialOrder,
     updateShippingCost,
+    resetOrder,
   };
 };

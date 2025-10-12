@@ -1,20 +1,64 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Expense } from '../../types/expense';
 import { expenseCategories } from '../../data/expenseCategories';
-import { Trash2, Loader2 } from 'lucide-react';
+import { Trash2, Loader2, Pencil, Check, X } from 'lucide-react';
 import * as Icons from 'lucide-react';
 
 interface ExpenseListProps {
   expenses: Expense[];
   isLoading: boolean;
   onDelete: (id: string) => Promise<void>;
+  onUpdateAmount: (id: string, amount: number) => Promise<void>;
 }
 
 export const ExpenseList: React.FC<ExpenseListProps> = ({
   expenses,
   isLoading,
-  onDelete
+  onDelete,
+  onUpdateAmount
 }) => {
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editAmount, setEditAmount] = useState<string>('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleEditClick = (expense: Expense) => {
+    setEditingId(expense.id);
+    setEditAmount(expense.amount.toString());
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditAmount('');
+  };
+
+  const handleSaveEdit = async (id: string) => {
+    const amount = parseFloat(editAmount);
+
+    if (isNaN(amount) || amount <= 0) {
+      alert('Please enter a valid amount greater than 0');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      await onUpdateAmount(id, amount);
+      setEditingId(null);
+      setEditAmount('');
+    } catch (error) {
+      console.error('Error updating expense amount:', error);
+      alert('Failed to update expense amount. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, id: string) => {
+    if (e.key === 'Enter') {
+      handleSaveEdit(id);
+    } else if (e.key === 'Escape') {
+      handleCancelEdit();
+    }
+  };
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -82,15 +126,69 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                     {expense.description}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {expense.amount.toFixed(2)} SAR
+                    {editingId === expense.id ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={editAmount}
+                          onChange={(e) => setEditAmount(e.target.value)}
+                          onKeyDown={(e) => handleKeyDown(e, expense.id)}
+                          className="w-32 px-2 py-1 border border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          disabled={isSaving}
+                          autoFocus
+                        />
+                        <span className="text-gray-500">SAR</span>
+                      </div>
+                    ) : (
+                      `${expense.amount.toFixed(2)} SAR`
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <button
-                      onClick={() => onDelete(expense.id)}
-                      className="text-red-600 hover:text-red-900 transition-colors"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {editingId === expense.id ? (
+                        <>
+                          <button
+                            onClick={() => handleSaveEdit(expense.id)}
+                            disabled={isSaving}
+                            className="text-green-600 hover:text-green-900 transition-colors disabled:opacity-50"
+                            title="Save"
+                          >
+                            {isSaving ? (
+                              <Loader2 className="h-5 w-5 animate-spin" />
+                            ) : (
+                              <Check className="h-5 w-5" />
+                            )}
+                          </button>
+                          <button
+                            onClick={handleCancelEdit}
+                            disabled={isSaving}
+                            className="text-gray-600 hover:text-gray-900 transition-colors disabled:opacity-50"
+                            title="Cancel"
+                          >
+                            <X className="h-5 w-5" />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => handleEditClick(expense)}
+                            className="text-blue-600 hover:text-blue-900 transition-colors"
+                            title="Edit amount"
+                          >
+                            <Pencil className="h-5 w-5" />
+                          </button>
+                          <button
+                            onClick={() => onDelete(expense.id)}
+                            className="text-red-600 hover:text-red-900 transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               );

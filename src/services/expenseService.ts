@@ -30,6 +30,22 @@ export const saveExpense = async (expense: Omit<Expense, 'id'>): Promise<void> =
   }
 };
 
+export const updateExpenseAmount = async (id: string, amount: number): Promise<void> => {
+  if (amount <= 0) {
+    throw new Error('Amount must be greater than 0');
+  }
+
+  const { error } = await supabase
+    .from('expenses')
+    .update({ amount })
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error updating expense amount:', error);
+    throw error;
+  }
+};
+
 export const deleteExpense = async (id: string): Promise<void> => {
   const { error } = await supabase
     .from('expenses')
