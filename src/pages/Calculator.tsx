@@ -35,6 +35,7 @@ export const Calculator = () => {
     order,
     setInitialOrder,
     updateShippingCost,
+    resetOrder,
   } = useOrder();
 
   // Load existing order if editing
@@ -68,7 +69,7 @@ export const Calculator = () => {
       alert('Please complete all required fields');
       return;
     }
-    
+
     if (!orderNumber.trim()) {
       alert('Please enter an order number');
       return;
@@ -92,7 +93,13 @@ export const Calculator = () => {
     try {
       setIsSaving(true);
       await saveOrder(order);
-      navigate('/orders', { replace: true });
+
+      if (editOrderId) {
+        navigate('/orders', { replace: true });
+      } else {
+        resetOrder();
+        navigate('/calculator', { replace: true });
+      }
     } catch (error) {
       console.error('Error saving order:', error);
       alert('There was an error saving the order. Please try again.');
