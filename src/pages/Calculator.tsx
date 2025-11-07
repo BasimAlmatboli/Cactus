@@ -32,6 +32,8 @@ export const Calculator = () => {
     setIsFreeShipping,
     discount,
     setDiscount,
+    appliedOffer,
+    setAppliedOffer,
     order,
     setInitialOrder,
     updateShippingCost,
@@ -204,6 +206,7 @@ export const Calculator = () => {
           <ProductSelect
             orderItems={orderItems}
             onOrderItemsChange={setOrderItems}
+            onOfferApplied={setAppliedOffer}
           />
           
           {/* Discount Section */}

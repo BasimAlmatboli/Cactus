@@ -22,6 +22,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onC
     order.shippingCost,
     order.paymentFees,
     discountAmount,
+    order.appliedOffer || null,
     order.isFreeShipping
   );
 

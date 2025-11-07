@@ -22,6 +22,7 @@ export const TotalEarningsReport: React.FC<TotalEarningsReportProps> = ({ orders
       order.shippingCost,
       order.paymentFees,
       discountAmount,
+      order.appliedOffer || null,
       order.isFreeShipping
     );
 

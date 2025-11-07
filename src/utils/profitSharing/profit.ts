@@ -1,4 +1,4 @@
-import { OrderItem } from '../../types';
+import { OrderItem, AppliedOffer } from '../../types';
 import { ProfitShare, ItemProfitDetails, TotalProfitShare } from './types';
 import { getYassirPercentage, getBasimPercentage } from './percentages';
 import { 
@@ -16,7 +16,8 @@ export const calculateItemProfit = (
   totalSubtotal: number,
   shippingCost: number,
   paymentFees: number,
-  discountAmount: number,
+  manualDiscountAmount: number,
+  appliedOffer: AppliedOffer | null,
   isFreeShipping: boolean
 ): ItemProfitDetails => {
   const itemSubtotal = item.product.sellingPrice * item.quantity;
@@ -28,10 +29,16 @@ export const calculateItemProfit = (
   
   // Calculate cost
   const cost = calculateItemCost(item.product.cost, item.quantity);
-  
+
   // Calculate expense share (always include shipping cost in expenses even if free)
-  const totalExpenses = shippingCost + paymentFees + discountAmount;
-  const expenseShare = calculateItemExpenseShare(totalExpenses, revenueProportion);
+  // Separate shared expenses (distributed proportionally) from offer-specific discounts
+  const sharedExpenses = shippingCost + paymentFees + manualDiscountAmount;
+  let expenseShare = calculateItemExpenseShare(sharedExpenses, revenueProportion);
+
+  // If this item is the target of an applied offer, add the offer discount to its expenses only
+  if (appliedOffer && item.product.id === appliedOffer.targetProductId) {
+    expenseShare += appliedOffer.discountAmount;
+  }
   
   // Calculate net profit
   const netProfit = total - cost - expenseShare;
@@ -55,7 +62,8 @@ export const calculateTotalProfitShare = (
   items: OrderItem[],
   shippingCost: number,
   paymentFees: number,
-  discountAmount: number,
+  manualDiscountAmount: number,
+  appliedOffer: AppliedOffer | null = null,
   isFreeShipping: boolean = false
 ): TotalProfitShare => {
   const totalSubtotal = items.reduce(
@@ -66,13 +74,14 @@ export const calculateTotalProfitShare = (
   // Only add shipping to total if it's not free
   const totalWithShipping = totalSubtotal + (isFreeShipping ? 0 : shippingCost);
   
-  const itemShares = items.map(item => 
+  const itemShares = items.map(item =>
     calculateItemProfit(
       item,
       totalSubtotal,
       shippingCost,
       paymentFees,
-      discountAmount,
+      manualDiscountAmount,
+      appliedOffer,
       isFreeShipping
     )
   );

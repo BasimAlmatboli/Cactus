@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShippingMethod } from '../types';
-import { getShippingMethods } from '../data/shipping';
+import { shippingService } from '../services/shippingService';
 
 interface ShippingSelectProps {
   selected: ShippingMethod | null;
@@ -17,7 +17,35 @@ export const ShippingSelect: React.FC<ShippingSelectProps> = ({
   onFreeShippingChange,
   onShippingCostChange,
 }) => {
-  const shippingMethods = getShippingMethods();
+  const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadShippingMethods();
+  }, []);
+
+  const loadShippingMethods = async () => {
+    try {
+      setLoading(true);
+      const methods = await shippingService.getActiveShippingMethods();
+      setShippingMethods(methods);
+    } catch (error) {
+      console.error('Error loading shipping methods:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold">Shipping Method</h2>
+        <div className="bg-white rounded-lg shadow p-4 text-center text-gray-500">
+          Loading shipping methods...
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-4">
