@@ -21,6 +21,7 @@ export const ProfitSharingReport: React.FC<ProfitSharingReportProps> = ({ orders
       order.shippingCost,
       order.paymentFees,
       discountAmount,
+      order.appliedOffer || null,
       order.isFreeShipping
     );
 

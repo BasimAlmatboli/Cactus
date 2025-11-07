@@ -26,20 +26,25 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({ order }) => {
       ? (order.subtotal * order.discount.value) / 100
       : order.discount.value
     : 0;
-  
+
+  const offerDiscountAmount = order.appliedOffer ? order.appliedOffer.discountAmount : 0;
+  const totalDiscountAmount = discountAmount + offerDiscountAmount;
+
   // Calculate the total amount before fees (base for payment fee calculation)
   const actualShippingCost = order.isFreeShipping ? 0 : order.shippingCost;
-  const totalBeforeFees = order.subtotal + actualShippingCost - discountAmount;
+  const totalBeforeFees = order.subtotal + actualShippingCost - totalDiscountAmount;
   
   // Get the payment fee percentage for the selected payment method
   const feePercentage = getPaymentFeePercentage(order.paymentMethod.id);
   
   // Calculate detailed profit sharing
+  // Pass manual discount and applied offer separately
   const profitSharing = calculateTotalProfitShare(
     order.items,
     order.shippingCost,
     order.paymentFees,
     discountAmount,
+    order.appliedOffer || null,
     order.isFreeShipping
   );
 
@@ -68,6 +73,13 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({ order }) => {
             <div className="flex justify-between text-green-600">
               <span>Discount {formatDiscount()}</span>
               <span>-{discountAmount.toFixed(2)} SAR</span>
+            </div>
+          )}
+
+          {order.appliedOffer && (
+            <div className="flex justify-between text-green-600">
+              <span>Offer: {order.appliedOffer.offerName}</span>
+              <span>-{offerDiscountAmount.toFixed(2)} SAR</span>
             </div>
           )}
 

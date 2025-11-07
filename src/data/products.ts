@@ -158,7 +158,7 @@ const defaultProducts: Product[] = [
     name: 'MUG',
     sku: 'MUG-001',
     cost: 19,
-    sellingPrice: 47.4,
+    sellingPrice: 79,
     owner: 'basim'
   },
 ];

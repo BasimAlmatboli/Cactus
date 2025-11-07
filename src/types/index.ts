@@ -11,6 +11,7 @@ export interface ShippingMethod {
   id: string;
   name: string;
   cost: number;
+  is_active: boolean;
 }
 
 export interface PaymentMethod {
@@ -29,6 +30,33 @@ export interface Discount {
   code?: string;
 }
 
+export interface Offer {
+  id: string;
+  name: string;
+  description?: string;
+  triggerProductId: string;
+  triggerProductName: string;
+  targetProductId: string;
+  targetProductName: string;
+  discountType: 'percentage' | 'fixed';
+  discountValue: number;
+  isActive: boolean;
+  startDate?: string;
+  endDate?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AppliedOffer {
+  offerId: string;
+  offerName: string;
+  triggerProductId: string;
+  targetProductId: string;
+  discountType: 'percentage' | 'fixed';
+  discountValue: number;
+  discountAmount: number;
+}
+
 export interface Order {
   id: string;
   orderNumber: string;
@@ -41,6 +69,7 @@ export interface Order {
   shippingCost: number;
   paymentFees: number;
   discount: Discount | null;
+  appliedOffer?: AppliedOffer | null;
   total: number;
   netProfit: number;
   isFreeShipping: boolean;

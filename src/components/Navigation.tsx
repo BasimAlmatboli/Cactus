@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Calculator, Settings as SettingsIcon, ClipboardList, BarChart3, Receipt } from 'lucide-react';
+import { Calculator, Settings as SettingsIcon, ClipboardList, BarChart3, Receipt, Tag } from 'lucide-react';
 
 export const Navigation = () => {
   const location = useLocation();
@@ -25,22 +25,34 @@ export const Navigation = () => {
             </Link>
 
             <Link
+              to="/offers"
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium ${
+                isActive('/offers')
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <Tag className="h-5 w-5" />
+              <span>Offers</span>
+            </Link>
+
+            <Link
               to="/calculator"
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium ${
-                isActive('/calculator') 
-                  ? 'bg-blue-100 text-blue-700' 
+                isActive('/calculator')
+                  ? 'bg-blue-100 text-blue-700'
                   : 'text-gray-700 hover:bg-gray-100'
               }`}
             >
               <Calculator className="h-5 w-5" />
               <span>Calculator</span>
             </Link>
-            
+
             <Link
               to="/reports"
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium ${
-                isActive('/reports') 
-                  ? 'bg-blue-100 text-blue-700' 
+                isActive('/reports')
+                  ? 'bg-blue-100 text-blue-700'
                   : 'text-gray-700 hover:bg-gray-100'
               }`}
             >
