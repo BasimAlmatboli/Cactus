@@ -8,13 +8,14 @@ export const ExpenseForm: React.FC<{ onExpenseAdded: () => void }> = ({ onExpens
   const [category, setCategory] = useState<Expense['category']>('other');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
+  const [owner, setOwner] = useState<Expense['owner']>('shared');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!description || !amount || !date) {
+
+    if (!description || !amount) {
       alert('Please fill in all fields');
       return;
     }
@@ -25,15 +26,17 @@ export const ExpenseForm: React.FC<{ onExpenseAdded: () => void }> = ({ onExpens
         category,
         description,
         amount: parseFloat(amount),
+        owner,
         date
       });
-      
+
       // Reset form
       setCategory('other');
       setDescription('');
       setAmount('');
+      setOwner('shared');
       setDate(new Date().toISOString().split('T')[0]);
-      
+
       onExpenseAdded();
     } catch (error) {
       console.error('Error saving expense:', error);
@@ -65,14 +68,17 @@ export const ExpenseForm: React.FC<{ onExpenseAdded: () => void }> = ({ onExpens
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Date
+            Owner
           </label>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
+          <select
+            value={owner}
+            onChange={(e) => setOwner(e.target.value as Expense['owner'])}
             className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-          />
+          >
+            <option value="basim">Basim</option>
+            <option value="yassir">Yassir</option>
+            <option value="shared">Shared</option>
+          </select>
         </div>
 
         <div className="md:col-span-2">

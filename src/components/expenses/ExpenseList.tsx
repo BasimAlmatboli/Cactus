@@ -88,13 +88,13 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Date
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Category
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Description
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Owner
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Amount
@@ -111,9 +111,6 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
 
               return (
                 <tr key={expense.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(expense.date).toLocaleDateString()}
-                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <IconComponent className="h-5 w-5 text-gray-400 mr-2" />
@@ -124,6 +121,15 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-900">
                     {expense.description}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`text-sm font-medium px-3 py-1 rounded-full ${
+                      expense.owner === 'basim' ? 'bg-blue-100 text-blue-800' :
+                      expense.owner === 'yassir' ? 'bg-green-100 text-green-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {expense.owner === 'basim' ? 'Basim' : expense.owner === 'yassir' ? 'Yassir' : 'Shared'}
+                    </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {editingId === expense.id ? (
