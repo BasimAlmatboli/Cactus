@@ -4,6 +4,7 @@ import { getExpenses, deleteExpense, updateExpenseAmount } from '../services/exp
 import { ExpenseForm } from '../components/expenses/ExpenseForm';
 import { ExpenseList } from '../components/expenses/ExpenseList';
 import { ExpenseImportExport } from '../components/expenses/ExpenseImportExport';
+import { ExpensesSummaryReport } from '../components/expenses/ExpensesSummaryReport';
 
 export const Expenses = () => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -59,7 +60,7 @@ export const Expenses = () => {
           />
         </div>
         
-        <div className="space-y-8">
+        <div className="space-y-6">
           <ExpenseForm onExpenseAdded={loadExpenses} />
           <ExpenseList
             expenses={expenses}
@@ -67,6 +68,9 @@ export const Expenses = () => {
             onDelete={handleDelete}
             onUpdateAmount={handleUpdateAmount}
           />
+          {expenses.length > 0 && (
+            <ExpensesSummaryReport expenses={expenses} />
+          )}
         </div>
       </div>
     </div>

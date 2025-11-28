@@ -4,6 +4,7 @@ export interface Expense {
   category: 'marketing' | 'packaging' | 'subscription' | 'other';
   description: string;
   amount: number;
+  owner: 'basim' | 'yassir' | 'shared';
 }
 
 export interface ExpenseCategory {
