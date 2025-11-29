@@ -48,14 +48,6 @@ export const importOrdersFromCSV = async (file: File): Promise<void> => {
       const subtotal = parseFloat(getValue(8));
       const shippingCost = parseFloat(getValue(9));
 
-      // Calculate payment fees if not provided or invalid
-      let paymentFees = parseFloat(getValue(10));
-      if (isNaN(paymentFees) || paymentFees <= 0) {
-        const actualShippingCost = isFreeShipping ? 0 : shippingCost;
-        const totalBeforeFees = subtotal + actualShippingCost;
-        paymentFees = calculatePaymentFees(paymentMethod.id, totalBeforeFees);
-      }
-
       const discountType = getValue(12);
       const discountValue = parseFloat(getValue(13));
       const discountCode = getValue(14);
@@ -66,15 +58,26 @@ export const importOrdersFromCSV = async (file: File): Promise<void> => {
         code: discountCode || undefined
       } : null;
 
-      // Calculate total and net profit
+      // Calculate actual shipping cost based on free shipping flag
       const actualShippingCost = isFreeShipping ? 0 : shippingCost;
+
+      // Calculate discount amount
       const discountAmount = discount
         ? discount.type === 'percentage'
           ? (subtotal * discount.value) / 100
           : discount.value
         : 0;
 
-      const total = subtotal + actualShippingCost - discountAmount;
+      // Calculate the customer total (what customer pays before fees)
+      const customerTotal = subtotal + actualShippingCost - discountAmount;
+
+      // Calculate payment fees based on customer total (after discounts applied)
+      let paymentFees = parseFloat(getValue(10));
+      if (isNaN(paymentFees) || paymentFees <= 0) {
+        paymentFees = calculatePaymentFees(paymentMethod.id, customerTotal);
+      }
+
+      const total = customerTotal;
       
       // Calculate total cost from items
       const totalCost = items.reduce((sum, item) => 

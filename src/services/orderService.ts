@@ -1,7 +1,11 @@
-import { Order } from '../types';
+import { Order, OrderItem, Offer, AppliedOffer } from '../types';
 import { supabase } from '../lib/supabase';
 import { generateUUID } from '../utils/uuid';
 import { transformOrderForSupabase, transformSupabaseOrder } from '../utils/transformers/orderTransformer';
+import { getActiveOffers } from './offerService';
+import { findApplicableOffers, getBestOffer, applyOfferToItems } from '../utils/offerHelpers';
+import { calculatePaymentFees } from '../utils/calculateFees';
+import { getProducts } from '../data/products';
 
 export const getOrders = async (): Promise<Order[]> => {
   const { data: orders, error } = await supabase
@@ -67,7 +71,7 @@ export const getOrderById = async (orderId: string): Promise<Order | null> => {
     .from('orders')
     .select('*')
     .eq('id', orderId)
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error('Error getting order:', error);
@@ -75,4 +79,120 @@ export const getOrderById = async (orderId: string): Promise<Order | null> => {
   }
 
   return order ? transformSupabaseOrder(order) : null;
+};
+
+const FREE_SHIPPING_THRESHOLD = 300;
+
+const getProductById = (productId: string): any => {
+  const products = getProducts();
+  return products.find(p => p.id === productId);
+};
+
+const recalculateOrderWithOffers = (order: Order, activeOffers: Offer[]): Order => {
+  const { items, shippingMethod, paymentMethod, isFreeShipping: originalFreeShipping } = order;
+
+  let orderItems = items.map(item => ({
+    ...item,
+    product: {
+      ...item.product,
+      sellingPrice: getProductById(item.product.id)?.sellingPrice || item.product.sellingPrice,
+    }
+  }));
+
+  const subtotal = orderItems.reduce(
+    (sum, item) => sum + (item.product.sellingPrice * item.quantity),
+    0
+  );
+
+  const applicableOffers = findApplicableOffers(orderItems, activeOffers);
+  let appliedOffer: AppliedOffer | null = null;
+
+  if (applicableOffers.length > 0) {
+    const bestOffer = getBestOffer(orderItems, applicableOffers);
+    if (bestOffer) {
+      const offerResult = applyOfferToItems(orderItems, bestOffer);
+      appliedOffer = offerResult.appliedOffer;
+    }
+  }
+
+  const totalCost = items.reduce(
+    (sum, item) => sum + item.product.cost * item.quantity,
+    0
+  );
+
+  const offerDiscountAmount = appliedOffer ? appliedOffer.discountAmount : 0;
+  const totalForFreeShipping = subtotal - offerDiscountAmount;
+
+  let isFreeShipping = originalFreeShipping;
+  if (totalForFreeShipping >= FREE_SHIPPING_THRESHOLD && !originalFreeShipping) {
+    isFreeShipping = true;
+  } else if (totalForFreeShipping < FREE_SHIPPING_THRESHOLD && originalFreeShipping) {
+    isFreeShipping = false;
+  }
+
+  const actualShippingCost = isFreeShipping ? 0 : shippingMethod.cost;
+  const customerTotal = subtotal + actualShippingCost - offerDiscountAmount;
+  const paymentFees = calculatePaymentFees(paymentMethod.id, customerTotal);
+  const total = customerTotal + paymentFees;
+  const netProfit = total - totalCost - shippingMethod.cost - paymentFees;
+
+  return {
+    ...order,
+    subtotal,
+    shippingCost: shippingMethod.cost,
+    paymentFees,
+    appliedOffer,
+    total: customerTotal,
+    netProfit,
+    isFreeShipping,
+    items: orderItems,
+  };
+};
+
+export const recalculateOrder = async (orderId: string): Promise<Order> => {
+  const order = await getOrderById(orderId);
+  if (!order) {
+    throw new Error('Order not found');
+  }
+
+  const activeOffers = await getActiveOffers();
+  const recalculatedOrder = recalculateOrderWithOffers(order, activeOffers);
+
+  await saveOrder(recalculatedOrder);
+  return recalculatedOrder;
+};
+
+export const recalculateOrders = async (orderIds: string[]): Promise<number> => {
+  try {
+    const activeOffers = await getActiveOffers();
+    let updatedCount = 0;
+
+    for (const orderId of orderIds) {
+      try {
+        const order = await getOrderById(orderId);
+        if (order) {
+          const recalculatedOrder = recalculateOrderWithOffers(order, activeOffers);
+          await saveOrder(recalculatedOrder);
+          updatedCount++;
+        }
+      } catch (error) {
+        console.error(`Error recalculating order ${orderId}:`, error);
+      }
+    }
+
+    return updatedCount;
+  } catch (error) {
+    console.error('Error in recalculateOrders:', error);
+    throw error;
+  }
+};
+
+export const recalculateAllOrders = async (): Promise<number> => {
+  try {
+    const orders = await getOrders();
+    return recalculateOrders(orders.map(o => o.id));
+  } catch (error) {
+    console.error('Error in recalculateAllOrders:', error);
+    throw error;
+  }
 };

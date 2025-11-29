@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, PenSquare, Loader2, User, CheckSquare, Square, Eye, Hash } from 'lucide-react';
+import { Trash2, PenSquare, Loader2, User, CheckSquare, Square, Eye, Hash, RefreshCw } from 'lucide-react';
 import { Order } from '../../types';
 import { OrdersEmptyState } from './OrdersEmptyState';
 import { OrderDetailsModal } from './OrderDetailsModal';
@@ -11,6 +11,9 @@ interface OrdersListProps {
   error: string | null;
   onDelete: (orderId: string) => Promise<void>;
   onBatchDelete: (orderIds: string[]) => Promise<void>;
+  onBatchRecalculate: (orderIds: string[]) => Promise<void>;
+  onRecalculateAll: () => Promise<void>;
+  isRecalculating?: boolean;
 }
 
 export const OrdersList: React.FC<OrdersListProps> = ({
@@ -19,6 +22,9 @@ export const OrdersList: React.FC<OrdersListProps> = ({
   error,
   onDelete,
   onBatchDelete,
+  onBatchRecalculate,
+  onRecalculateAll,
+  isRecalculating = false,
 }) => {
   const navigate = useNavigate();
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
@@ -44,11 +50,18 @@ export const OrdersList: React.FC<OrdersListProps> = ({
 
   const handleBatchDelete = async () => {
     if (selectedOrders.size === 0) return;
-    
+
     if (window.confirm(`Are you sure you want to delete ${selectedOrders.size} selected orders?`)) {
       await onBatchDelete(Array.from(selectedOrders));
       setSelectedOrders(new Set());
     }
+  };
+
+  const handleBatchRecalculate = async () => {
+    if (selectedOrders.size === 0) return;
+
+    await onBatchRecalculate(Array.from(selectedOrders));
+    setSelectedOrders(new Set());
   };
 
   if (isLoading) {
@@ -78,12 +91,39 @@ export const OrdersList: React.FC<OrdersListProps> = ({
           <span className="text-sm text-gray-600">
             {selectedOrders.size} order{selectedOrders.size !== 1 ? 's' : ''} selected
           </span>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={handleBatchRecalculate}
+              disabled={isRecalculating}
+              className="flex items-center px-4 py-2 text-sm text-blue-600 hover:text-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isRecalculating ? 'animate-spin' : ''}`} />
+              Recalculate {isRecalculating ? '...' : 'Selected'}
+            </button>
+            <button
+              onClick={handleBatchDelete}
+              disabled={isRecalculating}
+              className="flex items-center px-4 py-2 text-sm text-red-600 hover:text-red-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete Selected
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!selectedOrders.size && orders.length > 0 && (
+        <div className="bg-white p-4 rounded-lg shadow flex items-center justify-between">
+          <span className="text-sm text-gray-600">
+            {orders.length} order{orders.length !== 1 ? 's' : ''} in total
+          </span>
           <button
-            onClick={handleBatchDelete}
-            className="flex items-center px-4 py-2 text-sm text-red-600 hover:text-red-800 transition-colors"
+            onClick={onRecalculateAll}
+            disabled={isRecalculating}
+            className="flex items-center px-4 py-2 text-sm text-blue-600 hover:text-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Delete Selected
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRecalculating ? 'animate-spin' : ''}`} />
+            Recalculate All {isRecalculating ? '...' : 'Orders'}
           </button>
         </div>
       )}
