@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Order, OrderItem, ShippingMethod, PaymentMethod, Discount, AppliedOffer } from '../types';
 import { calculatePaymentFees } from '../utils/calculateFees';
+import { calculateTotalProfitShare } from '../utils/profitSharing';
 import { generateUUID } from '../utils/uuid';
 
 const FREE_SHIPPING_THRESHOLD = 300;
@@ -102,9 +103,18 @@ export const useOrder = (initialOrder?: Order | null) => {
       // Calculate payment fees based on the customer total
       const paymentFees = calculatePaymentFees(paymentMethod.id, customerTotal);
 
-      // Calculate the total including payment fees (for internal use)
-      const total = customerTotal + paymentFees;
-      const netProfit = total - totalCost - shippingMethod.cost - paymentFees;
+      // Calculate profit sharing to get net profit
+      const profitShare = calculateTotalProfitShare(
+        orderItems,
+        shippingMethod.cost,
+        paymentFees,
+        discountAmount,
+        appliedOffer,
+        isFreeShipping
+      );
+
+      // Net profit is the sum of both shares
+      const netProfit = profitShare.totalYassirShare + profitShare.totalBasimShare;
 
       setOrder({
         id: currentOrderId || generateUUID(),
