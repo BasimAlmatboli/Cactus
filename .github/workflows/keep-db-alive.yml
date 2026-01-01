@@ -1,0 +1,88 @@
+name: Keep Supabase Database Alive
+
+on:
+  schedule:
+    # Runs every 5 days at 00:00 UTC
+    - cron: '0 0 */5 * *'
+  workflow_dispatch: # Allows manual triggering for testing
+
+jobs:
+  query-database:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Supabase JS Client
+        run: npm install @supabase/supabase-js
+
+      - name: Query Products Table
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          node << 'EOF'
+          const { createClient } = require('@supabase/supabase-js');
+          
+          const supabaseUrl = process.env.SUPABASE_URL;
+          const supabaseKey = process.env.SUPABASE_ANON_KEY;
+          
+          const supabase = createClient(supabaseUrl, supabaseKey);
+          
+          async function queryProducts() {
+            try {
+              console.log('🔄 Querying products table to keep database alive...\n');
+              
+              const { data, error, count } = await supabase
+                .from('products')
+                .select('*', { count: 'exact' });
+              
+              if (error) {
+                console.error('❌ Error querying database:', error);
+                process.exit(1);
+              }
+              
+              console.log(`✅ Successfully queried database!`);
+              console.log(`📊 Total products found: ${count}\n`);
+              
+              if (data && data.length > 0) {
+                console.log('📦 Products List:\n');
+                data.forEach((product, index) => {
+                  console.log(`${index + 1}. ${product.name}`);
+                  console.log(`   SKU: ${product.sku}`);
+                  console.log(`   Owner: ${product.owner}`);
+                  console.log(`   Cost: $${product.cost}`);
+                  console.log(`   Selling Price: $${product.selling_price}`);
+                  console.log(`   Category: ${product.category || 'N/A'}`);
+                  console.log(`   Active: ${product.is_active ? 'Yes' : 'No'}`);
+                  console.log(`   Created: ${new Date(product.created_at).toLocaleString()}`);
+                  console.log('');
+                });
+              } else {
+                console.log('ℹ️  No products found in the database.');
+              }
+              
+              console.log(`\n✨ Database keep-alive completed at ${new Date().toISOString()}`);
+              
+            } catch (err) {
+              console.error('❌ Unexpected error:', err);
+              process.exit(1);
+            }
+          }
+          
+          queryProducts();
+          EOF
+
+      - name: Log Completion
+        if: success()
+        run: echo "✅ Database keep-alive job completed successfully!"
+
+      - name: Log Failure
+        if: failure()
+        run: echo "❌ Database keep-alive job failed!"
