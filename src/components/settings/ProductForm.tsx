@@ -1,16 +1,21 @@
 import React, { useState } from 'react';
 import { Product } from '../../types';
-import { getProducts, saveProducts, generateUniqueSKU } from '../../data/products';
-import { Plus } from 'lucide-react';
+import { saveProduct, generateUniqueSKU } from '../../data/products';
+import { Plus, Loader2 } from 'lucide-react';
 
-export const ProductForm = () => {
+interface ProductFormProps {
+  onProductAdded: () => void;
+}
+
+export const ProductForm: React.FC<ProductFormProps> = ({ onProductAdded }) => {
   const [name, setName] = useState('');
   const [sku, setSku] = useState('');
   const [cost, setCost] = useState('');
   const [sellingPrice, setSellingPrice] = useState('');
   const [owner, setOwner] = useState<'yassir' | 'basim'>('basim');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!name || !cost || !sellingPrice) {
@@ -18,45 +23,56 @@ export const ProductForm = () => {
       return;
     }
 
-    const products = getProducts();
-    
-    // Generate SKU if not provided
-    const finalSku = sku.trim() || generateUniqueSKU(name, products);
-    
-    // Check for duplicate SKU
-    if (products.some(p => p.sku === finalSku)) {
-      alert('SKU already exists. Please use a different SKU.');
-      return;
+    try {
+      setIsSubmitting(true);
+
+      // Generate SKU if not provided
+      const finalSku = sku.trim() || await generateUniqueSKU(name);
+
+      const newProduct: Product = {
+        id: `product_${Date.now()}`,
+        name,
+        sku: finalSku,
+        cost: Number(cost),
+        sellingPrice: Number(sellingPrice),
+        owner
+      };
+
+      await saveProduct(newProduct);
+
+      // Reset form
+      setName('');
+      setSku('');
+      setCost('');
+      setSellingPrice('');
+      setOwner('basim');
+
+      // Notify parent to reload products
+      onProductAdded();
+
+      alert('Product added successfully!');
+    } catch (error: any) {
+      console.error('Error adding product:', error);
+      if (error.message?.includes('duplicate') || error.message?.includes('unique')) {
+        alert('SKU already exists. Please use a different SKU.');
+      } else {
+        alert('Failed to add product. Please try again.');
+      }
+    } finally {
+      setIsSubmitting(false);
     }
-
-    const newProduct: Product = {
-      id: Date.now().toString(),
-      name,
-      sku: finalSku,
-      cost: Number(cost),
-      sellingPrice: Number(sellingPrice),
-      owner
-    };
-
-    saveProducts([...products, newProduct]);
-    
-    // Reset form
-    setName('');
-    setSku('');
-    setCost('');
-    setSellingPrice('');
-    setOwner('basim');
-    
-    // Refresh the page to show new product
-    window.location.reload();
   };
 
-  const handleNameChange = (newName: string) => {
+  const handleNameChange = async (newName: string) => {
     setName(newName);
     // Auto-generate SKU if SKU field is empty
     if (!sku.trim() && newName.trim()) {
-      const products = getProducts();
-      setSku(generateUniqueSKU(newName, products));
+      try {
+        const generatedSku = await generateUniqueSKU(newName);
+        setSku(generatedSku);
+      } catch (error) {
+        console.error('Error generating SKU:', error);
+      }
     }
   };
 
@@ -74,9 +90,10 @@ export const ProductForm = () => {
               id="name"
               value={name}
               onChange={(e) => handleNameChange(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 p-2 border"
               placeholder="Enter product name"
               required
+              disabled={isSubmitting}
             />
           </div>
 
@@ -89,8 +106,9 @@ export const ProductForm = () => {
               id="sku"
               value={sku}
               onChange={(e) => setSku(e.target.value.toUpperCase())}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 p-2 border"
               placeholder="Auto-generated if empty"
+              disabled={isSubmitting}
             />
             <p className="mt-1 text-xs text-gray-500">
               Leave empty to auto-generate from product name
@@ -108,11 +126,12 @@ export const ProductForm = () => {
               id="cost"
               value={cost}
               onChange={(e) => setCost(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 p-2 border"
               placeholder="0.00"
               step="0.01"
               min="0"
               required
+              disabled={isSubmitting}
             />
           </div>
 
@@ -125,11 +144,12 @@ export const ProductForm = () => {
               id="sellingPrice"
               value={sellingPrice}
               onChange={(e) => setSellingPrice(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 p-2 border"
               placeholder="0.00"
               step="0.01"
               min="0"
               required
+              disabled={isSubmitting}
             />
           </div>
         </div>
@@ -142,7 +162,8 @@ export const ProductForm = () => {
             id="owner"
             value={owner}
             onChange={(e) => setOwner(e.target.value as 'yassir' | 'basim')}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 p-2 border"
+            disabled={isSubmitting}
           >
             <option value="basim">Basim</option>
             <option value="yassir">Yassir</option>
@@ -151,10 +172,21 @@ export const ProductForm = () => {
 
         <button
           type="submit"
-          className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          disabled={isSubmitting}
+          className={`flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg transition-colors ${isSubmitting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'
+            }`}
         >
-          <Plus className="h-4 w-4" />
-          <span>Add Product</span>
+          {isSubmitting ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Adding Product...</span>
+            </>
+          ) : (
+            <>
+              <Plus className="h-4 w-4" />
+              <span>Add Product</span>
+            </>
+          )}
         </button>
       </form>
     </div>

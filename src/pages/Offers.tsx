@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Tag, Plus, Edit2, Trash2, Power } from 'lucide-react';
-import { Offer } from '../types';
+import { Offer, Product } from '../types';
 import { getOffers, createOffer, updateOffer, deleteOffer, toggleOfferStatus } from '../services/offerService';
 import { getProducts } from '../data/products';
 
 export const Offers = () => {
   const [offers, setOffers] = useState<Offer[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
   const [loading, setLoading] = useState(true);
-  const products = getProducts();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -24,16 +24,20 @@ export const Offers = () => {
   });
 
   useEffect(() => {
-    loadOffers();
+    loadData();
   }, []);
 
-  const loadOffers = async () => {
+  const loadData = async () => {
     try {
       setLoading(true);
-      const data = await getOffers();
-      setOffers(data);
+      const [offersData, productsData] = await Promise.all([
+        getOffers(),
+        getProducts()
+      ]);
+      setOffers(offersData);
+      setProducts(productsData);
     } catch (error) {
-      console.error('Failed to load offers:', error);
+      console.error('Failed to load data:', error);
     } finally {
       setLoading(false);
     }
@@ -65,7 +69,7 @@ export const Offers = () => {
         });
       }
 
-      await loadOffers();
+      await loadData();
       resetForm();
     } catch (error) {
       console.error('Failed to save offer:', error);
@@ -93,7 +97,7 @@ export const Offers = () => {
     if (window.confirm('Are you sure you want to delete this offer?')) {
       try {
         await deleteOffer(offerId);
-        await loadOffers();
+        await loadData();
       } catch (error) {
         console.error('Failed to delete offer:', error);
         alert('Failed to delete offer. Please try again.');
@@ -104,7 +108,7 @@ export const Offers = () => {
   const handleToggleStatus = async (offerId: string, currentStatus: boolean) => {
     try {
       await toggleOfferStatus(offerId, !currentStatus);
-      await loadOffers();
+      await loadData();
     } catch (error) {
       console.error('Failed to toggle offer status:', error);
       alert('Failed to update offer status. Please try again.');
@@ -401,11 +405,10 @@ export const Offers = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={() => handleToggleStatus(offer.id, offer.isActive)}
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                          offer.isActive
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${offer.isActive
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-800'
+                          }`}
                       >
                         <Power className="h-3 w-3 mr-1" />
                         {offer.isActive ? 'Active' : 'Inactive'}

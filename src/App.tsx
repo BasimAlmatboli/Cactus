@@ -7,6 +7,8 @@ import { Orders } from './pages/Orders';
 import { Reports } from './pages/Reports';
 import { Expenses } from './pages/Expenses';
 import { Offers } from './pages/Offers';
+import { ProductMigrationTest } from './components/ProductMigrationTest';
+
 
 function App() {
   return (
@@ -20,6 +22,8 @@ function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/expenses" element={<Expenses />} />
+          <Route path="/migration-test" element={<ProductMigrationTest />} />
+
         </Routes>
       </div>
     </Router>

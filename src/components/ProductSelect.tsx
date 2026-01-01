@@ -18,19 +18,28 @@ export const ProductSelect: React.FC<ProductSelectProps> = ({
   onOrderItemsChange,
   onOfferApplied,
 }) => {
+  const [products, setProducts] = useState<Product[]>([]);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [currentAppliedOffer, setCurrentAppliedOffer] = useState<AppliedOffer | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadOffers();
+    loadData();
   }, []);
 
-  const loadOffers = async () => {
+  const loadData = async () => {
     try {
-      const activeOffers = await getActiveOffers();
-      setOffers(activeOffers);
+      setIsLoading(true);
+      const [productsData, offersData] = await Promise.all([
+        getProducts(),
+        getActiveOffers()
+      ]);
+      setProducts(productsData);
+      setOffers(offersData);
     } catch (error) {
-      console.error('Failed to load offers:', error);
+      console.error('Failed to load data:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -74,7 +83,7 @@ export const ProductSelect: React.FC<ProductSelectProps> = ({
   const handleAddProduct = (product: Product) => {
     const newItems = [...orderItems];
     const existingItem = newItems.find(item => item.product.id === product.id);
-    
+
     if (existingItem) {
       existingItem.quantity += 1;
     } else {
@@ -82,7 +91,7 @@ export const ProductSelect: React.FC<ProductSelectProps> = ({
       const newProduct = { ...product };
       newItems.push({ product: newProduct, quantity: 1 });
     }
-    
+
     onOrderItemsChange(newItems);
   };
 
@@ -92,10 +101,10 @@ export const ProductSelect: React.FC<ProductSelectProps> = ({
       return;
     }
 
-    const newItems = orderItems.map(item => 
+    const newItems = orderItems.map(item =>
       item.product.id === productId ? { ...item, quantity } : item
     );
-    
+
     onOrderItemsChange(newItems);
   };
 
@@ -112,7 +121,7 @@ export const ProductSelect: React.FC<ProductSelectProps> = ({
       }
       return item;
     });
-    
+
     onOrderItemsChange(newItems);
   };
 
@@ -120,7 +129,15 @@ export const ProductSelect: React.FC<ProductSelectProps> = ({
     onOrderItemsChange(orderItems.filter(item => item.product.id !== product.id));
   };
 
-  const products = getProducts();
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <h2 className="text-lg font-semibold">Products</h2>
+        <div className="text-center py-8 text-gray-500">Loading products...</div>
+      </div>
+    );
+  }
+
   const selectedProducts = orderItems.map(item => item.product);
 
   return (

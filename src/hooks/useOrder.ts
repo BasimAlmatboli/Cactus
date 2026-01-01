@@ -3,8 +3,9 @@ import { Order, OrderItem, ShippingMethod, PaymentMethod, Discount, AppliedOffer
 import { calculatePaymentFees } from '../utils/calculateFees';
 import { calculateTotalProfitShare } from '../utils/profitSharing';
 import { generateUUID } from '../utils/uuid';
+import { useFreeShippingThreshold } from './useFreeShippingThreshold';
 
-const FREE_SHIPPING_THRESHOLD = 300;
+
 
 export const useOrder = (initialOrder?: Order | null) => {
   const [orderNumber, setOrderNumber] = useState(initialOrder?.orderNumber || '');
@@ -21,6 +22,9 @@ export const useOrder = (initialOrder?: Order | null) => {
   const [appliedOffer, setAppliedOffer] = useState<AppliedOffer | null>(initialOrder?.appliedOffer || null);
   const [order, setOrder] = useState<Order | null>(initialOrder || null);
   const [currentOrderId, setCurrentOrderId] = useState<string | null>(initialOrder?.id || null);
+
+  // Get free shipping threshold from database
+  const { threshold: freeShippingThreshold } = useFreeShippingThreshold();
 
   // Function to set initial order data
   const setInitialOrder = (order: Order) => {
@@ -86,11 +90,11 @@ export const useOrder = (initialOrder?: Order | null) => {
 
       // Calculate total for free shipping check
       const totalForFreeShipping = subtotal - totalDiscountAmount;
-      
+
       // Auto-toggle free shipping based on total
-      if (totalForFreeShipping >= FREE_SHIPPING_THRESHOLD && !isFreeShipping) {
+      if (totalForFreeShipping >= freeShippingThreshold && !isFreeShipping) {
         setIsFreeShipping(true);
-      } else if (totalForFreeShipping < FREE_SHIPPING_THRESHOLD && isFreeShipping) {
+      } else if (totalForFreeShipping < freeShippingThreshold && isFreeShipping) {
         setIsFreeShipping(false);
       }
 
