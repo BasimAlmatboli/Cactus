@@ -8,6 +8,7 @@ import { Reports } from './pages/Reports';
 import { Expenses } from './pages/Expenses';
 import { Offers } from './pages/Offers';
 
+
 function App() {
   return (
     <Router>
@@ -20,6 +21,7 @@ function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/expenses" element={<Expenses />} />
+
         </Routes>
       </div>
     </Router>

@@ -65,33 +65,6 @@ CREATE TABLE IF NOT EXISTS offers (
   )
 );
 
-ALTER TABLE offers ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view all offers"
-  ON offers
-  FOR SELECT
-  TO authenticated
-  USING (true);
-
-CREATE POLICY "Users can create offers"
-  ON offers
-  FOR INSERT
-  TO authenticated
-  WITH CHECK (true);
-
-CREATE POLICY "Users can update offers"
-  ON offers
-  FOR UPDATE
-  TO authenticated
-  USING (true)
-  WITH CHECK (true);
-
-CREATE POLICY "Users can delete offers"
-  ON offers
-  FOR DELETE
-  TO authenticated
-  USING (true);
-
 CREATE INDEX IF NOT EXISTS idx_offers_active ON offers(is_active);
 CREATE INDEX IF NOT EXISTS idx_offers_dates ON offers(start_date, end_date);
 CREATE INDEX IF NOT EXISTS idx_offers_trigger_product ON offers(trigger_product_id);

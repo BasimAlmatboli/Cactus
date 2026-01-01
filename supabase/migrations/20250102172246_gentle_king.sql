@@ -14,3 +14,4 @@ BEGIN
     ALTER TABLE orders ADD COLUMN customer_name text;
   END IF;
 END $$;
+
