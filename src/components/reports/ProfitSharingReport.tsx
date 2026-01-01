@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Order } from '../../types';
 import { Users } from 'lucide-react';
 import { calculateTotalProfitShare } from '../../utils/profitSharing';
@@ -8,29 +8,47 @@ interface ProfitSharingReportProps {
 }
 
 export const ProfitSharingReport: React.FC<ProfitSharingReportProps> = ({ orders }) => {
-  // Calculate total profit sharing across all orders
-  const totalShares = orders?.reduce((acc, order) => {
-    const discountAmount = order.discount
-      ? order.discount.type === 'percentage'
-        ? (order.subtotal * order.discount.value) / 100
-        : order.discount.value
-      : 0;
+  const [totalShares, setTotalShares] = useState<{
+    yassirShare: number;
+    basimShare: number;
+    totalProfit: number;
+  } | null>(null);
 
-    const profitSharing = calculateTotalProfitShare(
-      order.items,
-      order.shippingCost,
-      order.paymentFees,
-      discountAmount,
-      order.appliedOffer || null,
-      order.isFreeShipping
-    );
+  useEffect(() => {
+    const calculateShares = async () => {
+      if (!orders?.length) {
+        setTotalShares(null);
+        return;
+      }
 
-    return {
-      yassirShare: acc.yassirShare + profitSharing.totalYassirShare,
-      basimShare: acc.basimShare + profitSharing.totalBasimShare,
-      totalProfit: acc.totalProfit + (profitSharing.totalYassirShare + profitSharing.totalBasimShare)
+      const shares = { yassirShare: 0, basimShare: 0, totalProfit: 0 };
+
+      for (const order of orders) {
+        const discountAmount = order.discount
+          ? order.discount.type === 'percentage'
+            ? (order.subtotal * order.discount.value) / 100
+            : order.discount.value
+          : 0;
+
+        const profitSharing = await calculateTotalProfitShare(
+          order.items,
+          order.shippingCost,
+          order.paymentFees,
+          discountAmount,
+          order.appliedOffer || null,
+          order.isFreeShipping
+        );
+
+        shares.yassirShare += profitSharing.totalYassirShare;
+        shares.basimShare += profitSharing.totalBasimShare;
+        shares.totalProfit += profitSharing.totalYassirShare + profitSharing.totalBasimShare;
+      }
+
+      setTotalShares(shares);
     };
-  }, { yassirShare: 0, basimShare: 0, totalProfit: 0 });
+
+    calculateShares();
+  }, [orders]);
 
   // Calculate percentages
   const yassirPercentage = totalShares ? (totalShares.yassirShare / totalShares.totalProfit) * 100 : 0;
@@ -48,6 +66,18 @@ export const ProfitSharingReport: React.FC<ProfitSharingReportProps> = ({ orders
     );
   }
 
+  if (!totalShares) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex items-center gap-2 mb-6">
+          <Users className="h-6 w-6 text-blue-600" />
+          <h2 className="text-xl font-semibold">Total Profit Sharing</h2>
+        </div>
+        <p className="text-gray-500">Calculating profit shares...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex items-center gap-2 mb-6">
@@ -61,7 +91,7 @@ export const ProfitSharingReport: React.FC<ProfitSharingReportProps> = ({ orders
           <h3 className="text-lg font-medium text-blue-800 mb-4">Yassir's Total Share</h3>
           <div className="space-y-2">
             <p className="text-3xl font-bold text-blue-700">
-              {totalShares?.yassirShare.toFixed(2)} SAR
+              {totalShares.yassirShare.toFixed(2)} SAR
             </p>
             <p className="text-sm text-blue-600">
               {yassirPercentage.toFixed(1)}% of total profit
@@ -74,7 +104,7 @@ export const ProfitSharingReport: React.FC<ProfitSharingReportProps> = ({ orders
           <h3 className="text-lg font-medium text-green-800 mb-4">Basim's Total Share</h3>
           <div className="space-y-2">
             <p className="text-3xl font-bold text-green-700">
-              {totalShares?.basimShare.toFixed(2)} SAR
+              {totalShares.basimShare.toFixed(2)} SAR
             </p>
             <p className="text-sm text-green-600">
               {basimPercentage.toFixed(1)}% of total profit
@@ -87,7 +117,7 @@ export const ProfitSharingReport: React.FC<ProfitSharingReportProps> = ({ orders
       <div className="mt-6 bg-purple-50 rounded-lg p-6">
         <h3 className="text-lg font-medium text-purple-800 mb-4">Total Combined Profit</h3>
         <p className="text-3xl font-bold text-purple-700">
-          {totalShares?.totalProfit.toFixed(2)} SAR
+          {totalShares.totalProfit.toFixed(2)} SAR
         </p>
       </div>
 

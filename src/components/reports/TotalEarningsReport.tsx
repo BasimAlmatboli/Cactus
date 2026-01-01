@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Order } from '../../types';
 import { calculateTotalEarnings } from '../../utils/calculateEarnings';
 import { calculateTotalProfitShare } from '../../utils/profitSharing';
@@ -9,43 +9,57 @@ interface TotalEarningsReportProps {
 }
 
 export const TotalEarningsReport: React.FC<TotalEarningsReportProps> = ({ orders }) => {
-  // Calculate total earnings across all orders
-  const totalEarningsData = orders.reduce((acc, order) => {
-    const discountAmount = order.discount
-      ? order.discount.type === 'percentage'
-        ? (order.subtotal * order.discount.value) / 100
-        : order.discount.value
-      : 0;
+  const [totalEarningsData, setTotalEarningsData] = useState<any>(null);
 
-    const profitSharing = calculateTotalProfitShare(
-      order.items,
-      order.shippingCost,
-      order.paymentFees,
-      discountAmount,
-      order.appliedOffer || null,
-      order.isFreeShipping
-    );
+  useEffect(() => {
+    const calculateEarnings = async () => {
+      if (!orders?.length) {
+        setTotalEarningsData(null);
+        return;
+      }
 
-    const earnings = calculateTotalEarnings(
-      order.items,
-      profitSharing.totalYassirShare,
-      profitSharing.totalBasimShare
-    );
+      const earnings = {
+        yassirProductsCost: 0,
+        basimProductsCost: 0,
+        yassirTotalEarnings: 0,
+        basimTotalEarnings: 0,
+        combinedTotalEarnings: 0,
+      };
 
-    return {
-      yassirProductsCost: acc.yassirProductsCost + earnings.yassirProductsCost,
-      basimProductsCost: acc.basimProductsCost + earnings.basimProductsCost,
-      yassirTotalEarnings: acc.yassirTotalEarnings + earnings.yassirTotalEarnings,
-      basimTotalEarnings: acc.basimTotalEarnings + earnings.basimTotalEarnings,
-      combinedTotalEarnings: acc.combinedTotalEarnings + earnings.combinedTotalEarnings,
+      for (const order of orders) {
+        const discountAmount = order.discount
+          ? order.discount.type === 'percentage'
+            ? (order.subtotal * order.discount.value) / 100
+            : order.discount.value
+          : 0;
+
+        const profitSharing = await calculateTotalProfitShare(
+          order.items,
+          order.shippingCost,
+          order.paymentFees,
+          discountAmount,
+          order.appliedOffer || null,
+          order.isFreeShipping
+        );
+
+        const orderEarnings = calculateTotalEarnings(
+          order.items,
+          profitSharing.totalYassirShare,
+          profitSharing.totalBasimShare
+        );
+
+        earnings.yassirProductsCost += orderEarnings.yassirProductsCost;
+        earnings.basimProductsCost += orderEarnings.basimProductsCost;
+        earnings.yassirTotalEarnings += orderEarnings.yassirTotalEarnings;
+        earnings.basimTotalEarnings += orderEarnings.basimTotalEarnings;
+        earnings.combinedTotalEarnings += orderEarnings.combinedTotalEarnings;
+      }
+
+      setTotalEarningsData(earnings);
     };
-  }, {
-    yassirProductsCost: 0,
-    basimProductsCost: 0,
-    yassirTotalEarnings: 0,
-    basimTotalEarnings: 0,
-    combinedTotalEarnings: 0,
-  });
+
+    calculateEarnings();
+  }, [orders]);
 
   if (!orders?.length) {
     return (
@@ -55,6 +69,18 @@ export const TotalEarningsReport: React.FC<TotalEarningsReportProps> = ({ orders
           <h2 className="text-xl font-semibold">Total Earnings Report</h2>
         </div>
         <p className="text-gray-500">No orders found to generate earnings report.</p>
+      </div>
+    );
+  }
+
+  if (!totalEarningsData) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex items-center gap-2 mb-6">
+          <Wallet className="h-6 w-6 text-blue-600" />
+          <h2 className="text-xl font-semibold">Total Earnings Report</h2>
+        </div>
+        <p className="text-gray-500">Calculating earnings...</p>
       </div>
     );
   }

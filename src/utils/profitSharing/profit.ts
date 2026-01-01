@@ -1,17 +1,17 @@
 import { OrderItem, AppliedOffer } from '../../types';
 import { ProfitShare, ItemProfitDetails, TotalProfitShare } from './types';
-import { getYassirPercentage, getBasimPercentage } from './percentages';
-import { 
-  calculateItemRevenue, 
+import { calculateCachedProfitShare } from '../../services/profitShareService';
+import {
+  calculateItemRevenue,
   calculateTotalRevenue,
-  calculateRevenueProportion 
+  calculateRevenueProportion
 } from './revenue';
-import { 
+import {
   calculateItemExpenseShare,
-  calculateItemCost 
+  calculateItemCost
 } from './expenses';
 
-export const calculateItemProfit = (
+export const calculateItemProfit = async (
   item: OrderItem,
   totalSubtotal: number,
   shippingCost: number,
@@ -19,14 +19,14 @@ export const calculateItemProfit = (
   manualDiscountAmount: number,
   appliedOffer: AppliedOffer | null,
   isFreeShipping: boolean
-): ItemProfitDetails => {
+): Promise<ItemProfitDetails> => {
   const itemSubtotal = item.product.sellingPrice * item.quantity;
   const revenueProportion = calculateRevenueProportion(itemSubtotal, totalSubtotal);
-  
+
   // Calculate total (only add shipping if it's not free)
   const shippingToAdd = isFreeShipping ? 0 : shippingCost;
   const total = itemSubtotal + (shippingToAdd * revenueProportion);
-  
+
   // Calculate cost
   const cost = calculateItemCost(item.product.cost, item.quantity);
 
@@ -39,63 +39,64 @@ export const calculateItemProfit = (
   if (appliedOffer && item.product.id === appliedOffer.targetProductId) {
     expenseShare += appliedOffer.discountAmount;
   }
-  
+
   // Calculate net profit
   const netProfit = total - cost - expenseShare;
-  
-  // Calculate shares
-  const yassirShare = netProfit * getYassirPercentage(item.product.name);
-  const basimShare = netProfit * getBasimPercentage(item.product.name);
-  
+
+  // Calculate shares from database
+  const shares = await calculateCachedProfitShare(item.product.id, netProfit);
+
   return {
     total,
     revenueProportion,
     expenseShare,
     cost,
     netProfit,
-    yassirShare,
-    basimShare
+    yassirShare: shares.yassir,
+    basimShare: shares.basim
   };
 };
 
-export const calculateTotalProfitShare = (
+export const calculateTotalProfitShare = async (
   items: OrderItem[],
   shippingCost: number,
   paymentFees: number,
   manualDiscountAmount: number,
   appliedOffer: AppliedOffer | null = null,
   isFreeShipping: boolean = false
-): TotalProfitShare => {
+): Promise<TotalProfitShare> => {
   const totalSubtotal = items.reduce(
     (sum, item) => sum + (item.product.sellingPrice * item.quantity),
     0
   );
-  
+
   // Only add shipping to total if it's not free
   const totalWithShipping = totalSubtotal + (isFreeShipping ? 0 : shippingCost);
-  
-  const itemShares = items.map(item =>
-    calculateItemProfit(
-      item,
-      totalSubtotal,
-      shippingCost,
-      paymentFees,
-      manualDiscountAmount,
-      appliedOffer,
-      isFreeShipping
+
+  const itemShares = await Promise.all(
+    items.map(item =>
+      calculateItemProfit(
+        item,
+        totalSubtotal,
+        shippingCost,
+        paymentFees,
+        manualDiscountAmount,
+        appliedOffer,
+        isFreeShipping
+      )
     )
   );
-  
+
   const totalYassirShare = itemShares.reduce(
     (sum, share) => sum + share.yassirShare,
     0
   );
-  
+
   const totalBasimShare = itemShares.reduce(
     (sum, share) => sum + share.basimShare,
     0
   );
-  
+
   return {
     totalWithShipping,
     itemShares,

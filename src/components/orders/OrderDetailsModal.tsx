@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Package, Truck, CreditCard, Tag, Receipt, User, Hash } from 'lucide-react';
 import { Order } from '../../types';
 import { calculateTotalProfitShare } from '../../utils/profitSharing';
@@ -9,6 +9,35 @@ interface OrderDetailsModalProps {
 }
 
 export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose }) => {
+  const [profitSharing, setProfitSharing] = useState<any>(null);
+
+  useEffect(() => {
+    const calculateProfit = async () => {
+      if (!order) {
+        setProfitSharing(null);
+        return;
+      }
+
+      const discountAmount = order.discount
+        ? order.discount.type === 'percentage'
+          ? (order.subtotal * order.discount.value) / 100
+          : order.discount.value
+        : 0;
+
+      const result = await calculateTotalProfitShare(
+        order.items,
+        order.shippingCost,
+        order.paymentFees,
+        discountAmount,
+        order.appliedOffer || null,
+        order.isFreeShipping
+      );
+      setProfitSharing(result);
+    };
+
+    calculateProfit();
+  }, [order]);
+
   if (!order) return null;
 
   const discountAmount = order.discount
@@ -16,15 +45,6 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onC
       ? (order.subtotal * order.discount.value) / 100
       : order.discount.value
     : 0;
-
-  const profitSharing = calculateTotalProfitShare(
-    order.items,
-    order.shippingCost,
-    order.paymentFees,
-    discountAmount,
-    order.appliedOffer || null,
-    order.isFreeShipping
-  );
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -142,7 +162,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onC
                 </h3>
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="font-medium">
-                    {order.discount.type === 'percentage' 
+                    {order.discount.type === 'percentage'
                       ? `${order.discount.value}% Off`
                       : `${order.discount.value} SAR Off`
                     }
@@ -194,7 +214,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onC
                     <span className="float-right font-medium">{order.paymentFees.toFixed(2)} SAR</span>
                   </div>
                 </div>
-                
+
                 <div className="border-t border-gray-200 pt-4 grid grid-cols-2 gap-4">
                   <div className="text-lg">
                     <span className="font-medium">Total:</span>
@@ -207,23 +227,29 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onC
                 </div>
 
                 {/* Profit Sharing */}
-                <div className="border-t border-gray-200 pt-4 mt-4">
-                  <div className="text-sm font-medium text-gray-700 mb-2">Profit Sharing</div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <span className="text-indigo-600">Yassir's Share:</span>
-                      <span className="float-right font-medium">
-                        {profitSharing.totalYassirShare.toFixed(2)} SAR
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-purple-600">Basim's Share:</span>
-                      <span className="float-right font-medium">
-                        {profitSharing.totalBasimShare.toFixed(2)} SAR
-                      </span>
+                {profitSharing ? (
+                  <div className="border-t border-gray-200 pt-4 mt-4">
+                    <div className="text-sm font-medium text-gray-700 mb-2">Profit Sharing</div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <span className="text-indigo-600">Yassir's Share:</span>
+                        <span className="float-right font-medium">
+                          {profitSharing.totalYassirShare.toFixed(2)} SAR
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-purple-600">Basim's Share:</span>
+                        <span className="float-right font-medium">
+                          {profitSharing.totalBasimShare.toFixed(2)} SAR
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="border-t border-gray-200 pt-4 mt-4 text-sm text-gray-500">
+                    Calculating profit shares...
+                  </div>
+                )}
               </div>
             </div>
           </div>

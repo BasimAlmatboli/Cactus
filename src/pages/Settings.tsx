@@ -2,6 +2,7 @@ import React from 'react';
 import { GeneralSettings } from '../components/settings/GeneralSettings';
 import { ProductSettings } from '../components/settings/ProductSettings';
 import { ShippingSettings } from '../components/settings/ShippingSettings';
+import { ProfitShareSettings } from '../components/settings/ProfitShareSettings';
 
 export const Settings = () => {
   return (
@@ -10,6 +11,7 @@ export const Settings = () => {
         <h1 className="text-2xl font-bold mb-8">Settings</h1>
         <div className="space-y-8">
           <GeneralSettings />
+          <ProfitShareSettings />
           <ProductSettings />
           <ShippingSettings />
         </div>

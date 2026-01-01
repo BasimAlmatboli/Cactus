@@ -64,83 +64,87 @@ export const useOrder = (initialOrder?: Order | null) => {
   };
 
   useEffect(() => {
-    if (orderItems.length && shippingMethod && paymentMethod) {
-      const subtotal = orderItems.reduce(
-        (sum, item) => sum + (item.product.sellingPrice * item.quantity),
-        0
-      );
+    const calculateOrder = async () => {
+      if (orderItems.length && shippingMethod && paymentMethod) {
+        const subtotal = orderItems.reduce(
+          (sum, item) => sum + (item.product.sellingPrice * item.quantity),
+          0
+        );
 
-      const totalCost = orderItems.reduce(
-        (sum, item) => sum + item.product.cost * item.quantity,
-        0
-      );
+        const totalCost = orderItems.reduce(
+          (sum, item) => sum + item.product.cost * item.quantity,
+          0
+        );
 
-      // Calculate manual discount
-      const discountAmount = discount
-        ? discount.type === 'percentage'
-          ? (subtotal * discount.value) / 100
-          : discount.value
-        : 0;
+        // Calculate manual discount
+        const discountAmount = discount
+          ? discount.type === 'percentage'
+            ? (subtotal * discount.value) / 100
+            : discount.value
+          : 0;
 
-      // Calculate offer discount
-      const offerDiscountAmount = appliedOffer ? appliedOffer.discountAmount : 0;
+        // Calculate offer discount
+        const offerDiscountAmount = appliedOffer ? appliedOffer.discountAmount : 0;
 
-      // Total discount is both manual discount and offer discount
-      const totalDiscountAmount = discountAmount + offerDiscountAmount;
+        // Total discount is both manual discount and offer discount
+        const totalDiscountAmount = discountAmount + offerDiscountAmount;
 
-      // Calculate total for free shipping check
-      const totalForFreeShipping = subtotal - totalDiscountAmount;
+        // Calculate total for free shipping check
+        const totalForFreeShipping = subtotal - totalDiscountAmount;
 
-      // Auto-toggle free shipping based on total
-      if (totalForFreeShipping >= freeShippingThreshold && !isFreeShipping) {
-        setIsFreeShipping(true);
-      } else if (totalForFreeShipping < freeShippingThreshold && isFreeShipping) {
-        setIsFreeShipping(false);
+        // Auto-toggle free shipping based on total
+        if (totalForFreeShipping >= freeShippingThreshold && !isFreeShipping) {
+          setIsFreeShipping(true);
+        } else if (totalForFreeShipping < freeShippingThreshold && isFreeShipping) {
+          setIsFreeShipping(false);
+        }
+
+        // Calculate the actual shipping cost based on free shipping status
+        const actualShippingCost = isFreeShipping ? 0 : shippingMethod.cost;
+
+        // Calculate the total amount to be paid by the customer (without payment fees)
+        const customerTotal = subtotal + actualShippingCost - totalDiscountAmount;
+
+        // Calculate payment fees based on the customer total
+        const paymentFees = calculatePaymentFees(paymentMethod.id, customerTotal);
+
+        // Calculate profit sharing to get net profit (now async)
+        const profitShare = await calculateTotalProfitShare(
+          orderItems,
+          shippingMethod.cost,
+          paymentFees,
+          discountAmount,
+          appliedOffer,
+          isFreeShipping
+        );
+
+        // Net profit is the sum of both shares
+        const netProfit = profitShare.totalYassirShare + profitShare.totalBasimShare;
+
+        setOrder({
+          id: currentOrderId || generateUUID(),
+          orderNumber,
+          customerName: customerName || undefined,
+          date: initialOrder?.date || new Date().toISOString(),
+          items: orderItems,
+          shippingMethod,
+          paymentMethod,
+          subtotal,
+          shippingCost: shippingMethod.cost,
+          paymentFees,
+          discount,
+          appliedOffer,
+          total: customerTotal,
+          netProfit,
+          isFreeShipping,
+        });
+      } else {
+        setOrder(null);
       }
+    };
 
-      // Calculate the actual shipping cost based on free shipping status
-      const actualShippingCost = isFreeShipping ? 0 : shippingMethod.cost;
-
-      // Calculate the total amount to be paid by the customer (without payment fees)
-      const customerTotal = subtotal + actualShippingCost - totalDiscountAmount;
-
-      // Calculate payment fees based on the customer total
-      const paymentFees = calculatePaymentFees(paymentMethod.id, customerTotal);
-
-      // Calculate profit sharing to get net profit
-      const profitShare = calculateTotalProfitShare(
-        orderItems,
-        shippingMethod.cost,
-        paymentFees,
-        discountAmount,
-        appliedOffer,
-        isFreeShipping
-      );
-
-      // Net profit is the sum of both shares
-      const netProfit = profitShare.totalYassirShare + profitShare.totalBasimShare;
-
-      setOrder({
-        id: currentOrderId || generateUUID(),
-        orderNumber,
-        customerName: customerName || undefined,
-        date: initialOrder?.date || new Date().toISOString(),
-        items: orderItems,
-        shippingMethod,
-        paymentMethod,
-        subtotal,
-        shippingCost: shippingMethod.cost,
-        paymentFees,
-        discount,
-        appliedOffer,
-        total: customerTotal,
-        netProfit,
-        isFreeShipping,
-      });
-    } else {
-      setOrder(null);
-    }
-  }, [orderItems, shippingMethod, paymentMethod, isFreeShipping, discount, appliedOffer, orderNumber, customerName, currentOrderId, initialOrder]);
+    calculateOrder();
+  }, [orderItems, shippingMethod, paymentMethod, isFreeShipping, discount, appliedOffer, orderNumber, customerName, currentOrderId, initialOrder, freeShippingThreshold]);
 
   return {
     orderNumber,

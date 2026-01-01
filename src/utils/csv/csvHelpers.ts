@@ -78,27 +78,30 @@ export const importOrdersFromCSV = async (file: File): Promise<void> => {
       }
 
       const total = customerTotal;
-      
+
       // Calculate total cost from items
-      const totalCost = items.reduce((sum, item) => 
-        sum + (item.product.cost * item.quantity), 
+      const totalCost = items.reduce((sum, item) =>
+        sum + (item.product.cost * item.quantity),
         0
       );
 
       const netProfit = total - totalCost - shippingCost - paymentFees;
 
+      // Format order for database (jsonb columns handle objects directly)
       const order = {
         id: generateUUID(),
         order_number: getValue(0),
         customer_name: getValue(1) || null,
-        items,
+        date: new Date().toISOString(),
+        items: items, // jsonb handles arrays/objects
         shipping_method: shippingMethod,
         payment_method: paymentMethod,
         subtotal,
         shipping_cost: shippingCost,
         payment_fees: paymentFees,
         is_free_shipping: isFreeShipping,
-        discount,
+        discount: discount,
+        applied_offer: null,
         total,
         net_profit: netProfit
       };
@@ -108,9 +111,10 @@ export const importOrdersFromCSV = async (file: File): Promise<void> => {
         .insert(order);
 
       if (error) {
+        console.error('Database error:', error);
         throw new Error(`Failed to import order ${order.order_number}: ${error.message}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error processing row:', error);
       throw new Error(`Failed to process row: ${error.message}`);
     }

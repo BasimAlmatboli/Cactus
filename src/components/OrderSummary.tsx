@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Order } from '../types';
 import { calculateTotalProfitShare } from '../utils/profitSharing';
 import { EarningsReport } from './EarningsReport';
@@ -9,14 +9,38 @@ interface OrderSummaryProps {
 }
 
 export const OrderSummary: React.FC<OrderSummaryProps> = ({ order }) => {
+  const [profitSharing, setProfitSharing] = useState<any>(null);
+
+  useEffect(() => {
+    const calculateProfit = async () => {
+      const discountAmount = order.discount
+        ? order.discount.type === 'percentage'
+          ? (order.subtotal * order.discount.value) / 100
+          : order.discount.value
+        : 0;
+
+      const result = await calculateTotalProfitShare(
+        order.items,
+        order.shippingCost,
+        order.paymentFees,
+        discountAmount,
+        order.appliedOffer || null,
+        order.isFreeShipping
+      );
+      setProfitSharing(result);
+    };
+
+    calculateProfit();
+  }, [order]);
+
   const formatDiscount = () => {
     if (!order.discount) return null;
-    
-    const value = order.discount.type === 'percentage' 
+
+    const value = order.discount.type === 'percentage'
       ? `${order.discount.value}%`
       : `${order.discount.value} SAR`;
-      
-    return order.discount.code 
+
+    return order.discount.code
       ? `${value} (${order.discount.code})`
       : value;
   };
@@ -33,20 +57,14 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({ order }) => {
   // Calculate the total amount before fees (base for payment fee calculation)
   const actualShippingCost = order.isFreeShipping ? 0 : order.shippingCost;
   const totalBeforeFees = order.subtotal + actualShippingCost - totalDiscountAmount;
-  
+
   // Get the payment fee percentage for the selected payment method
   const feePercentage = getPaymentFeePercentage(order.paymentMethod.id);
-  
-  // Calculate detailed profit sharing
-  // Pass manual discount and applied offer separately
-  const profitSharing = calculateTotalProfitShare(
-    order.items,
-    order.shippingCost,
-    order.paymentFees,
-    discountAmount,
-    order.appliedOffer || null,
-    order.isFreeShipping
-  );
+
+  // Show loading while calculating profit
+  if (!profitSharing) {
+    return <div className="text-center py-4">Calculating profit...</div>;
+  }
 
   return (
     <div className="space-y-4">
@@ -60,15 +78,15 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({ order }) => {
             </div>
           ))}
         </div>
-        
+
         <hr />
-        
+
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span>Subtotal</span>
             <span>{order.subtotal.toFixed(2)} SAR</span>
           </div>
-          
+
           {order.discount && (
             <div className="flex justify-between text-green-600">
               <span>Discount {formatDiscount()}</span>
@@ -99,9 +117,9 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({ order }) => {
             </div>
           </div>
         </div>
-        
+
         <hr />
-        
+
         <div className="flex justify-between font-semibold">
           <span>Total</span>
           <span>{order.total.toFixed(2)} SAR</span>
@@ -118,12 +136,12 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({ order }) => {
                 (Subtotal + Shipping - Discount)
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-2">
               <div className="text-blue-600">Fee Percentage:</div>
               <div className="text-right font-medium">{feePercentage}%</div>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-2 pt-1 border-t border-blue-100">
               <div className="text-blue-600">Payment Fee:</div>
               <div className="text-right font-medium">{order.paymentFees.toFixed(2)} SAR</div>
@@ -134,7 +152,7 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({ order }) => {
         {/* Detailed Profit Sharing Breakdown */}
         <div className="mt-6 space-y-4">
           <h3 className="font-medium text-gray-700">Profit Sharing Breakdown</h3>
-          
+
           {/* Per Product Breakdown */}
           <div className="space-y-4">
             {profitSharing.itemShares.map((share, index) => {
@@ -144,7 +162,7 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({ order }) => {
                   <div className="font-medium text-gray-800">
                     {item.product.name} x{item.quantity}
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>
                       <div className="text-gray-600">Total</div>
@@ -163,7 +181,7 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({ order }) => {
                       <div className="font-medium text-green-600">{share.netProfit.toFixed(2)} SAR</div>
                     </div>
                   </div>
-                  
+
                   <div className="mt-2 pt-2 border-t border-gray-200">
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div>
@@ -180,7 +198,7 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({ order }) => {
               );
             })}
           </div>
-          
+
           {/* Total Shares */}
           <div className="bg-indigo-50 rounded-md p-3">
             <div className="font-medium text-indigo-800 mb-2">Total Shares</div>
@@ -202,7 +220,7 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({ order }) => {
         </div>
 
         {/* Earnings Report */}
-        <EarningsReport 
+        <EarningsReport
           items={order.items}
           totalYassirShare={profitSharing.totalYassirShare}
           totalBasimShare={profitSharing.totalBasimShare}
