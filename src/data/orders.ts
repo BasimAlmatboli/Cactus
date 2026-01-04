@@ -18,6 +18,7 @@ export const getOrders = async (): Promise<Order[]> => {
 export const saveOrder = async (order: Order): Promise<void> => {
   const supabaseOrder = transformOrderForSupabase(order);
 
+  // @ts-ignore - Supabase types need regeneration after schema changes
   const { error } = await supabase
     .from('orders')
     .upsert(supabaseOrder);
@@ -68,7 +69,6 @@ const transformSupabaseOrder = (supabaseOrder: any): Order => ({
   shippingCost: supabaseOrder.shipping_cost,
   paymentFees: supabaseOrder.payment_fees,
   discount: supabaseOrder.discount || null,
-  appliedOffer: supabaseOrder.applied_offer || null,
   total: supabaseOrder.total,
   netProfit: supabaseOrder.net_profit,
   isFreeShipping: supabaseOrder.is_free_shipping,
@@ -86,7 +86,6 @@ const transformOrderForSupabase = (order: Order) => ({
   shipping_cost: order.shippingCost,
   payment_fees: order.paymentFees,
   discount: order.discount || null,
-  applied_offer: order.appliedOffer || null,
   total: order.total,
   net_profit: order.netProfit,
   is_free_shipping: order.isFreeShipping,

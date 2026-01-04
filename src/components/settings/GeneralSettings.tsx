@@ -117,10 +117,9 @@ export const GeneralSettings = () => {
     if (isLoading) {
         return (
             <div className="space-y-4">
-                <h2 className="text-xl font-semibold">General Settings</h2>
                 <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-                    <span className="ml-2 text-gray-600">Loading settings...</span>
+                    <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
+                    <span className="ml-2 text-gray-300">Loading settings...</span>
                 </div>
             </div>
         );
@@ -129,12 +128,11 @@ export const GeneralSettings = () => {
     if (error) {
         return (
             <div className="space-y-4">
-                <h2 className="text-xl font-semibold">General Settings</h2>
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+                <div className="bg-red-900/30 border border-red-700 rounded-lg p-4 text-red-300">
                     {error}
                     <button
                         onClick={loadSettings}
-                        className="ml-4 text-red-800 underline hover:no-underline"
+                        className="ml-4 text-red-200 underline hover:no-underline"
                     >
                         Retry
                     </button>
@@ -154,24 +152,19 @@ export const GeneralSettings = () => {
     }, {} as Record<string, Setting[]>);
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center space-x-2">
-                <SettingsIcon className="h-6 w-6 text-gray-700" />
-                <h2 className="text-xl font-semibold">General Settings</h2>
-            </div>
-
+        <div className="space-y-4">
             {Object.entries(groupedSettings).map(([category, categorySettings]) => (
-                <div key={category} className="bg-white rounded-lg shadow p-6">
-                    <h3 className="text-lg font-semibold mb-4 capitalize">
+                <div key={category} className="bg-gray-900/50 rounded-lg p-4 border border-gray-700">
+                    <h3 className="text-base font-semibold mb-4 capitalize text-gray-200">
                         {category} Settings
                     </h3>
 
                     <div className="space-y-4">
                         {categorySettings.map((setting) => (
-                            <div key={setting.id} className="border-b border-gray-200 pb-4 last:border-0">
+                            <div key={setting.id} className="border-b border-gray-700 pb-4 last:border-0">
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1">
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">
                                             {formatLabel(setting.setting_key)}
                                         </label>
                                         {setting.description && (
@@ -186,7 +179,7 @@ export const GeneralSettings = () => {
                                                     type="checkbox"
                                                     checked={editedValues[setting.setting_key] === 'true'}
                                                     onChange={(e) => handleValueChange(setting.setting_key, e.target.checked ? 'true' : 'false')}
-                                                    className="rounded text-blue-500 focus:ring-blue-500"
+                                                    className="rounded text-blue-500 focus:ring-blue-500 bg-gray-700 border-gray-600"
                                                     disabled={isSaving}
                                                 />
                                             ) : (
@@ -194,22 +187,22 @@ export const GeneralSettings = () => {
                                                     type={getInputType(setting.setting_type)}
                                                     value={editedValues[setting.setting_key] || ''}
                                                     onChange={(e) => handleValueChange(setting.setting_key, e.target.value)}
-                                                    className="w-64 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                                    className="w-64 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                                     step={setting.setting_type === 'number' ? '0.01' : undefined}
                                                     disabled={isSaving}
                                                 />
                                             )}
 
                                             {setting.setting_key === 'free_shipping_threshold' && (
-                                                <span className="text-sm text-gray-600">SAR</span>
+                                                <span className="text-sm text-gray-400">SAR</span>
                                             )}
 
                                             <button
                                                 onClick={() => handleSave(setting.setting_key)}
                                                 disabled={isSaving || editedValues[setting.setting_key] === setting.setting_value}
                                                 className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${editedValues[setting.setting_key] === setting.setting_value
-                                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                                                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                                                    : 'bg-blue-600 text-white hover:bg-blue-700'
                                                     }`}
                                             >
                                                 {isSaving ? (

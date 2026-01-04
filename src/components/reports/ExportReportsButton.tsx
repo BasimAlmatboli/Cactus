@@ -32,9 +32,10 @@ export const ExportReportsButton: React.FC<ExportReportsButtonProps> = ({
     <button
       onClick={handleExport}
       disabled={isExporting}
-      className={`flex items-center space-x-2 px-4 py-2 ${
-        isExporting ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'
-      } text-white rounded-lg transition-colors`}
+      className={`flex items-center space-x-2 px-6 py-2.5 rounded-xl transition-all shadow-lg font-medium ${isExporting
+        ? 'bg-blue-600/50 text-blue-200 cursor-not-allowed shadow-none'
+        : 'bg-blue-600 text-white hover:bg-blue-500 hover:shadow-blue-600/20 hover:-translate-y-0.5'
+        }`}
     >
       {isExporting ? (
         <>

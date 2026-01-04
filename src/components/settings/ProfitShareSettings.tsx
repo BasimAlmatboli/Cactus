@@ -120,7 +120,7 @@ export const ProfitShareSettings: React.FC = () => {
                 share_percentage: shares[partner.id] || 0
             }));
 
-            // Call RPC function to update shares
+            // @ts-ignore - Supabase types need regeneration for custom RPC functions
             const { error: rpcError } = await supabase.rpc('update_product_profit_shares', {
                 p_product_id: productId,
                 p_shares: sharesArray
@@ -160,49 +160,49 @@ export const ProfitShareSettings: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center gap-2 mb-4">
-                    <Users className="h-6 w-6 text-blue-600" />
-                    <h2 className="text-xl font-semibold">Profit Share Settings</h2>
+            <div className="bg-[#1C1F26] rounded-xl border border-gray-800 p-6">
+                <div className="flex items-center gap-3 mb-6 border-b border-gray-800 pb-4">
+                    <div className="p-2 bg-blue-500/10 rounded-lg">
+                        <Users className="h-6 w-6 text-blue-400" />
+                    </div>
+                    <h2 className="text-xl font-semibold text-white">Profit Share Settings</h2>
                 </div>
-                <p className="text-gray-500">Loading profit shares...</p>
+                <div className="flex items-center gap-3 text-gray-400">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-400 border-t-blue-500"></div>
+                    <p>Loading profit shares...</p>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center gap-2 mb-6">
-                <Users className="h-6 w-6 text-blue-600" />
-                <h2 className="text-xl font-semibold">Profit Share Settings</h2>
-            </div>
-
+        <div>
             {error && (
-                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-                    <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-                    <p className="text-red-800">{error}</p>
+                <div className="mb-4 p-4 bg-red-900/30 border border-red-700 rounded-lg flex items-start gap-2">
+                    <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-red-300">{error}</p>
                 </div>
             )}
 
             {successMessage && (
-                <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-2">
-                    <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                    <p className="text-green-800">{successMessage}</p>
+                <div className="mb-4 p-4 bg-green-900/30 border border-green-700 rounded-lg flex items-start gap-2">
+                    <CheckCircle className="h-5 w-5 text-green-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-green-300">{successMessage}</p>
                 </div>
             )}
 
-            <div className="space-y-6">
+            <div className="space-y-4">
                 {products.map(product => {
                     const total = calculateTotal(product.id);
                     const valid = isValid(product.id);
                     const changed = hasChanges(product.id);
 
                     return (
-                        <div key={product.id} className="border border-gray-200 rounded-lg p-4">
+                        <div key={product.id} className="border border-gray-700 rounded-lg p-4 bg-gray-900/50">
                             <div className="flex justify-between items-start mb-4">
                                 <div>
-                                    <h3 className="font-medium text-lg">{product.name}</h3>
-                                    <div className={`text-sm mt-1 ${valid ? 'text-green-600' : 'text-red-600'}`}>
+                                    <h3 className="font-medium text-base text-gray-200">{product.name}</h3>
+                                    <div className={`text-sm mt-1 ${valid ? 'text-green-400' : 'text-red-400'}`}>
                                         Total: {total.toFixed(1)}% {valid ? '✓' : '⚠ Must equal 100%'}
                                     </div>
                                 </div>
@@ -211,7 +211,7 @@ export const ProfitShareSettings: React.FC = () => {
                                         <button
                                             onClick={() => handleReset(product.id)}
                                             disabled={saving === product.id}
-                                            className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 disabled:opacity-50"
+                                            className="px-3 py-1 text-sm text-gray-400 hover:text-gray-200 disabled:opacity-50"
                                         >
                                             Reset
                                         </button>
@@ -221,7 +221,7 @@ export const ProfitShareSettings: React.FC = () => {
                                         disabled={!valid || !changed || saving === product.id}
                                         className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors ${valid && changed
                                             ? 'bg-blue-600 text-white hover:bg-blue-700'
-                                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                            : 'bg-gray-700 text-gray-500 cursor-not-allowed'
                                             }`}
                                     >
                                         <Save className="h-4 w-4" />
@@ -233,7 +233,7 @@ export const ProfitShareSettings: React.FC = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {partners.map(partner => (
                                     <div key={partner.id} className="flex items-center gap-3">
-                                        <label className="flex-1 text-sm font-medium text-gray-700">
+                                        <label className="flex-1 text-sm font-medium text-gray-300">
                                             {partner.display_name}
                                         </label>
                                         <div className="flex items-center gap-2">
@@ -245,9 +245,9 @@ export const ProfitShareSettings: React.FC = () => {
                                                 value={editedShares[product.id]?.[partner.id] || 0}
                                                 onChange={(e) => handleShareChange(product.id, partner.id, e.target.value)}
                                                 disabled={saving === product.id}
-                                                className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+                                                className="w-24 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-800"
                                             />
-                                            <span className="text-gray-600">%</span>
+                                            <span className="text-gray-400">%</span>
                                         </div>
                                     </div>
                                 ))}
@@ -257,9 +257,9 @@ export const ProfitShareSettings: React.FC = () => {
                 })}
             </div>
 
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                <h4 className="font-medium text-blue-900 mb-2">💡 Tips:</h4>
-                <ul className="text-sm text-blue-800 space-y-1">
+            <div className="mt-6 p-4 bg-blue-900/30 border border-blue-700 rounded-lg">
+                <h4 className="font-medium text-blue-300 mb-2">💡 Tips:</h4>
+                <ul className="text-sm text-blue-200 space-y-1">
                     <li>• Profit shares must sum to exactly 100% for each product</li>
                     <li>• Changes are saved per product individually</li>
                     <li>• Cache is automatically cleared after saving</li>

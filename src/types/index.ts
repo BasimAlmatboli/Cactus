@@ -30,32 +30,17 @@ export interface Discount {
   code?: string;
 }
 
-export interface Offer {
+export interface QuickDiscount {
   id: string;
   name: string;
-  description?: string;
-  triggerProductId: string;
-  triggerProductName: string;
-  targetProductId: string;
-  targetProductName: string;
-  discountType: 'percentage' | 'fixed';
-  discountValue: number;
+  type: 'percentage' | 'fixed';
+  value: number;
+  displayOrder: number;
   isActive: boolean;
-  startDate?: string;
-  endDate?: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface AppliedOffer {
-  offerId: string;
-  offerName: string;
-  triggerProductId: string;
-  targetProductId: string;
-  discountType: 'percentage' | 'fixed';
-  discountValue: number;
-  discountAmount: number;
-}
 
 export interface Order {
   id: string;
@@ -69,7 +54,6 @@ export interface Order {
   shippingCost: number;
   paymentFees: number;
   discount: Discount | null;
-  appliedOffer?: AppliedOffer | null;
   total: number;
   netProfit: number;
   isFreeShipping: boolean;

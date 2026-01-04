@@ -15,7 +15,7 @@ export const FinancialReport: React.FC<FinancialReportProps> = ({ orders }) => {
     );
     return sum + productCosts + order.shippingCost + order.paymentFees;
   }, 0) || 0;
-  
+
   const totalDiscounts = orders?.reduce((sum, order) => {
     if (!order.discount) return sum;
     const discountAmount = order.discount.type === 'percentage'
@@ -28,10 +28,12 @@ export const FinancialReport: React.FC<FinancialReportProps> = ({ orders }) => {
 
   if (!orders?.length) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex items-center gap-2 mb-6">
-          <DollarSign className="h-6 w-6 text-blue-600" />
-          <h2 className="text-xl font-semibold">Financial Report</h2>
+      <div className="bg-[#1C1F26] rounded-xl border border-gray-800 p-6">
+        <div className="flex items-center gap-3 mb-6 border-b border-gray-800 pb-4">
+          <div className="p-2 bg-blue-500/10 rounded-lg">
+            <DollarSign className="h-6 w-6 text-blue-400" />
+          </div>
+          <h2 className="text-xl font-semibold text-white">Financial Report</h2>
         </div>
         <p className="text-gray-500">No orders found to generate financial report.</p>
       </div>
@@ -39,34 +41,36 @@ export const FinancialReport: React.FC<FinancialReportProps> = ({ orders }) => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <div className="flex items-center gap-2 mb-6">
-        <DollarSign className="h-6 w-6 text-blue-600" />
-        <h2 className="text-xl font-semibold">Financial Report</h2>
+    <div className="bg-[#1C1F26] rounded-xl border border-gray-800 p-6">
+      <div className="flex items-center gap-3 mb-6 border-b border-gray-800 pb-4">
+        <div className="p-2 bg-blue-500/10 rounded-lg">
+          <DollarSign className="h-6 w-6 text-blue-400" />
+        </div>
+        <h2 className="text-xl font-semibold text-white">Financial Report</h2>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4">
-          <div className="bg-green-50 rounded-lg p-4">
-            <h3 className="text-sm font-medium text-green-600 mb-1">Total Revenue</h3>
-            <p className="text-2xl font-bold text-green-700">{totalRevenue.toFixed(2)} SAR</p>
+          <div className="bg-[#13151A] rounded-xl p-5 border border-green-500/20 group hover:border-green-500/40 transition-colors">
+            <h3 className="text-sm font-medium text-green-400 mb-2 uppercase tracking-wider">Total Revenue</h3>
+            <p className="text-3xl font-bold text-white">{totalRevenue.toFixed(2)} <span className="text-lg text-gray-500 font-medium">SAR</span></p>
           </div>
 
-          <div className="bg-red-50 rounded-lg p-4">
-            <h3 className="text-sm font-medium text-red-600 mb-1">Total Costs</h3>
-            <p className="text-2xl font-bold text-red-700">{totalCosts.toFixed(2)} SAR</p>
+          <div className="bg-[#13151A] rounded-xl p-5 border border-red-500/20 group hover:border-red-500/40 transition-colors">
+            <h3 className="text-sm font-medium text-red-400 mb-2 uppercase tracking-wider">Total Costs</h3>
+            <p className="text-3xl font-bold text-white">{totalCosts.toFixed(2)} <span className="text-lg text-gray-500 font-medium">SAR</span></p>
           </div>
         </div>
 
         <div className="space-y-4">
-          <div className="bg-orange-50 rounded-lg p-4">
-            <h3 className="text-sm font-medium text-orange-600 mb-1">Total Discounts</h3>
-            <p className="text-2xl font-bold text-orange-700">{totalDiscounts.toFixed(2)} SAR</p>
+          <div className="bg-[#13151A] rounded-xl p-5 border border-orange-500/20 group hover:border-orange-500/40 transition-colors">
+            <h3 className="text-sm font-medium text-orange-400 mb-2 uppercase tracking-wider">Total Discounts</h3>
+            <p className="text-3xl font-bold text-white">{totalDiscounts.toFixed(2)} <span className="text-lg text-gray-500 font-medium">SAR</span></p>
           </div>
 
-          <div className="bg-blue-50 rounded-lg p-4">
-            <h3 className="text-sm font-medium text-blue-600 mb-1">Net Profit</h3>
-            <p className="text-2xl font-bold text-blue-700">{totalProfit.toFixed(2)} SAR</p>
+          <div className="bg-[#13151A] rounded-xl p-5 border border-blue-500/20 group hover:border-blue-500/40 transition-colors">
+            <h3 className="text-sm font-medium text-blue-400 mb-2 uppercase tracking-wider">Net Profit</h3>
+            <p className="text-3xl font-bold text-white">{totalProfit.toFixed(2)} <span className="text-lg text-gray-500 font-medium">SAR</span></p>
           </div>
         </div>
       </div>

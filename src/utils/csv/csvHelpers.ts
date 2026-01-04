@@ -14,8 +14,7 @@ export const exportOrdersToCSV = (orders: Order[]): string => {
 export const importOrdersFromCSV = async (file: File): Promise<void> => {
   const text = await file.text();
   const lines = text.split('\n');
-  const headers = lines[0].split(',');
-  const rows = lines.slice(1);
+  const rows = lines.slice(1); // Skip header row
 
   for (const row of rows) {
     if (!row.trim()) continue;
@@ -101,11 +100,11 @@ export const importOrdersFromCSV = async (file: File): Promise<void> => {
         payment_fees: paymentFees,
         is_free_shipping: isFreeShipping,
         discount: discount,
-        applied_offer: null,
         total,
         net_profit: netProfit
       };
 
+      // @ts-ignore - Supabase types need regeneration after schema changes
       const { error } = await supabase
         .from('orders')
         .insert(order);

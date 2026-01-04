@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Order, OrderItem, ShippingMethod, PaymentMethod, Discount, AppliedOffer } from '../types';
+import { Order, OrderItem, ShippingMethod, PaymentMethod, Discount } from '../types';
 import { calculatePaymentFees } from '../utils/calculateFees';
 import { calculateTotalProfitShare } from '../utils/profitSharing';
 import { generateUUID } from '../utils/uuid';
@@ -19,7 +19,6 @@ export const useOrder = (initialOrder?: Order | null) => {
   );
   const [isFreeShipping, setIsFreeShipping] = useState(initialOrder?.isFreeShipping || false);
   const [discount, setDiscount] = useState<Discount | null>(initialOrder?.discount || null);
-  const [appliedOffer, setAppliedOffer] = useState<AppliedOffer | null>(initialOrder?.appliedOffer || null);
   const [order, setOrder] = useState<Order | null>(initialOrder || null);
   const [currentOrderId, setCurrentOrderId] = useState<string | null>(initialOrder?.id || null);
 
@@ -36,7 +35,6 @@ export const useOrder = (initialOrder?: Order | null) => {
     setPaymentMethod(order.paymentMethod);
     setIsFreeShipping(order.isFreeShipping);
     setDiscount(order.discount);
-    setAppliedOffer(order.appliedOffer || null);
   };
 
   // Function to update shipping cost
@@ -59,7 +57,6 @@ export const useOrder = (initialOrder?: Order | null) => {
     setPaymentMethod(null);
     setIsFreeShipping(false);
     setDiscount(null);
-    setAppliedOffer(null);
     setOrder(null);
   };
 
@@ -83,14 +80,8 @@ export const useOrder = (initialOrder?: Order | null) => {
             : discount.value
           : 0;
 
-        // Calculate offer discount
-        const offerDiscountAmount = appliedOffer ? appliedOffer.discountAmount : 0;
-
-        // Total discount is both manual discount and offer discount
-        const totalDiscountAmount = discountAmount + offerDiscountAmount;
-
         // Calculate total for free shipping check
-        const totalForFreeShipping = subtotal - totalDiscountAmount;
+        const totalForFreeShipping = subtotal - discountAmount;
 
         // Auto-toggle free shipping based on total
         if (totalForFreeShipping >= freeShippingThreshold && !isFreeShipping) {
@@ -103,7 +94,7 @@ export const useOrder = (initialOrder?: Order | null) => {
         const actualShippingCost = isFreeShipping ? 0 : shippingMethod.cost;
 
         // Calculate the total amount to be paid by the customer (without payment fees)
-        const customerTotal = subtotal + actualShippingCost - totalDiscountAmount;
+        const customerTotal = subtotal + actualShippingCost - discountAmount;
 
         // Calculate payment fees based on the customer total
         const paymentFees = calculatePaymentFees(paymentMethod.id, customerTotal);
@@ -114,7 +105,6 @@ export const useOrder = (initialOrder?: Order | null) => {
           shippingMethod.cost,
           paymentFees,
           discountAmount,
-          appliedOffer,
           isFreeShipping
         );
 
@@ -133,7 +123,6 @@ export const useOrder = (initialOrder?: Order | null) => {
           shippingCost: shippingMethod.cost,
           paymentFees,
           discount,
-          appliedOffer,
           total: customerTotal,
           netProfit,
           isFreeShipping,
@@ -144,7 +133,7 @@ export const useOrder = (initialOrder?: Order | null) => {
     };
 
     calculateOrder();
-  }, [orderItems, shippingMethod, paymentMethod, isFreeShipping, discount, appliedOffer, orderNumber, customerName, currentOrderId, initialOrder, freeShippingThreshold]);
+  }, [orderItems, shippingMethod, paymentMethod, isFreeShipping, discount, orderNumber, customerName, currentOrderId, initialOrder, freeShippingThreshold]);
 
   return {
     orderNumber,
@@ -161,8 +150,6 @@ export const useOrder = (initialOrder?: Order | null) => {
     setIsFreeShipping,
     discount,
     setDiscount,
-    appliedOffer,
-    setAppliedOffer,
     order,
     setInitialOrder,
     updateShippingCost,

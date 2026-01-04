@@ -1,4 +1,4 @@
-import { OrderItem, AppliedOffer } from '../../types';
+import { OrderItem } from '../../types';
 import { ProfitShare, ItemProfitDetails, TotalProfitShare } from './types';
 import { calculateCachedProfitShare } from '../../services/profitShareService';
 import {
@@ -17,7 +17,6 @@ export const calculateItemProfit = async (
   shippingCost: number,
   paymentFees: number,
   manualDiscountAmount: number,
-  appliedOffer: AppliedOffer | null,
   isFreeShipping: boolean
 ): Promise<ItemProfitDetails> => {
   const itemSubtotal = item.product.sellingPrice * item.quantity;
@@ -30,15 +29,8 @@ export const calculateItemProfit = async (
   // Calculate cost
   const cost = calculateItemCost(item.product.cost, item.quantity);
 
-  // Calculate expense share (always include shipping cost in expenses even if free)
-  // Separate shared expenses (distributed proportionally) from offer-specific discounts
-  const sharedExpenses = shippingCost + paymentFees + manualDiscountAmount;
-  let expenseShare = calculateItemExpenseShare(sharedExpenses, revenueProportion);
-
-  // If this item is the target of an applied offer, add the offer discount to its expenses only
-  if (appliedOffer && item.product.id === appliedOffer.targetProductId) {
-    expenseShare += appliedOffer.discountAmount;
-  }
+  // Calculate expense share
+  const expenseShare = calculateItemExpenseShare(shippingCost + paymentFees + manualDiscountAmount, revenueProportion);
 
   // Calculate net profit
   const netProfit = total - cost - expenseShare;
@@ -62,7 +54,6 @@ export const calculateTotalProfitShare = async (
   shippingCost: number,
   paymentFees: number,
   manualDiscountAmount: number,
-  appliedOffer: AppliedOffer | null = null,
   isFreeShipping: boolean = false
 ): Promise<TotalProfitShare> => {
   const totalSubtotal = items.reduce(
@@ -81,7 +72,6 @@ export const calculateTotalProfitShare = async (
         shippingCost,
         paymentFees,
         manualDiscountAmount,
-        appliedOffer,
         isFreeShipping
       )
     )
