@@ -14,8 +14,7 @@ export const exportOrdersToCSV = (orders: Order[]): string => {
 export const importOrdersFromCSV = async (file: File): Promise<void> => {
   const text = await file.text();
   const lines = text.split('\n');
-  const headers = lines[0].split(',');
-  const rows = lines.slice(1);
+  const rows = lines.slice(1); // Skip header row
 
   for (const row of rows) {
     if (!row.trim()) continue;
@@ -78,39 +77,43 @@ export const importOrdersFromCSV = async (file: File): Promise<void> => {
       }
 
       const total = customerTotal;
-      
+
       // Calculate total cost from items
-      const totalCost = items.reduce((sum, item) => 
-        sum + (item.product.cost * item.quantity), 
+      const totalCost = items.reduce((sum, item) =>
+        sum + (item.product.cost * item.quantity),
         0
       );
 
       const netProfit = total - totalCost - shippingCost - paymentFees;
 
+      // Format order for database (jsonb columns handle objects directly)
       const order = {
         id: generateUUID(),
         order_number: getValue(0),
         customer_name: getValue(1) || null,
-        items,
+        date: new Date().toISOString(),
+        items: items, // jsonb handles arrays/objects
         shipping_method: shippingMethod,
         payment_method: paymentMethod,
         subtotal,
         shipping_cost: shippingCost,
         payment_fees: paymentFees,
         is_free_shipping: isFreeShipping,
-        discount,
+        discount: discount,
         total,
         net_profit: netProfit
       };
 
+      // @ts-ignore - Supabase types need regeneration after schema changes
       const { error } = await supabase
         .from('orders')
         .insert(order);
 
       if (error) {
+        console.error('Database error:', error);
         throw new Error(`Failed to import order ${order.order_number}: ${error.message}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error processing row:', error);
       throw new Error(`Failed to process row: ${error.message}`);
     }

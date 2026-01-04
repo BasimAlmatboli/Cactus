@@ -34,35 +34,35 @@ export const ProductList: React.FC<ProductListProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
+    <div className="bg-gray-900/50 rounded-lg shadow overflow-hidden border border-gray-700">
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-gray-700">
+          <thead className="bg-gray-800">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                 Product Name
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                 SKU
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                 Cost (SAR)
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                 Selling Price (SAR)
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                 Owner
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                 Profit Margin
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-gray-900/50 divide-y divide-gray-700">
             {products.map((product) => (
               <tr key={product.id}>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -70,18 +70,18 @@ export const ProductList: React.FC<ProductListProps> = ({
                     type="text"
                     value={product.name}
                     onChange={(e) => onProductChange(product.id, 'name', e.target.value)}
-                    className="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 p-2 border"
+                    className="w-full border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 p-2 border bg-gray-700 text-white"
                     disabled={isSaving}
                   />
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center space-x-2">
-                    <Hash className="h-4 w-4 text-gray-400" />
+                    <Hash className="h-4 w-4 text-gray-500" />
                     <input
                       type="text"
                       value={product.sku}
                       onChange={(e) => handleSKUChange(product.id, e.target.value)}
-                      className="w-32 border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 font-mono text-sm p-2 border"
+                      className="w-32 border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 font-mono text-sm p-2 border bg-gray-700 text-white"
                       placeholder="SKU"
                       disabled={isSaving}
                     />
@@ -92,7 +92,7 @@ export const ProductList: React.FC<ProductListProps> = ({
                     type="number"
                     value={product.cost}
                     onChange={(e) => onProductChange(product.id, 'cost', Number(e.target.value))}
-                    className="w-32 border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 p-2 border"
+                    className="w-32 border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 p-2 border bg-gray-700 text-white"
                     step="0.01"
                     min="0"
                     disabled={isSaving}
@@ -103,7 +103,7 @@ export const ProductList: React.FC<ProductListProps> = ({
                     type="number"
                     value={product.sellingPrice}
                     onChange={(e) => onProductChange(product.id, 'sellingPrice', Number(e.target.value))}
-                    className="w-32 border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 p-2 border"
+                    className="w-32 border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 p-2 border bg-gray-700 text-white"
                     step="0.01"
                     min="0"
                     disabled={isSaving}
@@ -113,22 +113,22 @@ export const ProductList: React.FC<ProductListProps> = ({
                   <select
                     value={product.owner}
                     onChange={(e) => onProductChange(product.id, 'owner', e.target.value)}
-                    className="w-32 border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 p-2 border"
+                    className="w-32 border-gray-600 rounded-md shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 p-2 border bg-gray-700 text-white"
                     disabled={isSaving}
                   >
                     <option value="basim">Basim</option>
                     <option value="yassir">Yassir</option>
                   </select>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/40 text-green-300">
                     {calculateProfitMargin(product.cost, product.sellingPrice)}%
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <button
                     onClick={() => onDeleteProduct(product.id)}
-                    className="text-red-600 hover:text-red-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="text-red-400 hover:text-red-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Delete Product"
                     disabled={isSaving}
                   >

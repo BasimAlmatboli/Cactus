@@ -45,15 +45,16 @@ export const ExpenseImportExport: React.FC<ExpenseImportExportProps> = ({
     <div className="flex gap-4">
       <button
         onClick={handleExport}
-        className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+        className="flex items-center space-x-2 px-6 py-2.5 bg-green-600/90 text-white font-medium rounded-xl hover:bg-green-500 hover:shadow-lg hover:shadow-green-900/20 hover:-translate-y-0.5 transition-all"
       >
         <Download className="h-4 w-4" />
         <span>Export CSV</span>
       </button>
-      
-      <label className={`flex items-center space-x-2 px-4 py-2 ${
-        isImporting ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'
-      } text-white rounded-lg transition-colors cursor-pointer`}>
+
+      <label className={`flex items-center space-x-2 px-6 py-2.5 ${isImporting
+          ? 'bg-blue-600/50 text-blue-200 cursor-not-allowed shadow-none'
+          : 'bg-blue-600 text-white hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-900/20 hover:-translate-y-0.5'
+        } font-medium rounded-xl transition-all cursor-pointer`}>
         {isImporting ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />

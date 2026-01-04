@@ -44,67 +44,75 @@ export const ProductSalesReport: React.FC<ProductSalesReportProps> = ({ orders }
 
   if (!orders?.length) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex items-center gap-2 mb-6">
-          <ShoppingBag className="h-6 w-6 text-blue-600" />
-          <h2 className="text-xl font-semibold">Product Sales Report</h2>
+      <div className="bg-[#1C1F26] rounded-xl border border-gray-800 p-6">
+        <div className="flex items-center gap-3 mb-6 border-b border-gray-800 pb-4">
+          <div className="p-2 bg-blue-500/10 rounded-lg">
+            <ShoppingBag className="h-6 w-6 text-blue-400" />
+          </div>
+          <h2 className="text-xl font-semibold text-white">Product Sales</h2>
         </div>
-        <p className="text-gray-500">No orders found to generate product sales report.</p>
+        <p className="text-gray-500">No orders found.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <div className="flex items-center gap-2 mb-6">
-        <ShoppingBag className="h-6 w-6 text-blue-600" />
-        <h2 className="text-xl font-semibold">Product Sales Report</h2>
+    <div className="bg-[#1C1F26] rounded-xl border border-gray-800 p-6">
+      <div className="flex items-center gap-3 mb-6 border-b border-gray-800 pb-4">
+        <div className="p-2 bg-blue-500/10 rounded-lg">
+          <ShoppingBag className="h-6 w-6 text-blue-400" />
+        </div>
+        <h2 className="text-xl font-semibold text-white">Product Sales</h2>
       </div>
 
       {/* Total Products Sold */}
-      <div className="bg-blue-50 rounded-lg p-4 mb-6">
-        <h3 className="text-sm font-medium text-blue-600 mb-1">Total Products Sold</h3>
-        <p className="text-2xl font-bold text-blue-700">{totalProductsSold} units</p>
+      <div className="bg-[#13151A] rounded-xl p-6 mb-8 border border-gray-800">
+        <h3 className="text-sm font-medium text-blue-400 mb-2 uppercase tracking-wider">Total Products Sold</h3>
+        <p className="text-3xl font-bold text-white">{totalProductsSold} <span className="text-lg text-gray-500 font-medium">units</span></p>
       </div>
 
       {/* Individual Product Sales */}
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-gray-800">
+          <thead className="bg-[#13151A]">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider rounded-tl-lg">
                 Product
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                 Units Sold
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                 Total Revenue
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider rounded-tr-lg">
                 % of Total Sales
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-[#1C1F26] divide-y divide-gray-800">
             {sortedProducts.map((product) => (
-              <tr key={product.id}>
+              <tr key={product.id} className="hover:bg-[#232730] transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
-                    <Package className="h-5 w-5 text-gray-400 mr-2" />
-                    <span className="text-sm font-medium text-gray-900">
+                    <div className="p-2 bg-[#13151A] rounded-lg mr-3 border border-gray-800">
+                      <Package className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <span className="text-sm font-medium text-white">
                       {product.name}
                     </span>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                   {product.count}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-white font-medium">
                   {product.revenue.toFixed(2)} SAR
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {((product.count / totalProductsSold) * 100).toFixed(1)}%
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <span className="bg-blue-500/10 text-blue-400 px-2.5 py-1 rounded-full text-xs font-medium border border-blue-500/20">
+                    {((product.count / totalProductsSold) * 100).toFixed(1)}%
+                  </span>
                 </td>
               </tr>
             ))}

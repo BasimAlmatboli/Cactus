@@ -94,10 +94,10 @@ export const ProductSettings = () => {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Product Settings</h2>
+        <h2 className="text-xl font-semibold text-white">Product Settings</h2>
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-          <span className="ml-2 text-gray-600">Loading products...</span>
+          <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
+          <span className="ml-2 text-gray-300">Loading products...</span>
         </div>
       </div>
     );
@@ -106,12 +106,12 @@ export const ProductSettings = () => {
   if (error) {
     return (
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Product Settings</h2>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+        <h2 className="text-xl font-semibold text-white">Product Settings</h2>
+        <div className="bg-red-900/30 border border-red-700 rounded-lg p-4 text-red-300">
           {error}
           <button
             onClick={loadProducts}
-            className="ml-4 text-red-800 underline hover:no-underline"
+            className="ml-4 text-red-200 underline hover:no-underline"
           >
             Retry
           </button>
@@ -123,7 +123,7 @@ export const ProductSettings = () => {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Product Settings</h2>
+        <h2 className="text-xl font-semibold text-white">Product Settings</h2>
         <div className="flex gap-4">
           <ProductImportExport
             products={products}

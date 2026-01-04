@@ -50,15 +50,15 @@ export const createOrderItems = async (
   productSKUs: string[],
   quantities: number[]
 ): Promise<OrderItem[]> => {
-  const systemProducts = getProducts();
-  
+  const systemProducts = await getProducts(); // Now async
+
   return productIds.map((productId, index) => {
     const productName = productNames[index];
     const productSKU = productSKUs[index];
     const quantity = quantities[index];
 
     const product = findProductInSystem(productId, productName, productSKU, systemProducts);
-    
+
     if (!product) {
       console.warn(`Product not found in system: ${productName} (SKU: ${productSKU}). Creating placeholder.`);
       return {

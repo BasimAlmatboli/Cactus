@@ -102,9 +102,9 @@ export const ShippingSettings = () => {
   if (loading) {
     return (
       <div className="space-y-4 mt-8">
-        <h2 className="text-xl font-semibold">Shipping Settings</h2>
-        <div className="bg-white rounded-lg shadow p-8 text-center">
-          <p className="text-gray-500">Loading shipping methods...</p>
+        <h2 className="text-xl font-semibold text-white">Shipping Settings</h2>
+        <div className="bg-gray-800 rounded-lg shadow p-8 text-center border border-gray-700">
+          <p className="text-gray-400">Loading shipping methods...</p>
         </div>
       </div>
     );
@@ -113,7 +113,7 @@ export const ShippingSettings = () => {
   return (
     <div className="space-y-4 mt-8">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Shipping Settings</h2>
+        <h2 className="text-xl font-semibold text-white">Shipping Settings</h2>
         <button
           onClick={handleSave}
           disabled={saving}
@@ -124,11 +124,11 @@ export const ShippingSettings = () => {
         </button>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 space-y-4">
-        <h3 className="text-lg font-medium">Add New Shipping Method</h3>
+      <div className="bg-gray-900/50 rounded-lg shadow p-6 space-y-4 border border-gray-700">
+        <h3 className="text-lg font-medium text-white">Add New Shipping Method</h3>
         <div className="flex gap-4 items-end">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-300 mb-1">
               Method Name
             </label>
             <input
@@ -136,11 +136,11 @@ export const ShippingSettings = () => {
               value={newMethodName}
               onChange={(e) => setNewMethodName(e.target.value)}
               placeholder="e.g., Express Delivery"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white placeholder-gray-400"
             />
           </div>
           <div className="w-40">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-300 mb-1">
               Cost (SAR)
             </label>
             <input
@@ -150,7 +150,7 @@ export const ShippingSettings = () => {
               placeholder="0"
               min="0"
               step="0.01"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white placeholder-gray-400"
             />
           </div>
           <button
@@ -163,29 +163,29 @@ export const ShippingSettings = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <div className="bg-gray-900/50 rounded-lg shadow overflow-hidden border border-gray-700">
+        <table className="min-w-full divide-y divide-gray-700">
+          <thead className="bg-gray-800">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                 Shipping Method
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                 Cost (SAR)
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-gray-900/50 divide-y divide-gray-700">
             {shippingMethods.map((method) => (
-              <tr key={method.id} className={!method.is_active ? 'bg-gray-50 opacity-60' : ''}>
+              <tr key={method.id} className={!method.is_active ? 'bg-gray-800/50 opacity-60' : ''}>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`text-sm font-medium ${method.is_active ? 'text-gray-900' : 'text-gray-400 line-through'}`}>
+                  <span className={`text-sm font-medium ${method.is_active ? 'text-white' : 'text-gray-500 line-through'}`}>
                     {method.name}
                   </span>
                 </td>
@@ -196,15 +196,14 @@ export const ShippingSettings = () => {
                     onChange={(e) => handleShippingChange(method.id, Number(e.target.value))}
                     min="0"
                     step="0.01"
-                    className="w-32 px-3 py-2 border border-gray-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    className="w-32 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white"
                   />
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    method.is_active
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${method.is_active
+                      ? 'bg-green-900/40 text-green-300'
+                      : 'bg-gray-800 text-gray-400'
+                    }`}>
                     {method.is_active ? 'Active' : 'Inactive'}
                   </span>
                 </td>
@@ -212,11 +211,10 @@ export const ShippingSettings = () => {
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={() => handleToggleStatus(method.id, method.is_active)}
-                      className={`transition-colors ${
-                        method.is_active
-                          ? 'text-gray-600 hover:text-gray-800'
-                          : 'text-green-600 hover:text-green-800'
-                      }`}
+                      className={`transition-colors ${method.is_active
+                          ? 'text-gray-400 hover:text-gray-200'
+                          : 'text-green-400 hover:text-green-300'
+                        }`}
                       title={method.is_active ? 'Deactivate shipping method' : 'Activate shipping method'}
                     >
                       {method.is_active ? (
@@ -227,7 +225,7 @@ export const ShippingSettings = () => {
                     </button>
                     <button
                       onClick={() => handleDeleteMethod(method.id)}
-                      className="text-red-600 hover:text-red-800 transition-colors"
+                      className="text-red-400 hover:text-red-300 transition-colors"
                       title="Permanently delete shipping method"
                     >
                       <Trash2 className="h-4 w-4" />

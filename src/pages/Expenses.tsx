@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Expense } from '../types/expense';
 import { getExpenses, deleteExpense, updateExpenseAmount } from '../services/expenseService';
 import { ExpenseForm } from '../components/expenses/ExpenseForm';
@@ -50,27 +50,27 @@ export const Expenses = () => {
   };
 
   return (
-    <div className="py-8">
-      <div className="max-w-6xl mx-auto px-4">
+    <div className="pt-2 pb-32">
+      <div className="max-w-[1600px] px-6">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold">Expenses</h1>
-          <ExpenseImportExport 
+          <h1 className="text-3xl font-bold text-white">Expenses</h1>
+          <ExpenseImportExport
             expenses={expenses}
             onExpensesImported={loadExpenses}
           />
         </div>
-        
+
         <div className="space-y-6">
           <ExpenseForm onExpenseAdded={loadExpenses} />
+          {expenses.length > 0 && (
+            <ExpensesSummaryReport expenses={expenses} />
+          )}
           <ExpenseList
             expenses={expenses}
             isLoading={isLoading}
             onDelete={handleDelete}
             onUpdateAmount={handleUpdateAmount}
           />
-          {expenses.length > 0 && (
-            <ExpensesSummaryReport expenses={expenses} />
-          )}
         </div>
       </div>
     </div>

@@ -13,37 +13,41 @@ export const SalesReport: React.FC<SalesReportProps> = ({ orders }) => {
 
   if (!orders?.length) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex items-center gap-2 mb-6">
-          <TrendingUp className="h-6 w-6 text-blue-600" />
-          <h2 className="text-xl font-semibold">Sales Report</h2>
+      <div className="bg-[#1C1F26] rounded-xl border border-gray-800 p-6">
+        <div className="flex items-center gap-3 mb-6 border-b border-gray-800 pb-4">
+          <div className="p-2 bg-blue-500/10 rounded-lg">
+            <TrendingUp className="h-6 w-6 text-blue-400" />
+          </div>
+          <h2 className="text-xl font-semibold text-white">Sales Report</h2>
         </div>
-        <p className="text-gray-500">No orders found to generate sales report.</p>
+        <p className="text-gray-500">No orders found.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <div className="flex items-center gap-2 mb-6">
-        <TrendingUp className="h-6 w-6 text-blue-600" />
-        <h2 className="text-xl font-semibold">Sales Report</h2>
+    <div className="bg-[#1C1F26] rounded-xl border border-gray-800 p-6">
+      <div className="flex items-center gap-3 mb-6 border-b border-gray-800 pb-4">
+        <div className="p-2 bg-blue-500/10 rounded-lg">
+          <TrendingUp className="h-6 w-6 text-blue-400" />
+        </div>
+        <h2 className="text-xl font-semibold text-white">Sales Report</h2>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-blue-50 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-blue-600 mb-1">Total Sales</h3>
-          <p className="text-2xl font-bold">{totalSales.toFixed(2)} SAR</p>
+        <div className="bg-[#13151A] rounded-xl p-5 border border-blue-500/20 group hover:border-blue-500/40 transition-colors">
+          <h3 className="text-sm font-medium text-blue-400 mb-2 uppercase tracking-wider">Total Sales</h3>
+          <p className="text-2xl font-bold text-white">{totalSales.toFixed(2)} <span className="text-lg text-gray-500 font-medium">SAR</span></p>
         </div>
 
-        <div className="bg-green-50 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-green-600 mb-1">Total Orders</h3>
-          <p className="text-2xl font-bold">{totalOrders}</p>
+        <div className="bg-[#13151A] rounded-xl p-5 border border-green-500/20 group hover:border-green-500/40 transition-colors">
+          <h3 className="text-sm font-medium text-green-400 mb-2 uppercase tracking-wider">Total Orders</h3>
+          <p className="text-2xl font-bold text-white">{totalOrders}</p>
         </div>
 
-        <div className="bg-purple-50 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-purple-600 mb-1">Average Order Value</h3>
-          <p className="text-2xl font-bold">{averageOrderValue.toFixed(2)} SAR</p>
+        <div className="bg-[#13151A] rounded-xl p-5 border border-purple-500/20 group hover:border-purple-500/40 transition-colors">
+          <h3 className="text-sm font-medium text-purple-400 mb-2 uppercase tracking-wider">Average Order Value</h3>
+          <p className="text-2xl font-bold text-white">{averageOrderValue.toFixed(2)} <span className="text-lg text-gray-500 font-medium">SAR</span></p>
         </div>
       </div>
     </div>

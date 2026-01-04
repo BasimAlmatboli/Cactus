@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Order } from '../../types';
 import { calculateTotalEarnings } from '../../utils/calculateEarnings';
 import { calculateTotalProfitShare } from '../../utils/profitSharing';
@@ -9,105 +9,136 @@ interface TotalEarningsReportProps {
 }
 
 export const TotalEarningsReport: React.FC<TotalEarningsReportProps> = ({ orders }) => {
-  // Calculate total earnings across all orders
-  const totalEarningsData = orders.reduce((acc, order) => {
-    const discountAmount = order.discount
-      ? order.discount.type === 'percentage'
-        ? (order.subtotal * order.discount.value) / 100
-        : order.discount.value
-      : 0;
+  const [totalEarningsData, setTotalEarningsData] = useState<any>(null);
 
-    const profitSharing = calculateTotalProfitShare(
-      order.items,
-      order.shippingCost,
-      order.paymentFees,
-      discountAmount,
-      order.appliedOffer || null,
-      order.isFreeShipping
-    );
+  useEffect(() => {
+    const calculateEarnings = async () => {
+      if (!orders?.length) {
+        setTotalEarningsData(null);
+        return;
+      }
 
-    const earnings = calculateTotalEarnings(
-      order.items,
-      profitSharing.totalYassirShare,
-      profitSharing.totalBasimShare
-    );
+      const earnings = {
+        yassirProductsCost: 0,
+        basimProductsCost: 0,
+        yassirTotalEarnings: 0,
+        basimTotalEarnings: 0,
+        combinedTotalEarnings: 0,
+      };
 
-    return {
-      yassirProductsCost: acc.yassirProductsCost + earnings.yassirProductsCost,
-      basimProductsCost: acc.basimProductsCost + earnings.basimProductsCost,
-      yassirTotalEarnings: acc.yassirTotalEarnings + earnings.yassirTotalEarnings,
-      basimTotalEarnings: acc.basimTotalEarnings + earnings.basimTotalEarnings,
-      combinedTotalEarnings: acc.combinedTotalEarnings + earnings.combinedTotalEarnings,
+      for (const order of orders) {
+        const discountAmount = order.discount
+          ? order.discount.type === 'percentage'
+            ? (order.subtotal * order.discount.value) / 100
+            : order.discount.value
+          : 0;
+
+        const profitSharing = await calculateTotalProfitShare(
+          order.items,
+          order.shippingCost,
+          order.paymentFees,
+          discountAmount,
+          order.isFreeShipping
+        );
+
+        const orderEarnings = calculateTotalEarnings(
+          order.items,
+          profitSharing.totalYassirShare,
+          profitSharing.totalBasimShare
+        );
+
+        earnings.yassirProductsCost += orderEarnings.yassirProductsCost;
+        earnings.basimProductsCost += orderEarnings.basimProductsCost;
+        earnings.yassirTotalEarnings += orderEarnings.yassirTotalEarnings;
+        earnings.basimTotalEarnings += orderEarnings.basimTotalEarnings;
+        earnings.combinedTotalEarnings += orderEarnings.combinedTotalEarnings;
+      }
+
+      setTotalEarningsData(earnings);
     };
-  }, {
-    yassirProductsCost: 0,
-    basimProductsCost: 0,
-    yassirTotalEarnings: 0,
-    basimTotalEarnings: 0,
-    combinedTotalEarnings: 0,
-  });
+
+    calculateEarnings();
+  }, [orders]);
 
   if (!orders?.length) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex items-center gap-2 mb-6">
-          <Wallet className="h-6 w-6 text-blue-600" />
-          <h2 className="text-xl font-semibold">Total Earnings Report</h2>
+      <div className="bg-[#1C1F26] rounded-xl border border-gray-800 p-6 h-full">
+        <div className="flex items-center gap-3 mb-6 border-b border-gray-800 pb-4">
+          <div className="p-2 bg-blue-500/10 rounded-lg">
+            <Wallet className="h-6 w-6 text-blue-400" />
+          </div>
+          <h2 className="text-xl font-semibold text-white">Total Earnings</h2>
         </div>
-        <p className="text-gray-500">No orders found to generate earnings report.</p>
+        <p className="text-gray-500">No orders found.</p>
+      </div>
+    );
+  }
+
+  if (!totalEarningsData) {
+    return (
+      <div className="bg-[#1C1F26] rounded-xl border border-gray-800 p-6 h-full">
+        <div className="flex items-center gap-3 mb-6 border-b border-gray-800 pb-4">
+          <div className="p-2 bg-blue-500/10 rounded-lg">
+            <Wallet className="h-6 w-6 text-blue-400" />
+          </div>
+          <h2 className="text-xl font-semibold text-white">Total Earnings</h2>
+        </div>
+        <p className="text-gray-500">Calculating earnings...</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <div className="flex items-center gap-2 mb-6">
-        <Wallet className="h-6 w-6 text-blue-600" />
-        <h2 className="text-xl font-semibold">Total Earnings Report</h2>
+    <div className="bg-[#1C1F26] rounded-xl border border-gray-800 p-6 h-full flex flex-col">
+      <div className="flex items-center gap-3 mb-6 border-b border-gray-800 pb-4">
+        <div className="p-2 bg-blue-500/10 rounded-lg">
+          <Wallet className="h-6 w-6 text-blue-400" />
+        </div>
+        <h2 className="text-xl font-semibold text-white">Total Earnings</h2>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-4 mb-6 flex-1">
         {/* Yassir's Earnings */}
-        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-indigo-800 mb-4">Yassir's Total Earnings</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-[#13151A] rounded-xl p-5 border border-gray-800">
+          <h3 className="text-sm font-medium text-blue-400 mb-3 uppercase tracking-wider">Yassir's Earnings</h3>
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <span className="text-indigo-600">Products Cost:</span>
-              <span className="ml-2 font-medium">{totalEarningsData.yassirProductsCost.toFixed(2)} SAR</span>
+              <span className="text-xs text-gray-500 uppercase tracking-wide">Costs</span>
+              <span className="block text-lg font-medium text-gray-300">{totalEarningsData.yassirProductsCost.toFixed(2)} SAR</span>
             </div>
             <div>
-              <span className="text-indigo-600">Total Earnings:</span>
-              <span className="ml-2 font-medium">{totalEarningsData.yassirTotalEarnings.toFixed(2)} SAR</span>
+              <span className="text-xs text-gray-500 uppercase tracking-wide">Net Earnings</span>
+              <span className="block text-lg font-bold text-white">{totalEarningsData.yassirTotalEarnings.toFixed(2)} SAR</span>
             </div>
           </div>
         </div>
 
         {/* Basim's Earnings */}
-        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-green-800 mb-4">Basim's Total Earnings</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-[#13151A] rounded-xl p-5 border border-gray-800">
+          <h3 className="text-sm font-medium text-green-400 mb-3 uppercase tracking-wider">Basim's Earnings</h3>
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <span className="text-green-600">Products Cost:</span>
-              <span className="ml-2 font-medium">{totalEarningsData.basimProductsCost.toFixed(2)} SAR</span>
+              <span className="text-xs text-gray-500 uppercase tracking-wide">Costs</span>
+              <span className="block text-lg font-medium text-gray-300">{totalEarningsData.basimProductsCost.toFixed(2)} SAR</span>
             </div>
             <div>
-              <span className="text-green-600">Total Earnings:</span>
-              <span className="ml-2 font-medium">{totalEarningsData.basimTotalEarnings.toFixed(2)} SAR</span>
+              <span className="text-xs text-gray-500 uppercase tracking-wide">Net Earnings</span>
+              <span className="block text-lg font-bold text-white">{totalEarningsData.basimTotalEarnings.toFixed(2)} SAR</span>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Combined Total */}
-        <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-purple-800 mb-4">Combined Total Earnings</h3>
-          <div className="text-2xl font-bold text-purple-700">
-            {totalEarningsData.combinedTotalEarnings.toFixed(2)} SAR
+      {/* Combined Total */}
+      <div className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 rounded-xl p-5 border border-purple-500/20">
+        <div className="flex justify-between items-center">
+          <div>
+            <h3 className="text-sm font-medium text-purple-300 mb-1">Combined Earnings</h3>
+            <p className="text-xs text-purple-400/60">Based on {orders.length} orders</p>
           </div>
-        </div>
-
-        {/* Order Count */}
-        <div className="text-sm text-gray-600">
-          Based on {orders.length} order{orders.length !== 1 ? 's' : ''}
+          <div className="text-3xl font-bold text-purple-300">
+            {totalEarningsData.combinedTotalEarnings.toFixed(2)} <span className="text-lg text-purple-400/60 font-medium">SAR</span>
+          </div>
         </div>
       </div>
     </div>
