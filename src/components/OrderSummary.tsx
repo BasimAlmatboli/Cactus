@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Order } from '../types';
 import { calculateTotalProfitShare } from '../utils/profitSharing';
 import { EarningsReport } from './EarningsReport';
-import { getPaymentFeePercentage } from '../utils/calculateFees';
+
 
 interface OrderSummaryProps {
   order: Order;
@@ -53,7 +53,7 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({ order }) => {
     : 0;
 
   // Get the payment fee percentage for display
-  const feePercentage = getPaymentFeePercentage(order.paymentMethod.id);
+  const feePercentage = order.paymentMethod.fee_percentage;
 
   // Show loading while calculating profit
   if (!profitSharing) {

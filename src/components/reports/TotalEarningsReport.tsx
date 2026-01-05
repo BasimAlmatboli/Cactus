@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Order } from '../../types';
-import { calculateTotalEarnings } from '../../utils/calculateEarnings';
+import { calculateTotalEarnings } from '../../utils/profitSharing';
 import { calculateTotalProfitShare } from '../../utils/profitSharing';
 import { Wallet } from 'lucide-react';
 

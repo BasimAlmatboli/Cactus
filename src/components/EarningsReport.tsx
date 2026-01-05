@@ -1,6 +1,6 @@
 import React from 'react';
 import { OrderItem } from '../types';
-import { calculateTotalEarnings } from '../utils/calculateEarnings';
+import { calculateTotalEarnings } from '../utils/profitSharing';
 import { Wallet } from 'lucide-react';
 
 interface EarningsReportProps {

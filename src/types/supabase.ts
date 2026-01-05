@@ -12,6 +12,7 @@ export interface SupabaseOrder {
   id: string;
   order_number: string;
   customer_name?: string;
+  created_at: string;  // ✅ Added to match database schema
   items: {
     product: {
       id: string;
@@ -25,10 +26,12 @@ export interface SupabaseOrder {
     id: string;
     name: string;
     cost: number;
+    [key: string]: any; // Allow extra fields like is_active
   };
   payment_method: {
     id: string;
     name: string;
+    [key: string]: any; // Allow extra fields like fees
   };
   subtotal: number;
   shipping_cost: number;
@@ -54,6 +57,19 @@ export interface SupabaseQuickDiscount {
   updated_at: string;
 }
 
+export interface SupabasePaymentMethod {
+  id: string;
+  name: string;
+  fee_percentage: number;
+  fee_fixed: number;
+  tax_rate: number;
+  customer_fee: number;
+  display_order: number;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -61,6 +77,11 @@ export interface Database {
         Row: SupabaseShippingMethod;
         Insert: Omit<SupabaseShippingMethod, 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Omit<SupabaseShippingMethod, 'id' | 'created_at' | 'updated_at'>>;
+      };
+      payment_methods: {
+        Row: SupabasePaymentMethod;
+        Insert: Omit<SupabasePaymentMethod, 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<SupabasePaymentMethod, 'created_at' | 'updated_at'>>;
       };
       orders: {
         Row: SupabaseOrder & {
