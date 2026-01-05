@@ -6,7 +6,8 @@ import {
     ClipboardList,
     BarChart3,
     Receipt,
-    MessageSquare
+    MessageSquare,
+    Upload
 } from 'lucide-react';
 
 interface MainLayoutProps {
@@ -67,6 +68,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
                             <NavLink to="/calculator" icon={<Calculator className="w-5 h-5" />} label="Calculator" />
                             <NavLink to="/reports" icon={<BarChart3 className="w-5 h-5" />} label="Reports" />
                             <NavLink to="/expenses" icon={<Receipt className="w-5 h-5" />} label="Expenses" />
+                            <NavLink to="/salla-import" icon={<Upload className="w-5 h-5" />} label="Salla Import" badge="New" />
                         </div>
                     </div>
 

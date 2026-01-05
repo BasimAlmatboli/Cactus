@@ -1,18 +1,23 @@
+import type { PaymentMethod } from '../types';
+
+/**
+ * Calculate payment fees dynamically based on payment method configuration
+ * @param paymentMethod - Payment method object with fee configuration
+ * @param amount - Transaction amount
+ * @returns Total fees including tax
+ */
 export const calculatePaymentFees = (
-  paymentMethodId: string,
+  paymentMethod: PaymentMethod,
   amount: number
 ): number => {
-  switch (paymentMethodId) {
-    case 'mada':
-      return calculateMadaFees(amount);
-    case 'visa':
-      return calculateVisaFees(amount);
-    case 'tamara':
-      return calculateTamaraFees(amount);
-    default:
-      return 0;
-  }
+  const paymentGatewayFee = amount * (paymentMethod.fee_percentage / 100);
+  const baseFees = paymentGatewayFee + paymentMethod.fee_fixed;
+  const feesTax = baseFees * (paymentMethod.tax_rate / 100);
+  return baseFees + feesTax;
 };
+
+// Legacy functions kept for reference (will be removed after migration)
+/** @deprecated Use calculatePaymentFees with PaymentMethod object */
 
 export const calculateMadaFees = (amount: number): number => {
   const paymentGatewayFee = amount * 0.01;

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Settings as SettingsIcon, Package, Truck, Users, Tag } from 'lucide-react';
+import { Settings as SettingsIcon, Package, Truck, Users, Tag, CreditCard } from 'lucide-react';
 import { GeneralSettings } from '../components/settings/GeneralSettings';
 import { ProfitShareSettings } from '../components/settings/ProfitShareSettings';
 import { ProductSettings } from '../components/settings/ProductSettings';
 import { ShippingSettings } from '../components/settings/ShippingSettings';
 import { QuickDiscountSettings } from '../components/settings/QuickDiscountSettings';
+import { PaymentMethodsSettings } from '../components/settings/PaymentMethodsSettings';
 
 interface SettingSection {
   id: string;
@@ -38,6 +39,12 @@ export const Settings = () => {
       title: 'Shipping Settings',
       icon: <Truck className="h-5 w-5" />,
       component: <ShippingSettings />,
+    },
+    {
+      id: 'payment-methods',
+      title: 'Payment Methods',
+      icon: <CreditCard className="h-5 w-5" />,
+      component: <PaymentMethodsSettings />,
     },
     {
       id: 'quick-discounts',
