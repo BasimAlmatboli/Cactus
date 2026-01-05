@@ -230,13 +230,13 @@ export const ProfitShareSettings: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"> {/* Use grid for compact layout */}
                                 {partners.map(partner => (
-                                    <div key={partner.id} className="flex items-center gap-3">
-                                        <label className="flex-1 text-sm font-medium text-gray-300">
+                                    <div key={partner.id} className="flex items-center justify-between bg-gray-800/50 p-2 rounded-lg border border-gray-700"> {/* Card-like style for each partner */}
+                                        <label className="text-sm font-medium text-gray-300 mr-2 truncate">
                                             {partner.display_name}
                                         </label>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-1">
                                             <input
                                                 type="number"
                                                 min="0"
@@ -245,9 +245,9 @@ export const ProfitShareSettings: React.FC = () => {
                                                 value={editedShares[product.id]?.[partner.id] || 0}
                                                 onChange={(e) => handleShareChange(product.id, partner.id, e.target.value)}
                                                 disabled={saving === product.id}
-                                                className="w-24 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-800"
+                                                className="w-16 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-right text-white text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-800"
                                             />
-                                            <span className="text-gray-400">%</span>
+                                            <span className="text-gray-400 text-sm">%</span>
                                         </div>
                                     </div>
                                 ))}
