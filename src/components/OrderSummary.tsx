@@ -142,8 +142,10 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({ order }) => {
           <div className="space-y-4">
             {profitSharing.itemShares.map((share: any, index: number) => {
               const item = order.items[index];
+              if (!item) return null;
+
               return (
-                <div key={item.product.id} className="bg-[#13151A] rounded-xl border border-gray-800 p-4 space-y-3">
+                <div key={item.product?.id || index} className="bg-[#13151A] rounded-xl border border-gray-800 p-4 space-y-3">
                   <div className="font-medium text-white border-b border-gray-800 pb-2">
                     {item.product.name} x{item.quantity}
                   </div>
