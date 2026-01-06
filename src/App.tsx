@@ -5,6 +5,7 @@ import { Settings } from './pages/Settings';
 import { Orders } from './pages/Orders';
 import { Reports } from './pages/Reports';
 import { Expenses } from './pages/Expenses';
+import SallaImport from './pages/SallaImport';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 
@@ -19,6 +20,7 @@ function App() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/expenses" element={<Expenses />} />
+            <Route path="/salla-import" element={<SallaImport />} />
           </Routes>
         </MainLayout>
       </Router>

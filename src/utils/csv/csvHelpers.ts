@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { createOrderCSVHeaders, createOrderCSVRow } from './exportHelpers';
 import { parseCSVRow, createOrderItems } from './importHelpers';
 import { generateUUID } from '../uuid';
-import { calculatePaymentFees } from '../calculateFees';
+import { calculatePaymentFees } from '../orderCalculations';
 
 export const exportOrdersToCSV = (orders: Order[]): string => {
   const headers = createOrderCSVHeaders();
@@ -12,6 +12,15 @@ export const exportOrdersToCSV = (orders: Order[]): string => {
 };
 
 export const importOrdersFromCSV = async (file: File): Promise<void> => {
+  // Fetch all payment methods for fee calculation
+  const { data: dbPaymentMethods } = await supabase
+    .from('payment_methods')
+    .select('*');
+
+  const paymentMethodsMap = new Map(
+    dbPaymentMethods?.map(pm => [pm.id, pm]) || []
+  );
+
   const text = await file.text();
   const lines = text.split('\n');
   const rows = lines.slice(1); // Skip header row
@@ -35,12 +44,26 @@ export const importOrdersFromCSV = async (file: File): Promise<void> => {
       const shippingMethod = {
         id: getValue(6).toLowerCase().replace(/\s+/g, '-'),
         name: getValue(6),
-        cost: parseFloat(getValue(9))
+        cost: parseFloat(getValue(9)),
+        is_active: true // Default to true for imported orders
       };
 
+      // Get payment method ID from CSV
+      const paymentMethodId = getValue(7).toLowerCase();
+
+      // Look up full details from database to get fee structure
+      const dbPaymentMethod = paymentMethodsMap.get(paymentMethodId);
+
+      // Construct payment method object (using DB details if available, or fallback defaults)
       const paymentMethod = {
-        id: getValue(7).toLowerCase() as 'mada' | 'visa' | 'tamara',
-        name: getValue(7)
+        id: paymentMethodId,
+        name: getValue(7),
+        fee_percentage: dbPaymentMethod?.fee_percentage ?? 0,
+        fee_fixed: dbPaymentMethod?.fee_fixed ?? 0,
+        tax_rate: dbPaymentMethod?.tax_rate ?? 0,
+        customer_fee: dbPaymentMethod?.customer_fee ?? 0,
+        display_order: dbPaymentMethod?.display_order ?? 0,
+        is_active: dbPaymentMethod?.is_active ?? true
       };
 
       const isFreeShipping = getValue(11).toLowerCase() === 'true';
@@ -72,8 +95,10 @@ export const importOrdersFromCSV = async (file: File): Promise<void> => {
 
       // Calculate payment fees based on customer total (after discounts applied)
       let paymentFees = parseFloat(getValue(10));
+
+      // If fees are missing in CSV, calculate them using the new system
       if (isNaN(paymentFees) || paymentFees <= 0) {
-        paymentFees = calculatePaymentFees(paymentMethod.id, customerTotal);
+        paymentFees = calculatePaymentFees(paymentMethod, customerTotal);
       }
 
       const total = customerTotal;
@@ -91,7 +116,7 @@ export const importOrdersFromCSV = async (file: File): Promise<void> => {
         id: generateUUID(),
         order_number: getValue(0),
         customer_name: getValue(1) || null,
-        date: new Date().toISOString(),
+        created_at: new Date().toISOString(), // Changed from date to created_at to match schema
         items: items, // jsonb handles arrays/objects
         shipping_method: shippingMethod,
         payment_method: paymentMethod,
@@ -101,7 +126,8 @@ export const importOrdersFromCSV = async (file: File): Promise<void> => {
         is_free_shipping: isFreeShipping,
         discount: discount,
         total,
-        net_profit: netProfit
+        net_profit: netProfit,
+        status: 'completed' // Default status for imports
       };
 
       // @ts-ignore - Supabase types need regeneration after schema changes

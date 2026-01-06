@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Order } from '../types';
 import { calculateTotalProfitShare } from '../utils/profitSharing';
 import { EarningsReport } from './EarningsReport';
-import { getPaymentFeePercentage } from '../utils/calculateFees';
+
 
 interface OrderSummaryProps {
   order: Order;
@@ -44,20 +44,16 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({ order }) => {
       : value;
   };
 
+  // ✅ NO RECALCULATION - Just use pre-calculated values from order object
+  // All calculations were done by calculateCompleteOrder() function
   const discountAmount = order.discount
     ? order.discount.type === 'percentage'
       ? (order.subtotal * order.discount.value) / 100
       : order.discount.value
     : 0;
 
-  const totalDiscountAmount = discountAmount;
-
-  // Calculate the total amount before fees (base for payment fee calculation)
-  const actualShippingCost = order.isFreeShipping ? 0 : order.shippingCost;
-  const totalBeforeFees = order.subtotal + actualShippingCost - totalDiscountAmount;
-
-  // Get the payment fee percentage for the selected payment method
-  const feePercentage = getPaymentFeePercentage(order.paymentMethod.id);
+  // Get the payment fee percentage for display
+  const feePercentage = order.paymentMethod.fee_percentage;
 
   // Show loading while calculating profit
   if (!profitSharing) {
@@ -122,11 +118,8 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({ order }) => {
           <div className="font-medium text-blue-400">Payment Fee Information</div>
           <div className="space-y-2 text-sm">
             <div className="grid grid-cols-2 gap-2">
-              <div className="text-gray-400">Base Amount:</div>
-              <div className="text-right font-medium text-gray-300">{totalBeforeFees.toFixed(2)} SAR</div>
-              <div className="col-span-2 text-xs text-gray-500">
-                (Subtotal + Shipping - Discount)
-              </div>
+              <div className="text-gray-400">Payment Method:</div>
+              <div className="text-right font-medium text-gray-300">{order.paymentMethod.name}</div>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
@@ -149,8 +142,10 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({ order }) => {
           <div className="space-y-4">
             {profitSharing.itemShares.map((share: any, index: number) => {
               const item = order.items[index];
+              if (!item) return null;
+
               return (
-                <div key={item.product.id} className="bg-[#13151A] rounded-xl border border-gray-800 p-4 space-y-3">
+                <div key={item.product?.id || index} className="bg-[#13151A] rounded-xl border border-gray-800 p-4 space-y-3">
                   <div className="font-medium text-white border-b border-gray-800 pb-2">
                     {item.product.name} x{item.quantity}
                   </div>

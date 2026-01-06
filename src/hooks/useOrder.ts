@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Order, OrderItem, ShippingMethod, PaymentMethod, Discount } from '../types';
-import { calculatePaymentFees } from '../utils/calculateFees';
-import { calculateTotalProfitShare } from '../utils/profitSharing';
+import { calculateCompleteOrder } from '../utils/orderCalculations';
 import { generateUUID } from '../utils/uuid';
 import { useFreeShippingThreshold } from './useFreeShippingThreshold';
 
@@ -63,54 +62,22 @@ export const useOrder = (initialOrder?: Order | null) => {
   useEffect(() => {
     const calculateOrder = async () => {
       if (orderItems.length && shippingMethod && paymentMethod) {
-        const subtotal = orderItems.reduce(
-          (sum, item) => sum + (item.product.sellingPrice * item.quantity),
-          0
-        );
+        // ✅ USE CENTRALIZED CALCULATION FUNCTION
+        // All business logic is now in ONE place: orderCalculations/completeOrder.ts
+        const result = await calculateCompleteOrder({
+          orderItems,
+          shippingMethod,
+          paymentMethod,
+          discount,
+          freeShippingThreshold,
+        });
 
-        const totalCost = orderItems.reduce(
-          (sum, item) => sum + item.product.cost * item.quantity,
-          0
-        );
-
-        // Calculate manual discount
-        const discountAmount = discount
-          ? discount.type === 'percentage'
-            ? (subtotal * discount.value) / 100
-            : discount.value
-          : 0;
-
-        // Calculate total for free shipping check
-        const totalForFreeShipping = subtotal - discountAmount;
-
-        // Auto-toggle free shipping based on total
-        if (totalForFreeShipping >= freeShippingThreshold && !isFreeShipping) {
-          setIsFreeShipping(true);
-        } else if (totalForFreeShipping < freeShippingThreshold && isFreeShipping) {
-          setIsFreeShipping(false);
+        // Update free shipping state if it changed based on calculation
+        if (result.isFreeShipping !== isFreeShipping) {
+          setIsFreeShipping(result.isFreeShipping);
         }
 
-        // Calculate the actual shipping cost based on free shipping status
-        const actualShippingCost = isFreeShipping ? 0 : shippingMethod.cost;
-
-        // Calculate the total amount to be paid by the customer (without payment fees)
-        const customerTotal = subtotal + actualShippingCost - discountAmount;
-
-        // Calculate payment fees based on the customer total
-        const paymentFees = calculatePaymentFees(paymentMethod.id, customerTotal);
-
-        // Calculate profit sharing to get net profit (now async)
-        const profitShare = await calculateTotalProfitShare(
-          orderItems,
-          shippingMethod.cost,
-          paymentFees,
-          discountAmount,
-          isFreeShipping
-        );
-
-        // Net profit is the sum of both shares
-        const netProfit = profitShare.totalYassirShare + profitShare.totalBasimShare;
-
+        // Build order object from calculation result
         setOrder({
           id: currentOrderId || generateUUID(),
           orderNumber,
@@ -119,13 +86,13 @@ export const useOrder = (initialOrder?: Order | null) => {
           items: orderItems,
           shippingMethod,
           paymentMethod,
-          subtotal,
-          shippingCost: shippingMethod.cost,
-          paymentFees,
+          subtotal: result.subtotal,
+          shippingCost: shippingMethod.cost, // Store original cost (not actual)
+          paymentFees: result.paymentFees,
           discount,
-          total: customerTotal,
-          netProfit,
-          isFreeShipping,
+          total: result.customerTotal, // What customer pays
+          netProfit: result.netProfit,
+          isFreeShipping: result.isFreeShipping,
         });
       } else {
         setOrder(null);

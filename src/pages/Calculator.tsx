@@ -247,7 +247,7 @@ export const Calculator = () => {
               <div className="flex flex-col items-end">
                 <span className="text-xs text-blue-200">Total Amount</span>
                 <span className="text-xl font-bold">
-                  {totalPaidByCustomer.toFixed(2)} SAR
+                  {order.total.toFixed(2)} SAR
                 </span>
               </div>
             </button>
