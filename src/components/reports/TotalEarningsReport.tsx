@@ -1,65 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Order } from '../../types';
-import { calculateTotalEarnings } from '../../utils/profitSharing';
-import { calculateTotalProfitShare } from '../../utils/profitSharing';
-import { Wallet } from 'lucide-react';
+import { Wallet, Loader2 } from 'lucide-react';
+
+interface EarningsData {
+  yassirProductsCost: number;
+  basimProductsCost: number;
+  yassirTotalEarnings: number;
+  basimTotalEarnings: number;
+  combinedTotalEarnings: number;
+}
 
 interface TotalEarningsReportProps {
   orders: Order[];
+  earningsData: EarningsData | null;
 }
 
-export const TotalEarningsReport: React.FC<TotalEarningsReportProps> = ({ orders }) => {
-  const [totalEarningsData, setTotalEarningsData] = useState<any>(null);
-
-  useEffect(() => {
-    const calculateEarnings = async () => {
-      if (!orders?.length) {
-        setTotalEarningsData(null);
-        return;
-      }
-
-      const earnings = {
-        yassirProductsCost: 0,
-        basimProductsCost: 0,
-        yassirTotalEarnings: 0,
-        basimTotalEarnings: 0,
-        combinedTotalEarnings: 0,
-      };
-
-      for (const order of orders) {
-        const discountAmount = order.discount
-          ? order.discount.type === 'percentage'
-            ? (order.subtotal * order.discount.value) / 100
-            : order.discount.value
-          : 0;
-
-        const profitSharing = await calculateTotalProfitShare(
-          order.items,
-          order.shippingCost,
-          order.paymentFees,
-          discountAmount,
-          order.isFreeShipping
-        );
-
-        const orderEarnings = calculateTotalEarnings(
-          order.items,
-          profitSharing.totalYassirShare,
-          profitSharing.totalBasimShare
-        );
-
-        earnings.yassirProductsCost += orderEarnings.yassirProductsCost;
-        earnings.basimProductsCost += orderEarnings.basimProductsCost;
-        earnings.yassirTotalEarnings += orderEarnings.yassirTotalEarnings;
-        earnings.basimTotalEarnings += orderEarnings.basimTotalEarnings;
-        earnings.combinedTotalEarnings += orderEarnings.combinedTotalEarnings;
-      }
-
-      setTotalEarningsData(earnings);
-    };
-
-    calculateEarnings();
-  }, [orders]);
-
+export const TotalEarningsReport: React.FC<TotalEarningsReportProps> = ({
+  orders,
+  earningsData
+}) => {
   if (!orders?.length) {
     return (
       <div className="bg-[#1C1F26] rounded-xl border border-gray-800 p-6 h-full">
@@ -74,7 +33,7 @@ export const TotalEarningsReport: React.FC<TotalEarningsReportProps> = ({ orders
     );
   }
 
-  if (!totalEarningsData) {
+  if (!earningsData) {
     return (
       <div className="bg-[#1C1F26] rounded-xl border border-gray-800 p-6 h-full">
         <div className="flex items-center gap-3 mb-6 border-b border-gray-800 pb-4">
@@ -83,7 +42,9 @@ export const TotalEarningsReport: React.FC<TotalEarningsReportProps> = ({ orders
           </div>
           <h2 className="text-xl font-semibold text-white">Total Earnings</h2>
         </div>
-        <p className="text-gray-500">Calculating earnings...</p>
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+        </div>
       </div>
     );
   }
@@ -104,11 +65,11 @@ export const TotalEarningsReport: React.FC<TotalEarningsReportProps> = ({ orders
           <div className="grid grid-cols-2 gap-4">
             <div>
               <span className="text-xs text-gray-500 uppercase tracking-wide">Costs</span>
-              <span className="block text-lg font-medium text-gray-300">{totalEarningsData.yassirProductsCost.toFixed(2)} SAR</span>
+              <span className="block text-lg font-medium text-gray-300">{earningsData.yassirProductsCost.toFixed(2)} SAR</span>
             </div>
             <div>
               <span className="text-xs text-gray-500 uppercase tracking-wide">Net Earnings</span>
-              <span className="block text-lg font-bold text-white">{totalEarningsData.yassirTotalEarnings.toFixed(2)} SAR</span>
+              <span className="block text-lg font-bold text-white">{earningsData.yassirTotalEarnings.toFixed(2)} SAR</span>
             </div>
           </div>
         </div>
@@ -119,11 +80,11 @@ export const TotalEarningsReport: React.FC<TotalEarningsReportProps> = ({ orders
           <div className="grid grid-cols-2 gap-4">
             <div>
               <span className="text-xs text-gray-500 uppercase tracking-wide">Costs</span>
-              <span className="block text-lg font-medium text-gray-300">{totalEarningsData.basimProductsCost.toFixed(2)} SAR</span>
+              <span className="block text-lg font-medium text-gray-300">{earningsData.basimProductsCost.toFixed(2)} SAR</span>
             </div>
             <div>
               <span className="text-xs text-gray-500 uppercase tracking-wide">Net Earnings</span>
-              <span className="block text-lg font-bold text-white">{totalEarningsData.basimTotalEarnings.toFixed(2)} SAR</span>
+              <span className="block text-lg font-bold text-white">{earningsData.basimTotalEarnings.toFixed(2)} SAR</span>
             </div>
           </div>
         </div>
@@ -137,7 +98,7 @@ export const TotalEarningsReport: React.FC<TotalEarningsReportProps> = ({ orders
             <p className="text-xs text-purple-400/60">Based on {orders.length} orders</p>
           </div>
           <div className="text-3xl font-bold text-purple-300">
-            {totalEarningsData.combinedTotalEarnings.toFixed(2)} <span className="text-lg text-purple-400/60 font-medium">SAR</span>
+            {earningsData.combinedTotalEarnings.toFixed(2)} <span className="text-lg text-purple-400/60 font-medium">SAR</span>
           </div>
         </div>
       </div>

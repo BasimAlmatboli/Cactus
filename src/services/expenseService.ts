@@ -13,16 +13,36 @@ export const getExpenses = async (): Promise<Expense[]> => {
     throw error;
   }
 
-  return expenses;
+  // Map snake_case from database to camelCase for TypeScript
+  return expenses.map((exp: any) => ({
+    id: exp.id,
+    date: exp.date,
+    category: exp.category,
+    description: exp.description,
+    amount: exp.amount,
+    owner: exp.owner,
+    basimSharePercentage: exp.basim_share_percentage ?? 50,
+    yassirSharePercentage: exp.yassir_share_percentage ?? 50,
+    includeTax: exp.include_tax ?? false,
+    amountBeforeTax: exp.amount_before_tax
+  }));
 };
 
 export const saveExpense = async (expense: Omit<Expense, 'id'>): Promise<void> => {
   const { error } = await supabase
     .from('expenses')
     .insert({
-      ...expense,
-      id: generateUUID()
-    });
+      id: generateUUID(),
+      date: expense.date,
+      category: expense.category,
+      description: expense.description,
+      amount: expense.amount,
+      owner: expense.owner,
+      basim_share_percentage: expense.basimSharePercentage,
+      yassir_share_percentage: expense.yassirSharePercentage,
+      include_tax: expense.includeTax,
+      amount_before_tax: expense.amountBeforeTax
+    } as any); // Type assertion until Supabase types are regenerated
 
   if (error) {
     console.error('Error saving expense:', error);
@@ -30,18 +50,24 @@ export const saveExpense = async (expense: Omit<Expense, 'id'>): Promise<void> =
   }
 };
 
-export const updateExpenseAmount = async (id: string, amount: number): Promise<void> => {
-  if (amount <= 0) {
-    throw new Error('Amount must be greater than 0');
-  }
-
+export const updateExpense = async (id: string, expense: Omit<Expense, 'id'>): Promise<void> => {
   const { error } = await supabase
     .from('expenses')
-    .update({ amount })
+    .update({
+      date: expense.date,
+      category: expense.category,
+      description: expense.description,
+      amount: expense.amount,
+      owner: expense.owner,
+      basim_share_percentage: expense.basimSharePercentage,
+      yassir_share_percentage: expense.yassirSharePercentage,
+      include_tax: expense.includeTax,
+      amount_before_tax: expense.amountBeforeTax
+    } as any)
     .eq('id', id);
 
   if (error) {
-    console.error('Error updating expense amount:', error);
+    console.error('Error updating expense:', error);
     throw error;
   }
 };

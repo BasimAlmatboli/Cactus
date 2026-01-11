@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Expense } from '../types/expense';
-import { getExpenses, deleteExpense, updateExpenseAmount } from '../services/expenseService';
+import { getExpenses, deleteExpense, updateExpense } from '../services/expenseService';
 import { ExpenseForm } from '../components/expenses/ExpenseForm';
 import { ExpenseList } from '../components/expenses/ExpenseList';
 import { ExpenseImportExport } from '../components/expenses/ExpenseImportExport';
@@ -39,12 +39,12 @@ export const Expenses = () => {
     }
   };
 
-  const handleUpdateAmount = async (id: string, amount: number) => {
+  const handleUpdate = async (id: string, expense: Omit<Expense, 'id'>) => {
     try {
-      await updateExpenseAmount(id, amount);
+      await updateExpense(id, expense);
       await loadExpenses();
     } catch (error) {
-      console.error('Error updating expense amount:', error);
+      console.error('Error updating expense:', error);
       throw error;
     }
   };
@@ -69,7 +69,7 @@ export const Expenses = () => {
             expenses={expenses}
             isLoading={isLoading}
             onDelete={handleDelete}
-            onUpdateAmount={handleUpdateAmount}
+            onUpdate={handleUpdate}
           />
         </div>
       </div>

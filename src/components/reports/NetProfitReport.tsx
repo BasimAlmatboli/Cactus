@@ -1,0 +1,191 @@
+import React from 'react';
+import { Order } from '../../types';
+import { TrendingUp, Loader2, DollarSign, Receipt, Wallet } from 'lucide-react';
+
+interface EarningsData {
+    yassirProductsCost: number;
+    basimProductsCost: number;
+    yassirTotalEarnings: number;
+    basimTotalEarnings: number;
+    combinedTotalEarnings: number;
+}
+
+interface ExpensesData {
+    yassirExpenses: number;
+    basimExpenses: number;
+    totalExpenses: number;
+}
+
+interface NetProfitReportProps {
+    orders: Order[];
+    earningsData: EarningsData | null;
+    expensesData: ExpensesData | null;
+}
+
+export const NetProfitReport: React.FC<NetProfitReportProps> = ({
+    orders,
+    earningsData,
+    expensesData
+}) => {
+    // Calculate net profit from passed data
+    const netProfitData = earningsData && expensesData ? {
+        yassirNetProfit: earningsData.yassirTotalEarnings - expensesData.yassirExpenses,
+        basimNetProfit: earningsData.basimTotalEarnings - expensesData.basimExpenses,
+        combinedNetProfit: earningsData.combinedTotalEarnings - expensesData.totalExpenses,
+    } : null;
+
+    if (!earningsData || !expensesData) {
+        return (
+            <div className="bg-[#1C1F26] rounded-xl border border-gray-800 p-6">
+                <div className="flex items-center gap-3 mb-6 border-b border-gray-800 pb-4">
+                    <div className="p-2 bg-green-500/10 rounded-lg">
+                        <TrendingUp className="h-6 w-6 text-green-400" />
+                    </div>
+                    <h2 className="text-xl font-semibold text-white">Net Profit Analysis</h2>
+                </div>
+                <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-green-500" />
+                </div>
+            </div>
+        );
+    }
+
+    if (!orders?.length) {
+        return (
+            <div className="bg-[#1C1F26] rounded-xl border border-gray-800 p-6">
+                <div className="flex items-center gap-3 mb-6 border-b border-gray-800 pb-4">
+                    <div className="p-2 bg-green-500/10 rounded-lg">
+                        <TrendingUp className="h-6 w-6 text-green-400" />
+                    </div>
+                    <h2 className="text-xl font-semibold text-white">Net Profit Analysis</h2>
+                </div>
+                <p className="text-gray-500">No orders found.</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="bg-[#1C1F26] rounded-xl border border-gray-800 p-6">
+            <div className="flex items-center gap-3 mb-6 border-b border-gray-800 pb-4">
+                <div className="p-2 bg-green-500/10 rounded-lg">
+                    <TrendingUp className="h-6 w-6 text-green-400" />
+                </div>
+                <h2 className="text-xl font-semibold text-white">Net Profit Analysis</h2>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Yassir's Net Profit */}
+                <div className="bg-[#13151A] rounded-xl border border-gray-800 overflow-hidden">
+                    <div className="bg-blue-500/10 border-b border-blue-500/20 px-5 py-3">
+                        <h3 className="text-sm font-semibold text-blue-400 uppercase tracking-wider">Yassir's Net Profit</h3>
+                    </div>
+                    <div className="p-5 space-y-4">
+                        {/* Earnings */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Wallet className="h-4 w-4 text-blue-400" />
+                                <span className="text-sm text-gray-400">Earnings</span>
+                            </div>
+                            <span className="text-base font-medium text-white">
+                                {earningsData.yassirTotalEarnings.toFixed(2)} SAR
+                            </span>
+                        </div>
+
+                        {/* Expenses */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Receipt className="h-4 w-4 text-red-400" />
+                                <span className="text-sm text-gray-400">Expenses</span>
+                            </div>
+                            <span className="text-base font-medium text-red-400">
+                                -{expensesData.yassirExpenses.toFixed(2)} SAR
+                            </span>
+                        </div>
+
+                        {/* Divider */}
+                        <div className="border-t border-gray-700/50"></div>
+
+                        {/* Net Profit */}
+                        <div className="flex items-center justify-between bg-blue-500/5 rounded-lg p-3 border border-blue-500/10">
+                            <div className="flex items-center gap-2">
+                                <DollarSign className="h-5 w-5 text-blue-400" />
+                                <span className="text-sm font-semibold text-blue-300">Net Profit</span>
+                            </div>
+                            <span className={`text-xl font-bold ${netProfitData!.yassirNetProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                {netProfitData!.yassirNetProfit.toFixed(2)} SAR
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Basim's Net Profit */}
+                <div className="bg-[#13151A] rounded-xl border border-gray-800 overflow-hidden">
+                    <div className="bg-green-500/10 border-b border-green-500/20 px-5 py-3">
+                        <h3 className="text-sm font-semibold text-green-400 uppercase tracking-wider">Basim's Net Profit</h3>
+                    </div>
+                    <div className="p-5 space-y-4">
+                        {/* Earnings */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Wallet className="h-4 w-4 text-green-400" />
+                                <span className="text-sm text-gray-400">Earnings</span>
+                            </div>
+                            <span className="text-base font-medium text-white">
+                                {earningsData.basimTotalEarnings.toFixed(2)} SAR
+                            </span>
+                        </div>
+
+                        {/* Expenses */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Receipt className="h-4 w-4 text-red-400" />
+                                <span className="text-sm text-gray-400">Expenses</span>
+                            </div>
+                            <span className="text-base font-medium text-red-400">
+                                -{expensesData.basimExpenses.toFixed(2)} SAR
+                            </span>
+                        </div>
+
+                        {/* Divider */}
+                        <div className="border-t border-gray-700/50"></div>
+
+                        {/* Net Profit */}
+                        <div className="flex items-center justify-between bg-green-500/5 rounded-lg p-3 border border-green-500/10">
+                            <div className="flex items-center gap-2">
+                                <DollarSign className="h-5 w-5 text-green-400" />
+                                <span className="text-sm font-semibold text-green-300">Net Profit</span>
+                            </div>
+                            <span className={`text-xl font-bold ${netProfitData!.basimNetProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                {netProfitData!.basimNetProfit.toFixed(2)} SAR
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Combined Summary */}
+            <div className="mt-6 bg-gradient-to-br from-emerald-900/20 to-teal-900/20 rounded-xl p-6 border border-emerald-500/20">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <p className="text-xs text-emerald-400/60 uppercase tracking-wider mb-2">Total Earnings</p>
+                        <p className="text-2xl font-bold text-emerald-300">
+                            {earningsData.combinedTotalEarnings.toFixed(2)} <span className="text-sm text-emerald-400/60 font-medium">SAR</span>
+                        </p>
+                    </div>
+                    <div>
+                        <p className="text-xs text-red-400/60 uppercase tracking-wider mb-2">Total Expenses</p>
+                        <p className="text-2xl font-bold text-red-300">
+                            {expensesData.totalExpenses.toFixed(2)} <span className="text-sm text-red-400/60 font-medium">SAR</span>
+                        </p>
+                    </div>
+                    <div>
+                        <p className="text-xs text-emerald-400/60 uppercase tracking-wider mb-2">Combined Net Profit</p>
+                        <p className={`text-2xl font-bold ${netProfitData!.combinedNetProfit >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
+                            {netProfitData!.combinedNetProfit.toFixed(2)} <span className="text-sm text-emerald-400/60 font-medium">SAR</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
