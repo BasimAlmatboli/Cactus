@@ -17,6 +17,7 @@ import { NetProfitReport } from '../components/reports/NetProfitReport';
 import { ShippingFeeAnalysis } from '../components/reports/ShippingFeeAnalysis';
 import { PaymentFeeAnalysis } from '../components/reports/PaymentFeeAnalysis';
 import { ExportReportsButton } from '../components/reports/ExportReportsButton';
+import { BusinessMetricsReport } from '../components/reports/BusinessMetricsReport';
 
 interface EarningsData {
   yassirProductsCost: number;
@@ -76,6 +77,7 @@ export const Reports = () => {
   const [expensesData, setExpensesData] = useState<ExpensesData | null>(null);
   const [shippingFeeData, setShippingFeeData] = useState<ShippingFeeData | null>(null);
   const [paymentFeeData, setPaymentFeeData] = useState<PaymentFeeData | null>(null);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [activeSection, setActiveSection] = useState<string>('overview');
   const reportsContainerRef = useRef<HTMLDivElement>(null);
 
@@ -104,10 +106,12 @@ export const Reports = () => {
 
   const loadExpenses = async () => {
     try {
-      const expenses = await getExpenses();
-      calculateExpenses(expenses);
+      const loadedExpenses = await getExpenses();
+      setExpenses(loadedExpenses);
+      calculateExpenses(loadedExpenses);
     } catch (error) {
       console.error('Error loading expenses:', error);
+      setExpenses([]);
       setExpensesData({ yassirExpenses: 0, basimExpenses: 0, totalExpenses: 0 });
     }
   };
@@ -348,6 +352,19 @@ export const Reports = () => {
         </div>
       ),
     },
+    {
+      id: 'business-metrics',
+      title: 'Business Metrics',
+      icon: <TrendingUp className="h-5 w-5" />,
+      component: (
+        <BusinessMetricsReport
+          orders={orders}
+          earningsData={earningsData}
+          expensesData={expensesData}
+          expenses={expenses}
+        />
+      ),
+    },
   ];
 
   const currentSection = sections.find(s => s.id === activeSection);
@@ -417,7 +434,9 @@ export const Reports = () => {
             <p className="text-gray-400 text-sm">
               {activeSection === 'overview'
                 ? 'Comprehensive overview of your business performance'
-                : 'Detailed analysis of shipping and payment processing fees'
+                : activeSection === 'fee-analysis'
+                  ? 'Detailed analysis of shipping and payment processing fees'
+                  : 'Key performance indicators and business metrics'
               }
             </p>
           </div>
