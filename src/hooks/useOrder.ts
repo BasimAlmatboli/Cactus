@@ -17,6 +17,7 @@ export const useOrder = (initialOrder?: Order | null) => {
     initialOrder?.paymentMethod || null
   );
   const [isFreeShipping, setIsFreeShipping] = useState(initialOrder?.isFreeShipping || false);
+  const [freeShippingManualMode, setFreeShippingManualMode] = useState(false);
   const [discount, setDiscount] = useState<Discount | null>(initialOrder?.discount || null);
   const [order, setOrder] = useState<Order | null>(initialOrder || null);
   const [currentOrderId, setCurrentOrderId] = useState<string | null>(initialOrder?.id || null);
@@ -33,6 +34,7 @@ export const useOrder = (initialOrder?: Order | null) => {
     setShippingMethod(order.shippingMethod);
     setPaymentMethod(order.paymentMethod);
     setIsFreeShipping(order.isFreeShipping);
+    setFreeShippingManualMode(false); // Reset to automatic mode when loading order
     setDiscount(order.discount);
   };
 
@@ -55,8 +57,15 @@ export const useOrder = (initialOrder?: Order | null) => {
     setShippingMethod(null);
     setPaymentMethod(null);
     setIsFreeShipping(false);
+    setFreeShippingManualMode(false); // Reset to automatic mode
     setDiscount(null);
     setOrder(null);
+  };
+
+  // Wrapper to track when user manually changes free shipping
+  const handleFreeShippingChange = (value: boolean) => {
+    setIsFreeShipping(value);
+    setFreeShippingManualMode(true); // Enable manual mode
   };
 
   useEffect(() => {
@@ -70,10 +79,11 @@ export const useOrder = (initialOrder?: Order | null) => {
           paymentMethod,
           discount,
           freeShippingThreshold,
+          manualIsFreeShipping: freeShippingManualMode ? isFreeShipping : undefined,
         });
 
-        // Update free shipping state if it changed based on calculation
-        if (result.isFreeShipping !== isFreeShipping) {
+        // Only update free shipping automatically if not in manual mode
+        if (!freeShippingManualMode && result.isFreeShipping !== isFreeShipping) {
           setIsFreeShipping(result.isFreeShipping);
         }
 
@@ -100,7 +110,7 @@ export const useOrder = (initialOrder?: Order | null) => {
     };
 
     calculateOrder();
-  }, [orderItems, shippingMethod, paymentMethod, isFreeShipping, discount, orderNumber, customerName, currentOrderId, initialOrder, freeShippingThreshold]);
+  }, [orderItems, shippingMethod, paymentMethod, isFreeShipping, discount, orderNumber, customerName, currentOrderId, initialOrder, freeShippingThreshold, freeShippingManualMode]);
 
   return {
     orderNumber,
@@ -114,7 +124,7 @@ export const useOrder = (initialOrder?: Order | null) => {
     paymentMethod,
     setPaymentMethod,
     isFreeShipping,
-    setIsFreeShipping,
+    setIsFreeShipping: handleFreeShippingChange,
     discount,
     setDiscount,
     order,

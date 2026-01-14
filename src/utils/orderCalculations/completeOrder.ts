@@ -15,6 +15,7 @@ export interface OrderCalculationInputs {
     paymentMethod: PaymentMethod;
     discount: Discount | null;
     freeShippingThreshold: number;
+    manualIsFreeShipping?: boolean; // Optional: Manual override for free shipping
 }
 
 /**
@@ -75,12 +76,14 @@ export async function calculateCompleteOrder(
     // 2. Calculate discount
     const discountAmount = calculateDiscountAmount(subtotal, inputs.discount);
 
-    // 3. Determine free shipping
-    const isFreeShipping = determineIsFreeShipping(
-        subtotal,
-        discountAmount,
-        inputs.freeShippingThreshold
-    );
+    // 3. Determine free shipping (with manual override support)
+    const isFreeShipping = inputs.manualIsFreeShipping !== undefined
+        ? inputs.manualIsFreeShipping // Use manual override if provided
+        : determineIsFreeShipping(    // Otherwise use automatic threshold check
+            subtotal,
+            discountAmount,
+            inputs.freeShippingThreshold
+        );
 
     // 4. Calculate actual shipping cost
     const actualShippingCost = calculateActualShippingCost(
@@ -108,7 +111,8 @@ export async function calculateCompleteOrder(
         inputs.shippingMethod.cost, // Use original cost for profit calculation
         paymentFees,
         discountAmount,
-        isFreeShipping
+        isFreeShipping,
+        customerFee
     );
 
     const netProfit = profitShare.totalYassirShare + profitShare.totalBasimShare;

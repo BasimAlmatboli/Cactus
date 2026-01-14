@@ -4,11 +4,7 @@ import { Plus } from 'lucide-react';
 import { ImportExportButtons } from '../ImportExportButtons';
 import { useOrders } from '../../hooks/useOrders';
 
-interface OrdersHeaderProps {
-  onOrdersImported: () => Promise<void>;
-}
-
-export const OrdersHeader: React.FC<OrdersHeaderProps> = ({ onOrdersImported }) => {
+export const OrdersHeader: React.FC = () => {
   const { orders } = useOrders();
 
   return (
@@ -19,10 +15,7 @@ export const OrdersHeader: React.FC<OrdersHeaderProps> = ({ onOrdersImported }) 
       </div>
 
       <div className="flex gap-4">
-        <ImportExportButtons
-          orders={orders}
-          onOrdersImported={onOrdersImported}
-        />
+        <ImportExportButtons orders={orders} />
 
         <Link
           to="/calculator"

@@ -1,4 +1,3 @@
-import React from 'react';
 import { OrdersList } from '../components/orders/OrdersList';
 import { OrdersHeader } from '../components/orders/OrdersHeader';
 import { useOrders } from '../hooks/useOrders';
@@ -22,7 +21,7 @@ export const Orders = () => {
   return (
     <div className="py-8">
       <div className="max-w-6xl mx-auto px-4">
-        <OrdersHeader onOrdersImported={refreshOrders} />
+        <OrdersHeader />
 
         <OrdersList
           orders={orders}

@@ -7,17 +7,13 @@ interface ExpensesSummaryReportProps {
 }
 
 export const ExpensesSummaryReport: React.FC<ExpensesSummaryReportProps> = ({ expenses }) => {
-  // Calculate totals
+  // Calculate totals using actual split percentages
   const basimTotal = expenses.reduce((sum, expense) => {
-    if (expense.owner === 'basim') return sum + expense.amount;
-    if (expense.owner === 'shared') return sum + (expense.amount / 2);
-    return sum;
+    return sum + (expense.amount * (expense.basimSharePercentage / 100));
   }, 0);
 
   const yassirTotal = expenses.reduce((sum, expense) => {
-    if (expense.owner === 'yassir') return sum + expense.amount;
-    if (expense.owner === 'shared') return sum + (expense.amount / 2);
-    return sum;
+    return sum + (expense.amount * (expense.yassirSharePercentage / 100));
   }, 0);
 
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);

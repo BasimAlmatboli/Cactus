@@ -8,9 +8,24 @@ export const ExpenseForm: React.FC<{ onExpenseAdded: () => void }> = ({ onExpens
   const [category, setCategory] = useState<Expense['category']>('other');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
-  const [owner, setOwner] = useState<Expense['owner']>('shared');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [basimShare, setBasimShare] = useState(50);
+  const [yassirShare, setYassirShare] = useState(50);
+  const [includeTax, setIncludeTax] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Auto-calculate complementary percentage
+  const handleBasimShareChange = (value: number) => {
+    const validValue = Math.max(0, Math.min(100, value));
+    setBasimShare(validValue);
+    setYassirShare(100 - validValue);
+  };
+
+  const handleYassirShareChange = (value: number) => {
+    const validValue = Math.max(0, Math.min(100, value));
+    setYassirShare(validValue);
+    setBasimShare(100 - validValue);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,11 +37,25 @@ export const ExpenseForm: React.FC<{ onExpenseAdded: () => void }> = ({ onExpens
 
     try {
       setIsSubmitting(true);
+      // Auto-determine owner based on split percentages for backward compatibility
+      const owner: Expense['owner'] =
+        basimShare === yassirShare ? 'shared' :
+          basimShare > yassirShare ? 'basim' : 'yassir';
+
+      // Calculate total amount (base + tax if applicable)
+      const totalAmount = includeTax
+        ? parseFloat(amount) * 1.15  // Add 15% tax to base amount
+        : parseFloat(amount);         // No tax, use base amount
+
       await saveExpense({
         category,
         description,
-        amount: parseFloat(amount),
+        amount: totalAmount,  // Store total (with tax if applicable)
         owner,
+        basimSharePercentage: basimShare,
+        yassirSharePercentage: yassirShare,
+        includeTax,
+        amountBeforeTax: includeTax ? parseFloat(amount) : undefined,  // Store base if tax applied
         date
       });
 
@@ -34,7 +63,9 @@ export const ExpenseForm: React.FC<{ onExpenseAdded: () => void }> = ({ onExpens
       setCategory('other');
       setDescription('');
       setAmount('');
-      setOwner('shared');
+      setBasimShare(50);
+      setYassirShare(50);
+      setIncludeTax(false);
       setDate(new Date().toISOString().split('T')[0]);
 
       onExpenseAdded();
@@ -56,7 +87,7 @@ export const ExpenseForm: React.FC<{ onExpenseAdded: () => void }> = ({ onExpens
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
+        <div className="md:col-span-2">
           <label className="block text-sm font-medium text-gray-400 mb-2">
             Category
           </label>
@@ -68,21 +99,6 @@ export const ExpenseForm: React.FC<{ onExpenseAdded: () => void }> = ({ onExpens
             {expenseCategories.map(cat => (
               <option key={cat.id} value={cat.id}>{cat.name}</option>
             ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-400 mb-2">
-            Owner
-          </label>
-          <select
-            value={owner}
-            onChange={(e) => setOwner(e.target.value as Expense['owner'])}
-            className="w-full px-4 py-3 bg-[#13151A] border border-gray-800 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
-          >
-            <option value="basim">Basim</option>
-            <option value="yassir">Yassir</option>
-            <option value="shared">Shared</option>
           </select>
         </div>
 
@@ -118,19 +134,117 @@ export const ExpenseForm: React.FC<{ onExpenseAdded: () => void }> = ({ onExpens
             </div>
           </div>
         </div>
+
+        {/* Owner Split Percentage Section */}
+        <div className="md:col-span-2 bg-gray-800/30 rounded-lg p-5 border border-gray-700/50">
+          <h3 className="text-sm font-semibold text-gray-300 mb-4 flex items-center gap-2">
+            <span className="w-1 h-4 bg-purple-500 rounded-full"></span>
+            Owner Split Percentage
+          </h3>
+
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            {/* Basim Share */}
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-2">
+                Basim Share (%)
+              </label>
+              <input
+                type="number"
+                value={basimShare}
+                onChange={(e) => handleBasimShareChange(Number(e.target.value))}
+                min="0"
+                max="100"
+                step="1"
+                className="w-full px-4 py-2.5 bg-[#13151A] border border-gray-800 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none"
+              />
+            </div>
+
+            {/* Yasir Share */}
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-2">
+                Yasir Share (%)
+              </label>
+              <input
+                type="number"
+                value={yassirShare}
+                onChange={(e) => handleYassirShareChange(Number(e.target.value))}
+                min="0"
+                max="100"
+                step="1"
+                className="w-full px-4 py-2.5 bg-[#13151A] border border-gray-800 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Visual Split Indicator */}
+          <div>
+            <div className="h-3 bg-gray-700/50 rounded-full overflow-hidden flex">
+              <div
+                className="bg-blue-500 transition-all duration-300"
+                style={{ width: `${basimShare}%` }}
+              />
+              <div
+                className="bg-purple-500 transition-all duration-300"
+                style={{ width: `${yassirShare}%` }}
+              />
+            </div>
+            <div className="mt-2 flex justify-between text-xs">
+              <span className="text-blue-400 font-medium">Basim: {basimShare}%</span>
+              <span className="text-purple-400 font-medium">Yasir: {yassirShare}%</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Tax Toggle Section */}
+        <div className="md:col-span-2 bg-blue-900/10 border border-blue-700/30 rounded-lg p-5">
+          <label className="flex items-center justify-between cursor-pointer group">
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-blue-300 mb-1 flex items-center gap-2">
+                <span className="w-1 h-4 bg-blue-500 rounded-full"></span>
+                Add 15% VAT
+              </h3>
+              <p className="text-xs text-gray-400">
+                Check to add 15% tax to the amount (e.g., Meta Ads, TikTok Ads)
+              </p>
+            </div>
+            <input
+              type="checkbox"
+              checked={includeTax}
+              onChange={(e) => setIncludeTax(e.target.checked)}
+              className="w-6 h-6 rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 transition-all"
+            />
+          </label>
+
+          {includeTax && amount && parseFloat(amount) > 0 && (
+            <div className="mt-4 pt-4 border-t border-blue-700/30 space-y-2 text-sm">
+              <div className="flex justify-between text-gray-300">
+                <span>Base amount:</span>
+                <span className="font-mono">{parseFloat(amount).toFixed(2)} SAR</span>
+              </div>
+              <div className="flex justify-between text-gray-300">
+                <span>Tax (15%):</span>
+                <span className="font-mono text-blue-400">+{(parseFloat(amount) * 0.15).toFixed(2)} SAR</span>
+              </div>
+              <div className="flex justify-between text-white font-semibold text-base pt-2 border-t border-blue-700/30">
+                <span>Total to save:</span>
+                <span className="font-mono text-green-400">{(parseFloat(amount) * 1.15).toFixed(2)} SAR</span>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       <button
         type="submit"
         disabled={isSubmitting}
         className={`mt-8 w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-blue-600 text-white font-medium rounded-xl transition-all shadow-lg shadow-blue-900/20 ${isSubmitting
-            ? 'opacity-75 cursor-not-allowed'
-            : 'hover:bg-blue-500 hover:shadow-blue-600/30 hover:-translate-y-0.5'
+          ? 'opacity-75 cursor-not-allowed'
+          : 'hover:bg-blue-500 hover:shadow-blue-600/30 hover:-translate-y-0.5'
           }`}
       >
         <Plus className="h-5 w-5" />
         <span>{isSubmitting ? 'Adding Expense...' : 'Add Expense'}</span>
       </button>
-    </form>
+    </form >
   );
 };
