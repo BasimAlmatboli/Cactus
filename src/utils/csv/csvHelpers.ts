@@ -15,9 +15,9 @@ import { calculateTotalProfitShare } from '../profitSharing/profit';
  * 8. Discount
  * 9. Total
  * 10. Payment Fee
- * 11. Net Profit
- * 12. Basim Net Profit
- * 13. Yasir Net Profit
+ * 11. Order Profit
+ * 12. Basim Order Profit
+ * 13. Yasir Order Profit
  */
 export const exportOrdersToCSV = async (orders: Order[]): Promise<string> => {
   const headers = [
@@ -31,9 +31,9 @@ export const exportOrdersToCSV = async (orders: Order[]): Promise<string> => {
     'Discount',
     'Total',
     'Payment Fee',
-    'Net Profit',
-    'Basim Net Profit',
-    'Yasir Net Profit'
+    'Order Profit',
+    'Basim Order Profit',
+    'Yasir Order Profit'
   ].join(',');
 
   const rows = await Promise.all(
@@ -50,7 +50,8 @@ export const exportOrdersToCSV = async (orders: Order[]): Promise<string> => {
         order.shippingCost,
         order.paymentFees,
         discountAmount,
-        order.isFreeShipping
+        order.isFreeShipping,
+        order.paymentMethod.customer_fee || 0
       );
 
       // Format products as JSON array matching Salla import format

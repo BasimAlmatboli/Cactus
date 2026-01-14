@@ -1,5 +1,5 @@
 import React from 'react';
-import { Order } from '../../types';
+import { Order } from '../../../types';
 import { Package } from 'lucide-react';
 
 interface ProductPerformance {

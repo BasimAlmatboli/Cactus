@@ -1,5 +1,5 @@
 import React from 'react';
-import { Order } from '../../types';
+import { Order } from '../../../types';
 import { Ship, TrendingUp, TrendingDown, DollarSign, Package } from 'lucide-react';
 
 interface ShippingFeeData {

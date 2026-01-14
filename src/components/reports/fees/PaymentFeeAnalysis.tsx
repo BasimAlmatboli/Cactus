@@ -1,5 +1,5 @@
 import React from 'react';
-import { Order } from '../../types';
+import { Order } from '../../../types';
 import { CreditCard, TrendingUp, DollarSign, Percent, Wallet } from 'lucide-react';
 
 interface PaymentFeeData {

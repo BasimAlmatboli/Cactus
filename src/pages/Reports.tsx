@@ -8,16 +8,16 @@ import { getExpenses } from '../services/expenseService';
 import { Loader2 } from 'lucide-react';
 
 // Report Components
-import { SalesReport } from '../components/reports/SalesReport';
-import { FinancialReport } from '../components/reports/FinancialReport';
-import { ProfitSharingReport } from '../components/reports/ProfitSharingReport';
-import { TotalEarningsReport } from '../components/reports/TotalEarningsReport';
-import { ProductSalesReport } from '../components/reports/ProductSalesReport';
-import { NetProfitReport } from '../components/reports/NetProfitReport';
-import { ShippingFeeAnalysis } from '../components/reports/ShippingFeeAnalysis';
-import { PaymentFeeAnalysis } from '../components/reports/PaymentFeeAnalysis';
+import { SalesReport } from '../components/reports/sales/SalesReport';
+import { FinancialReport } from '../components/reports/overview/FinancialReport';
+import { ProfitSharingReport } from '../components/reports/overview/ProfitSharingReport';
+import { PartnerPayoutsReport } from '../components/reports/overview/PartnerPayoutsReport';
+import { ProductSalesReport } from '../components/reports/sales/ProductSalesReport';
+import { NetProfitReport } from '../components/reports/overview/NetProfitReport';
+import { ShippingFeeAnalysis } from '../components/reports/fees/ShippingFeeAnalysis';
+import { PaymentFeeAnalysis } from '../components/reports/fees/PaymentFeeAnalysis';
 import { ExportReportsButton } from '../components/reports/ExportReportsButton';
-import { BusinessMetricsReport } from '../components/reports/BusinessMetricsReport';
+import { BusinessMetricsReport } from '../components/reports/overview/BusinessMetricsReport';
 
 interface EarningsData {
   yassirProductsCost: number;
@@ -142,7 +142,8 @@ export const Reports = () => {
         order.shippingCost,
         order.paymentFees,
         discountAmount,
-        order.isFreeShipping
+        order.isFreeShipping,
+        order.paymentMethod.customer_fee || 0
       );
 
       const orderEarnings = calculateTotalEarnings(
@@ -204,16 +205,20 @@ export const Reports = () => {
         freeShippingCount++;
       } else {
         paidShippingCount++;
-        totalShippingFees += order.shippingCost;
-
-        // Track by company
-        const companyName = order.shippingMethod.name;
-        const existing = companyMap.get(companyName) || { orderCount: 0, totalFees: 0 };
-        companyMap.set(companyName, {
-          orderCount: existing.orderCount + 1,
-          totalFees: existing.totalFees + order.shippingCost,
-        });
       }
+
+      // Always calculate the actual fee paid to the company from the DB value
+      // This is what the business pays, regardless of what the customer paid
+      const actualShippingFee = order.shippingMethod.cost;
+      totalShippingFees += actualShippingFee;
+
+      // Track by company
+      const companyName = order.shippingMethod.name;
+      const existing = companyMap.get(companyName) || { orderCount: 0, totalFees: 0 };
+      companyMap.set(companyName, {
+        orderCount: existing.orderCount + 1,
+        totalFees: existing.totalFees + actualShippingFee,
+      });
 
       // Payment fees
       totalPaymentFees += order.paymentFees;
@@ -251,7 +256,7 @@ export const Reports = () => {
       totalShippingFees,
       freeShippingCount,
       paidShippingCount,
-      averageShippingFee: paidShippingCount > 0 ? totalShippingFees / paidShippingCount : 0,
+      averageShippingFee: ordersList.length > 0 ? totalShippingFees / ordersList.length : 0,
       totalRevenue,
       feesAsPercentOfRevenue: totalRevenue > 0 ? (totalShippingFees / totalRevenue) * 100 : 0,
       byCompany,
@@ -279,9 +284,10 @@ export const Reports = () => {
             orders={orders}
             earningsData={earningsData}
             expensesData={expensesData}
+            expenses={expenses}
           />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <TotalEarningsReport
+            <PartnerPayoutsReport
               orders={orders}
               earningsData={earningsData}
             />
@@ -395,7 +401,7 @@ export const Reports = () => {
   return (
     <div className="h-full flex gap-8">
       {/* Reports Sidebar */}
-      <div className="w-64 flex-shrink-0">
+      <div className="w-64 flex-shrink-0 sticky top-6 self-start">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-2xl font-bold text-white">Reports</h2>
         </div>

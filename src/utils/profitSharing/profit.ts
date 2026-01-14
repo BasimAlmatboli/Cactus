@@ -1,9 +1,7 @@
 import { OrderItem } from '../../types';
-import { ProfitShare, ItemProfitDetails, TotalProfitShare } from './types';
+import { ItemProfitDetails, TotalProfitShare } from './types';
 import { calculateCachedProfitShare } from '../../services/profitShareService';
 import {
-  calculateItemRevenue,
-  calculateTotalRevenue,
   calculateRevenueProportion
 } from './revenue';
 import {
@@ -67,14 +65,15 @@ export const calculateItemProfit = async (
   shippingCost: number,
   paymentFees: number,
   manualDiscountAmount: number,
-  isFreeShipping: boolean
+  isFreeShipping: boolean,
+  customerFee: number = 0
 ): Promise<ItemProfitDetails> => {
   const itemSubtotal = item.product.sellingPrice * item.quantity;
   const revenueProportion = calculateRevenueProportion(itemSubtotal, totalSubtotal);
 
   // Calculate total (only add shipping if it's not free)
   const shippingToAdd = isFreeShipping ? 0 : shippingCost;
-  const total = itemSubtotal + (shippingToAdd * revenueProportion);
+  const total = itemSubtotal + (shippingToAdd * revenueProportion) + (customerFee * revenueProportion);
 
   // Calculate cost
   const cost = calculateItemCost(item.product.cost, item.quantity);
@@ -154,15 +153,16 @@ export const calculateTotalProfitShare = async (
   shippingCost: number,
   paymentFees: number,
   manualDiscountAmount: number,
-  isFreeShipping: boolean = false
+  isFreeShipping: boolean = false,
+  customerFee: number = 0
 ): Promise<TotalProfitShare> => {
   const totalSubtotal = items.reduce(
     (sum, item) => sum + (item.product.sellingPrice * item.quantity),
     0
   );
 
-  // Only add shipping to total if it's not free
-  const totalWithShipping = totalSubtotal + (isFreeShipping ? 0 : shippingCost);
+  // Only add shipping and customer fee to total if shipping is not free
+  const totalWithShipping = totalSubtotal + (isFreeShipping ? 0 : shippingCost) + customerFee;
 
   const itemShares = await Promise.all(
     items.map(item =>
@@ -172,7 +172,8 @@ export const calculateTotalProfitShare = async (
         shippingCost,
         paymentFees,
         manualDiscountAmount,
-        isFreeShipping
+        isFreeShipping,
+        customerFee
       )
     )
   );

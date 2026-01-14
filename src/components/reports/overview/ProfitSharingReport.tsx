@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Order } from '../../types';
+import { Order } from '../../../types';
 import { Users } from 'lucide-react';
-import { calculateTotalProfitShare } from '../../utils/profitSharing';
+import { calculateTotalProfitShare } from '../../../utils/profitSharing';
 
 interface ProfitSharingReportProps {
   orders: Order[];
@@ -35,7 +35,8 @@ export const ProfitSharingReport: React.FC<ProfitSharingReportProps> = ({ orders
           order.shippingCost,
           order.paymentFees,
           discountAmount,
-          order.isFreeShipping
+          order.isFreeShipping,
+          order.paymentMethod.customer_fee || 0
         );
 
         shares.yassirShare += profitSharing.totalYassirShare;
@@ -60,7 +61,7 @@ export const ProfitSharingReport: React.FC<ProfitSharingReportProps> = ({ orders
           <div className="p-2 bg-blue-500/10 rounded-lg">
             <Users className="h-6 w-6 text-blue-400" />
           </div>
-          <h2 className="text-xl font-semibold text-white">Profit Sharing</h2>
+          <h2 className="text-xl font-semibold text-white">Contribution Profit Sharing</h2>
         </div>
         <p className="text-gray-500">No orders found.</p>
       </div>
@@ -87,7 +88,7 @@ export const ProfitSharingReport: React.FC<ProfitSharingReportProps> = ({ orders
         <div className="p-2 bg-blue-500/10 rounded-lg">
           <Users className="h-6 w-6 text-blue-400" />
         </div>
-        <h2 className="text-xl font-semibold text-white">Profit Sharing</h2>
+        <h2 className="text-xl font-semibold text-white">Contribution Profit Sharing</h2>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 flex-1">

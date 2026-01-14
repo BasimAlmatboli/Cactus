@@ -130,7 +130,7 @@ export const OrdersList: React.FC<OrdersListProps> = ({
                   Total
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                  Net Profit
+                  Order Profit
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
                   Actions

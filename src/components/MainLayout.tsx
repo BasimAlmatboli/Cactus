@@ -132,7 +132,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
 
                 {/* Page Content */}
                 <div className="flex-1 overflow-auto relative">
-                    <div className="absolute inset-0 pb-8 px-8">
+                    <div className="min-h-full pb-8 px-8">
                         {children}
                     </div>
                 </div>

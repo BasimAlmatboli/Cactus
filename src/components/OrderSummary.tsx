@@ -24,7 +24,8 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({ order }) => {
         order.shippingCost,
         order.paymentFees,
         discountAmount,
-        order.isFreeShipping
+        order.isFreeShipping,
+        order.paymentMethod.customer_fee || 0
       );
       setProfitSharing(result);
     };

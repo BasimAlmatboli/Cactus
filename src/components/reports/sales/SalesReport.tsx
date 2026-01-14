@@ -1,5 +1,5 @@
 import React from 'react';
-import { Order } from '../../types';
+import { Order } from '../../../types';
 import { TrendingUp } from 'lucide-react';
 
 interface SalesReportProps {

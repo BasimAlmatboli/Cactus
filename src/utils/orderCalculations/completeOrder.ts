@@ -111,7 +111,8 @@ export async function calculateCompleteOrder(
         inputs.shippingMethod.cost, // Use original cost for profit calculation
         paymentFees,
         discountAmount,
-        isFreeShipping
+        isFreeShipping,
+        customerFee
     );
 
     const netProfit = profitShare.totalYassirShare + profitShare.totalBasimShare;

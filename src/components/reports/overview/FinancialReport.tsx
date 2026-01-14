@@ -1,5 +1,5 @@
 import React from 'react';
-import { Order } from '../../types';
+import { Order } from '../../../types';
 import { DollarSign } from 'lucide-react';
 
 interface FinancialReportProps {
@@ -24,7 +24,7 @@ export const FinancialReport: React.FC<FinancialReportProps> = ({ orders }) => {
     return sum + discountAmount;
   }, 0) || 0;
 
-  const totalProfit = orders?.reduce((sum, order) => sum + order.netProfit, 0) || 0;
+  const totalOrderProfit = orders?.reduce((sum, order) => sum + order.netProfit, 0) || 0;
 
   if (!orders?.length) {
     return (
@@ -69,8 +69,8 @@ export const FinancialReport: React.FC<FinancialReportProps> = ({ orders }) => {
           </div>
 
           <div className="bg-[#13151A] rounded-xl p-5 border border-blue-500/20 group hover:border-blue-500/40 transition-colors">
-            <h3 className="text-sm font-medium text-blue-400 mb-2 uppercase tracking-wider">Net Profit</h3>
-            <p className="text-3xl font-bold text-white">{totalProfit.toFixed(2)} <span className="text-lg text-gray-500 font-medium">SAR</span></p>
+            <h3 className="text-sm font-medium text-blue-400 mb-2 uppercase tracking-wider">Total Order Profit</h3>
+            <p className="text-3xl font-bold text-white">{totalOrderProfit.toFixed(2)} <span className="text-lg text-gray-500 font-medium">SAR</span></p>
           </div>
         </div>
       </div>
