@@ -798,28 +798,418 @@ const result = await calculateCompleteOrder({
 
 // Results:
 result.subtotal           // 130 SAR (50×2 + 30×1)
-result.discountAmount     // 13 SAR (10% of 130)
-result.isFreeShipping     // true (117 >= 100)
-result.actualShippingCost // 0 SAR (free!)
-result.customerFee        // 10 SAR (COD fee)
-result.customerTotal      // 127 SAR (130 + 0 - 13 + 10) ← Customer pays this
-result.paymentFees        // 2.61 SAR (you pay this to MADA)
+result.discount Amount          // 13 SAR (10% of 130)
+result.isFreeShipping        // true ((130-13) = 117 >= 100)  
+result.actualShippingCost    // 0 SAR (free!)
+result.customerFee           // 10 SAR (COD fee)
+result.customerTotal         // 127 SAR ← Invoice amount
+result.paymentFees           // 2.61 SAR ← What YOU pay
 ```
 
 **Customer Invoice:**
 ```
-Subtotal:        130.00 SAR
-Discount (10%):  -13.00 SAR
-Shipping:         FREE!
-COD Fee:         +10.00 SAR
-─────────────────────────
-Total:           127.00 SAR ← Customer pays
+Subtotal:        130 SAR
+Discount (10%): - 13 SAR
+Shipping:          FREE
+COD Fee:        + 10 SAR
+━━━━━━━━━━━━━━━━━━━━━━
+TOTAL:           127 SAR ✅
 ```
 
 **Your Costs:**
 ```
-Payment Gateway Fee: 2.61 SAR
+Payment Fees: 2.61 SAR (MADA 1% + 1 SAR + 15% VAT)
 ```
+
+---
+
+## 📊 **Report Calculations Module**
+
+### 🎯 Overview
+
+Similar to order calculations, **all report metrics** are centralized in `/utils/reportCalculations/`. This ensures consistency across all financial reports.
+
+### 🏗️ Architecture
+
+```
+src/utils/reportCalculations/
+├── index.ts              # Export all functions
+├── types.ts              # TypeScript interfaces  
+├── complete.ts           # Orchestrator - calculateAllReportMetrics()
+├── volume.ts             # Order volume metrics
+├── revenue.ts            # Revenue calculations
+├── costs.ts              # Cost & fee breakdowns
+├── profit.ts             # Profit metrics
+├── profitSharing.ts      # Partner profit shares
+├── earnings.ts           # Partner earnings
+├── expenses.ts           # Expense calculations
+└── partnerNetProfit.ts   # Final distributions
+```
+
+### 🚀 Quick Start
+
+**Use the single orchestrator function:**
+
+```typescript
+import { calculateAllReportMetrics } from '@/utils/reportCalculations';
+
+const metrics = await calculateAllReportMetrics({
+  orders: ordersArray,
+  expenses: expensesArray
+});
+
+// Access all metrics from one object
+console.log(metrics.totalRevenue);          // 17604.08
+console.log(metrics.totalExpenses);         // 3690.85
+console.log(metrics.grossProfit);           // 13551.08
+console.log(metrics.netProfit);             // 10856.32
+console.log(metrics.earnings.basimTotalEarnings);
+console.log(metrics.expenses.yassirExpenses);
+console.log(metrics.partnerNetProfit.basimNetProfit);
+```
+
+### 📊 Complete Metric Types
+
+```typescript
+interface ReportMetrics {
+  // Volume
+  totalOrders: number;
+  totalRevenue: number;
+  averageOrderValue: number;
+
+  // Costs
+  totalProductCosts: number;
+  totalShippingFees: number;
+  totalPaymentFees: number;
+  totalFees: number;
+
+  // Profit
+  grossProfit: number;
+  netProfit: number;
+  grossProfitMargin: number;
+  netProfitMargin: number;
+  grossProfitPerOrder: number;
+  netProfitPerOrder: number;
+
+  // Partner Shares
+  profitShares: PartnerProfitShares;
+  earnings: PartnerEarnings;
+  expenses: PartnerExpenses;
+  partnerNetProfit: PartnerNetProfit;
+
+  // Fee Analysis
+  shippingFeeData: ShippingFeeData;
+  paymentFeeData: PaymentFeeData;
+
+  // Additional
+  marketingExpenses: number;
+  productCostPercent: number;
+  feeImpactPercent: number;
+}
+```
+
+### ✅ Best Practices
+
+```typescript
+// ✅ GOOD - Calculate once, use everywhere
+const metrics = await calculateAllReportMetrics({ orders, expenses });
+<NetProfitReport metrics={metrics} />
+<BusinessMetricsReport metrics={metrics} />
+<PartnerPayoutsReport metrics={metrics} />
+
+// ✅ GOOD - Display pre-calculated values
+<p>{metrics.totalExpenses.toFixed(2)} SAR</p>
+
+// ❌ BAD - Don't recalculate in components
+const total = expenses.reduce((sum, e) => sum + e.amount, 0);
+
+// ❌ BAD - Don't duplicate calculation logic
+const grossProfit = revenue - costs; // Use metrics.grossProfit!
+```
+
+---
+
+## 🤖 **CRITICAL: AI Agent Guidelines**
+
+> [!CAUTION]
+> **FOR ANY AI DEVELOPER WORKING ON THIS PROJECT**
+> 
+> This section contains **MANDATORY ARCHITECTURE RULES** that must NEVER be violated.
+> Violating these rules will break the entire calculation consistency across the system.
+
+### ⚠️ **Golden Rules**
+
+#### **Rule #1: NEVER Calculate in UI Components**
+
+**❌ FORBIDDEN:**
+```typescript
+// DON'T DO THIS - Calculation in component
+function OrderTotal({ items, shipping }) {
+  const total = items.reduce((sum, item) => 
+    sum + item.price * item.quantity, 0) + shipping;
+  return <p>{total}</p>;
+}
+
+// DON'T DO THIS - Manual calculation in report
+function ProfitReport({ orders }) {
+  const revenue = orders.reduce((sum, o) => sum + o.total, 0);
+  return <p>Revenue: {revenue}</p>;
+}
+```
+
+**✅ REQUIRED:**
+```typescript
+// DO THIS - Use centralized calculation
+function OrderTotal({ orderData }) {
+  return <p>{orderData.customerTotal}</p>;
+}
+
+// DO THIS - Use metrics object
+function ProfitReport({ metrics }) {
+  return <p>Revenue: {metrics.totalRevenue}</p>;
+}
+```
+
+---
+
+#### **Rule #2: ALWAYS Use Centralized Functions**
+
+**FOR ORDER CALCULATIONS:**
+```typescript
+import { calculateCompleteOrder } from '@/utils/orderCalculations';
+
+// ✅ ALWAYS call this for ANY order calculation
+const result = await calculateCompleteOrder({
+  orderItems,
+  shippingMethod,
+  paymentMethod,
+  discount,
+  freeShippingThreshold
+});
+```
+
+**FOR REPORT CALCULATIONS:**
+```typescript
+import { calculateAllReportMetrics } from '@/utils/reportCalculations';
+
+// ✅ ALWAYS call this for ANY report metrics
+const metrics = await calculateAllReportMetrics({
+  orders,
+  expenses
+});
+```
+
+---
+
+#### **Rule #3: NEVER Duplicate Calculation Logic**
+
+**❌ FORBIDDEN:**
+```typescript
+// Creating new calculation functions
+function calculateOrderTotal(items) {
+  return items.reduce(...); // DON'T!
+}
+
+function getRevenue(orders) {
+  return orders.reduce(...); // DON'T!
+}
+```
+
+**✅ REQUIRED:**
+```typescript
+// Use existing centralized functions
+import { calculateCompleteOrder, calculateAllReportMetrics } 
+  from '@/utils/...'
+```
+
+---
+
+#### **Rule #4: Single Source of Truth**
+
+**Where Calculations Live:**
+
+| Calculation Type | Location | Function |
+|-----------------|----------|----------|
+| Order totals, fees, profit | `utils/orderCalculations/` | `calculateCompleteOrder()` |
+| Report metrics, analytics | `utils/reportCalculations/` | `calculateAllReportMetrics()` |
+| Individual order metrics | `utils/orderCalculations/` | Specific functions |
+| Individual report metrics | `utils/reportCalculations/` | Specific functions |
+
+**Usage Pattern:**
+```typescript
+// Calculator page
+const orderData = await calculateCompleteOrder({ ... });
+
+// Salla import
+const orderData = await calculateCompleteOrder({ ... }); // SAME FUNCTION!
+
+// Order edit
+const orderData = await calculateCompleteOrder({ ... }); // SAME FUNCTION!
+
+// Reports page
+const metrics = await calculateAllReportMetrics({ ... });
+
+// All report components
+<Component metrics={metrics} /> // SAME OBJECT!
+```
+
+---
+
+### 🎯 **Implementation Checklist**
+
+Before adding ANY feature that involves calculations, verify:
+
+- [ ] Am I calculating order-related values?
+  - ✅ YES → Use `calculateCompleteOrder()`
+  - ❌ NO → Continue
+
+- [ ] Am I calculating report/analytics values?
+  - ✅ YES → Use `calculateAllReportMetrics()`
+  - ❌ NO → Continue
+
+- [ ] Am I displaying pre-calculated values?
+  - ✅ YES → Use `order.total` or `metrics.revenue` directly
+  - ❌ NO → You're doing it wrong!
+
+- [ ] Do I need a NEW calculation not in centralized modules?
+  - ✅ YES → Add to appropriate module (orderCalculations or reportCalculations)
+  - ❌ NO → Use existing functions
+
+---
+
+### 🚨 **Common Mistakes to Avoid**
+
+#### **Mistake #1: Inline Calculations**
+```typescript
+// ❌ WRONG
+<p>Total: {items.reduce((s, i) => s + i.price, 0)}</p>
+
+// ✅ CORRECT
+<p>Total: {orderData.customerTotal}</p>
+```
+
+#### **Mistake #2: Recalculating in Display**
+```typescript
+// ❌ WRONG
+const displayTotal = order.subtotal - order.discount + order.shipping;
+
+// ✅ CORRECT
+const displayTotal = order.total; // Already calculated!
+```
+
+#### **Mistake #3: Creating Helper Functions**
+```typescript
+// ❌ WRONG - Don't create local helpers
+function getTotalRevenue(orders) {
+  return orders.reduce((sum, o) => sum + o.total, 0);
+}
+
+// ✅ CORRECT - Import from centralized module
+import { calculateAllReportMetrics } from '@/utils/reportCalculations';
+const metrics = await calculateAllReportMetrics({ orders, expenses });
+const revenue = metrics.totalRevenue;
+```
+
+#### **Mistake #4: Modifying Centralized Functions**
+```typescript
+// ❌ WRONG - Changing how fees are calculated
+export function calculatePaymentFees(method, amount) {
+  // Modified logic here breaks everything!
+}
+
+// ✅ CORRECT - Extend, don't modify
+export function calculateSpecialFees(method, amount) {
+  const baseFees = calculatePaymentFees(method, amount);
+  return baseFees + specialFee;
+}
+```
+
+---
+
+### 📋 **Adding New Calculations**
+
+**Step-by-step process:**
+
+1. **Identify the correct module:**
+   - Order-related? → `utils/orderCalculations/`
+   - Report-related? → `utils/reportCalculations/`
+
+2. **Create new function file:**
+   ```typescript
+   // utils/reportCalculations/customMetric.ts
+   export function calculateCustomMetric(input: InputType): number {
+     // Pure function - no side effects
+     return calculatedValue;
+   }
+   ```
+
+3. **Export from index.ts:**
+   ```typescript
+   export { calculateCustomMetric } from './customMetric';
+   ```
+
+4. **Update orchestrator (if needed):**
+   ```typescript
+   // complete.ts or completeOrder.ts
+   const customMetric = calculateCustomMetric(data);
+   return {
+     ...otherMetrics,
+     customMetric
+   };
+   ```
+
+5. **Use in components:**
+   ```typescript
+   const metrics = await calculateAllReportMetrics({ ... });
+   <p>{metrics.customMetric}</p>
+   ```
+
+---
+
+### ⚡ **Quick Reference**
+
+**When you see this pattern - IT'S WRONG:**
+- `orders.reduce(...)` in a component
+- `expenses.filter(...).reduce(...)` in a component
+- `order.subtotal + order.shipping - order.discount` manually
+- New functions calculating totals/metrics locally
+- `useState` for calculations
+
+**When you see this pattern - IT'S CORRECT:**
+- `import { calculateCompleteOrder } from '@/utils/orderCalculations'`
+- `import { calculateAllReportMetrics } from '@/utils/reportCalculations'`
+- `<Component data={calculatedData} />` (passing results)
+- `{orderData.customerTotal}` (displaying pre-calculated)
+- `{metrics.totalRevenue}` (displaying from metrics)
+
+---
+
+### 💡 **Why This Matters**
+
+**Problem Without Centralization:**
+- Calculate order total in Calculator: **127 SAR**
+- Calculate same order in Reports: **125 SAR** ← DIFFERENT! 😱
+- Calculate in Salla Import: **130 SAR** ← ALSO DIFFERENT! 😱
+
+**Solution With Centralization:**
+- Calculate everywhere with `calculateCompleteOrder()`: **127 SAR** ✅
+- Same function → Same inputs → Same outputs → Always consistent! 🎉
+
+---
+
+## 📞 **Support**
+
+For questions about:
+- **Architecture:** Review this README
+- **Order Calculations:** See `/utils/orderCalculations/` documentation above
+- **Report Calculations:** See `/utils/reportCalculations/` section
+- **AI Development:** Follow the AI Agent Guidelines strictly
+
+---
+
+**Last Updated:** 2026-01-15  
+**Version:** 2.0.0 (Centralized Calculations)  
+**Critical Sections:** AI Agent Guidelines, Order Calculations, Report Calculations
 
 ---
 
@@ -831,7 +1221,44 @@ Payment Gateway Fee: 2.61 SAR
 ✅ **Easy to test:** Pure functions  
 ✅ **Easy to maintain:** Change once, applies everywhere  
 
-**Remember:** These functions are the **SINGLE SOURCE OF TRUTH** for all order calculations in the system!
+
+## 📊 **Financial Reports & Logic**
+
+This section documents how the major financial reports are calculated.
+
+### **1. Contribution Profit Sharing**
+*   **Location:** Reports > Overview
+*   **Purpose:** Shows the pure **Gross Profit** generated from orders, split by partner based on product ownership.
+*   **Formula:**
+    `Total Revenue` - `COGS` - `Order Fees` (Shipping + Payment + Discounts)
+*   **Key Note:** This does **NOT** subtract operating expenses (Ads, Salaries, etc.). It is the raw profit from sales.
+
+### **2. Monthly Partner Distributions**
+*   **Location:** Reports > Overview
+*   **Purpose:** Shows the final amount available to be paid out to partners (Cash Flow).
+*   **Formula:**
+    `Profit Share` + `Product Cost Recovery` - `Operating Expenses`
+*   **Why is it higher?**
+    It typically adds back the **Product Cost** to the payout. This is to repay the partner who bought the inventory, ensuring they recover their capital investment plus their profit share. Expenses (like Ads) are then deducted from this total.
+
+### **3. Business Metrics (Profit Funnel)**
+*   **Location:** Reports > Business Metrics
+*   **Purpose:** A top-down view of business profitability.
+*   **Calculation Flow:**
+    1.  **Total Revenue:** Sum of all order totals ranges.
+    2.  **Product Costs:** Sum of `Cost Price` × `Quantity`.
+    3.  **Gross Profit:** `Revenue` - `Product Costs`.
+    4.  **Shipping Fees:** Sum of `Order.ShippingMethod.Cost` (What the business pays the carrier).
+    5.  **Payment Fees:** Sum of `Order.PaymentFees` (Gateway costs).
+    6.  **Operating Expenses:** Sum of manually entered expenses (Marketing, Packaging, etc.).
+    7.  **True Net Profit:** `Gross Profit` - `Fees` - `Operating Expenses`.
+
+### **4. Fee Analysis**
+*   **Location:** Reports > Fee Analysis
+*   **Purpose:** Breakdown of where money is lost to fees.
+*   **Shipping Fee Analysis:** Compares "Shipping Collected from Customer" vs "Shipping Paid to Carrier".
+*   **Payment Fee Analysis:** Breakdown of costs per payment method (Tamara, Visa, etc.).
+
 
 ---
 
@@ -840,3 +1267,6 @@ Payment Gateway Fee: 2.61 SAR
 - Check function comments for examples
 - Review `completeOrder.ts` for the full flow
 - Look at existing usage in `useOrder.ts` or `SallaImportFlow.tsx`
+
+---
+

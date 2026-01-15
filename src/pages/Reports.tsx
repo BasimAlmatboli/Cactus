@@ -3,7 +3,7 @@ import { getOrders } from '../data/orders';
 import { Order } from '../types';
 import { Expense } from '../types/expense';
 import { BarChart3, TrendingUp, DollarSign } from 'lucide-react';
-import { calculateTotalEarnings, calculateTotalProfitShare } from '../utils/profitSharing';
+import { calculateAllReportMetrics, ReportMetrics } from '../utils/reportCalculations';
 import { getExpenses } from '../services/expenseService';
 import { Loader2 } from 'lucide-react';
 
@@ -19,49 +19,6 @@ import { PaymentFeeAnalysis } from '../components/reports/fees/PaymentFeeAnalysi
 import { ExportReportsButton } from '../components/reports/ExportReportsButton';
 import { BusinessMetricsReport } from '../components/reports/overview/BusinessMetricsReport';
 
-interface EarningsData {
-  yassirProductsCost: number;
-  basimProductsCost: number;
-  yassirTotalEarnings: number;
-  basimTotalEarnings: number;
-  combinedTotalEarnings: number;
-}
-
-interface ExpensesData {
-  yassirExpenses: number;
-  basimExpenses: number;
-  totalExpenses: number;
-}
-
-interface ShippingFeeData {
-  totalShippingFees: number;
-  freeShippingCount: number;
-  paidShippingCount: number;
-  averageShippingFee: number;
-  totalRevenue: number;
-  feesAsPercentOfRevenue: number;
-  byCompany: Array<{
-    companyName: string;
-    orderCount: number;
-    totalFees: number;
-    averageFee: number;
-  }>;
-}
-
-interface PaymentFeeData {
-  totalPaymentFees: number;
-  averagePaymentFee: number;
-  totalRevenue: number;
-  feesAsPercentOfRevenue: number;
-  averageFeePercentage: number;
-  byMethod: Array<{
-    methodName: string;
-    orderCount: number;
-    totalFees: number;
-    averageFee: number;
-  }>;
-}
-
 interface ReportSection {
   id: string;
   title: string;
@@ -73,204 +30,57 @@ export const Reports = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [earningsData, setEarningsData] = useState<EarningsData | null>(null);
-  const [expensesData, setExpensesData] = useState<ExpensesData | null>(null);
-  const [shippingFeeData, setShippingFeeData] = useState<ShippingFeeData | null>(null);
-  const [paymentFeeData, setPaymentFeeData] = useState<PaymentFeeData | null>(null);
+  const [metrics, setMetrics] = useState<ReportMetrics | null>(null);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [activeSection, setActiveSection] = useState<string>('overview');
   const reportsContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    loadOrders();
-    loadExpenses();
+    loadData();
   }, []);
 
-  const loadOrders = async () => {
+  const loadData = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const loadedOrders = await getOrders();
-      setOrders(loadedOrders);
 
-      // Calculate earnings and fees once after orders are loaded
-      await calculateEarnings(loadedOrders);
-      calculateFees(loadedOrders);
+      // Load both orders and expenses in parallel
+      const [loadedOrders, loadedExpenses] = await Promise.all([
+        getOrders(),
+        getExpenses()
+      ]);
+
+      setOrders(loadedOrders);
+      setExpenses(loadedExpenses);
+
+      // Calculate metrics with both datasets
+      if (loadedOrders.length > 0) {
+        await calculateMetrics(loadedOrders, loadedExpenses);
+      }
     } catch (error) {
-      console.error('Error loading orders:', error);
+      console.error('Error loading data:', error);
       setError('Failed to load reports. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const loadExpenses = async () => {
+  const calculateMetrics = async (ordersList: Order[], expensesList: Expense[]) => {
+    if (!ordersList?.length) {
+      setMetrics(null);
+      return;
+    }
+
     try {
-      const loadedExpenses = await getExpenses();
-      setExpenses(loadedExpenses);
-      calculateExpenses(loadedExpenses);
+      const calculatedMetrics = await calculateAllReportMetrics({
+        orders: ordersList,
+        expenses: expensesList
+      });
+      setMetrics(calculatedMetrics);
     } catch (error) {
-      console.error('Error loading expenses:', error);
-      setExpenses([]);
-      setExpensesData({ yassirExpenses: 0, basimExpenses: 0, totalExpenses: 0 });
+      console.error('Error calculating metrics:', error);
+      setMetrics(null);
     }
-  };
-
-  const calculateEarnings = async (ordersList: Order[]) => {
-    if (!ordersList?.length) {
-      setEarningsData(null);
-      return;
-    }
-
-    const earnings: EarningsData = {
-      yassirProductsCost: 0,
-      basimProductsCost: 0,
-      yassirTotalEarnings: 0,
-      basimTotalEarnings: 0,
-      combinedTotalEarnings: 0,
-    };
-
-    for (const order of ordersList) {
-      const discountAmount = order.discount
-        ? order.discount.type === 'percentage'
-          ? (order.subtotal * order.discount.value) / 100
-          : order.discount.value
-        : 0;
-
-      const profitSharing = await calculateTotalProfitShare(
-        order.items,
-        order.shippingCost,
-        order.paymentFees,
-        discountAmount,
-        order.isFreeShipping,
-        order.paymentMethod.customer_fee || 0
-      );
-
-      const orderEarnings = calculateTotalEarnings(
-        order.items,
-        profitSharing.totalYassirShare,
-        profitSharing.totalBasimShare
-      );
-
-      earnings.yassirProductsCost += orderEarnings.yassirProductsCost;
-      earnings.basimProductsCost += orderEarnings.basimProductsCost;
-      earnings.yassirTotalEarnings += orderEarnings.yassirTotalEarnings;
-      earnings.basimTotalEarnings += orderEarnings.basimTotalEarnings;
-      earnings.combinedTotalEarnings += orderEarnings.combinedTotalEarnings;
-    }
-
-    setEarningsData(earnings);
-  };
-
-  const calculateExpenses = (expenses: Expense[]) => {
-    if (!expenses.length) {
-      setExpensesData({ yassirExpenses: 0, basimExpenses: 0, totalExpenses: 0 });
-      return;
-    }
-
-    const yassirExpenses = expenses.reduce((sum, expense) => {
-      return sum + (expense.amount * (expense.yassirSharePercentage / 100));
-    }, 0);
-
-    const basimExpenses = expenses.reduce((sum, expense) => {
-      return sum + (expense.amount * (expense.basimSharePercentage / 100));
-    }, 0);
-
-    const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
-
-    setExpensesData({ yassirExpenses, basimExpenses, totalExpenses });
-  };
-
-  const calculateFees = (ordersList: Order[]) => {
-    if (!ordersList?.length) {
-      setShippingFeeData(null);
-      setPaymentFeeData(null);
-      return;
-    }
-
-    let totalShippingFees = 0;
-    let totalPaymentFees = 0;
-    let freeShippingCount = 0;
-    let paidShippingCount = 0;
-    let totalRevenue = 0;
-
-    // Group by shipping company
-    const companyMap = new Map<string, { orderCount: number; totalFees: number }>();
-    // Group by payment method
-    const paymentMethodMap = new Map<string, { orderCount: number; totalFees: number }>();
-
-    ordersList.forEach(order => {
-      // Shipping fees
-      if (order.isFreeShipping) {
-        freeShippingCount++;
-      } else {
-        paidShippingCount++;
-      }
-
-      // Always calculate the actual fee paid to the company from the DB value
-      // This is what the business pays, regardless of what the customer paid
-      const actualShippingFee = order.shippingMethod.cost;
-      totalShippingFees += actualShippingFee;
-
-      // Track by company
-      const companyName = order.shippingMethod.name;
-      const existing = companyMap.get(companyName) || { orderCount: 0, totalFees: 0 };
-      companyMap.set(companyName, {
-        orderCount: existing.orderCount + 1,
-        totalFees: existing.totalFees + actualShippingFee,
-      });
-
-      // Payment fees
-      totalPaymentFees += order.paymentFees;
-
-      // Track by payment method
-      const methodName = order.paymentMethod.name;
-      const existingMethod = paymentMethodMap.get(methodName) || { orderCount: 0, totalFees: 0 };
-      paymentMethodMap.set(methodName, {
-        orderCount: existingMethod.orderCount + 1,
-        totalFees: existingMethod.totalFees + order.paymentFees,
-      });
-
-      // Revenue
-      totalRevenue += order.total;
-    });
-
-    // Convert company map to array
-    const byCompany = Array.from(companyMap.entries()).map(([companyName, data]) => ({
-      companyName,
-      orderCount: data.orderCount,
-      totalFees: data.totalFees,
-      averageFee: data.totalFees / data.orderCount,
-    })).sort((a, b) => b.orderCount - a.orderCount); // Sort by order count desc
-
-    // Convert payment method map to array
-    const byMethod = Array.from(paymentMethodMap.entries()).map(([methodName, data]) => ({
-      methodName,
-      orderCount: data.orderCount,
-      totalFees: data.totalFees,
-      averageFee: data.totalFees / data.orderCount,
-    })).sort((a, b) => b.orderCount - a.orderCount); // Sort by order count desc
-
-    // Shipping fee data
-    setShippingFeeData({
-      totalShippingFees,
-      freeShippingCount,
-      paidShippingCount,
-      averageShippingFee: ordersList.length > 0 ? totalShippingFees / ordersList.length : 0,
-      totalRevenue,
-      feesAsPercentOfRevenue: totalRevenue > 0 ? (totalShippingFees / totalRevenue) * 100 : 0,
-      byCompany,
-    });
-
-    // Payment fee data
-    setPaymentFeeData({
-      totalPaymentFees,
-      averagePaymentFee: totalPaymentFees / ordersList.length,
-      totalRevenue,
-      feesAsPercentOfRevenue: totalRevenue > 0 ? (totalPaymentFees / totalRevenue) * 100 : 0,
-      averageFeePercentage: totalRevenue > 0 ? (totalPaymentFees / totalRevenue) * 100 : 0,
-      byMethod,
-    });
   };
 
   const sections: ReportSection[] = [
@@ -282,16 +92,15 @@ export const Reports = () => {
         <div ref={reportsContainerRef} className="space-y-6">
           <NetProfitReport
             orders={orders}
-            earningsData={earningsData}
-            expensesData={expensesData}
+            metrics={metrics}
             expenses={expenses}
           />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <PartnerPayoutsReport
               orders={orders}
-              earningsData={earningsData}
+              metrics={metrics}
             />
-            <ProfitSharingReport orders={orders} />
+            <ProfitSharingReport orders={orders} metrics={metrics} />
           </div>
           <FinancialReport orders={orders} />
           <SalesReport orders={orders} />
@@ -308,23 +117,23 @@ export const Reports = () => {
           <div className="space-y-6">
             <ShippingFeeAnalysis
               orders={orders}
-              shippingFeeData={shippingFeeData}
+              shippingFeeData={metrics?.shippingFeeData || null}
             />
             <PaymentFeeAnalysis
               orders={orders}
-              paymentFeeData={paymentFeeData}
+              paymentFeeData={metrics?.paymentFeeData || null}
             />
           </div>
 
           {/* Combined Fee Summary */}
-          {shippingFeeData && paymentFeeData && (
+          {metrics?.shippingFeeData && metrics?.paymentFeeData && (
             <div className="bg-[#1C1F26] rounded-xl border border-gray-800 p-6">
               <h2 className="text-xl font-semibold text-white mb-6">Combined Fee Summary</h2>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="bg-[#13151A] rounded-xl p-5 border border-gray-800">
                   <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Total Fees</p>
                   <p className="text-2xl font-bold text-white">
-                    {(shippingFeeData.totalShippingFees + paymentFeeData.totalPaymentFees).toFixed(2)}
+                    {(metrics.shippingFeeData.totalShippingFees + metrics.paymentFeeData.totalPaymentFees).toFixed(2)}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">SAR</p>
                 </div>
@@ -332,7 +141,7 @@ export const Reports = () => {
                 <div className="bg-[#13151A] rounded-xl p-5 border border-gray-800">
                   <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Shipping Fees</p>
                   <p className="text-2xl font-bold text-blue-400">
-                    {shippingFeeData.totalShippingFees.toFixed(2)}
+                    {metrics.shippingFeeData.totalShippingFees.toFixed(2)}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">SAR</p>
                 </div>
@@ -340,7 +149,7 @@ export const Reports = () => {
                 <div className="bg-[#13151A] rounded-xl p-5 border border-gray-800">
                   <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Payment Fees</p>
                   <p className="text-2xl font-bold text-purple-400">
-                    {paymentFeeData.totalPaymentFees.toFixed(2)}
+                    {metrics.paymentFeeData.totalPaymentFees.toFixed(2)}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">SAR</p>
                 </div>
@@ -348,7 +157,7 @@ export const Reports = () => {
                 <div className="bg-[#13151A] rounded-xl p-5 border border-gray-800">
                   <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">% of Revenue</p>
                   <p className="text-2xl font-bold text-orange-400">
-                    {((shippingFeeData.totalShippingFees + paymentFeeData.totalPaymentFees) / shippingFeeData.totalRevenue * 100).toFixed(2)}%
+                    {((metrics.shippingFeeData.totalShippingFees + metrics.paymentFeeData.totalPaymentFees) / metrics.shippingFeeData.totalRevenue * 100).toFixed(2)}%
                   </p>
                   <p className="text-xs text-gray-500 mt-1">Impact</p>
                 </div>
@@ -365,9 +174,7 @@ export const Reports = () => {
       component: (
         <BusinessMetricsReport
           orders={orders}
-          earningsData={earningsData}
-          expensesData={expensesData}
-          expenses={expenses}
+          metrics={metrics}
         />
       ),
     },
