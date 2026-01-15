@@ -1,6 +1,5 @@
 import React from 'react';
 import { Order } from '../../../types';
-import { Expense } from '../../../types/expense';
 import {
     TrendingUp,
     DollarSign,
@@ -15,66 +14,20 @@ import {
     Database,
     ShoppingBag
 } from 'lucide-react';
-
-interface EarningsData {
-    yassirProductsCost: number;
-    basimProductsCost: number;
-    yassirTotalEarnings: number;
-    basimTotalEarnings: number;
-    combinedTotalEarnings: number;
-}
-
-interface ExpensesData {
-    yassirExpenses: number;
-    basimExpenses: number;
-    totalExpenses: number;
-}
+import { ReportMetrics } from '../../../utils/reportCalculations';
 
 interface BusinessMetricsReportProps {
     orders: Order[];
-    earningsData: EarningsData | null;
-    expensesData: ExpensesData | null;
-    expenses: Expense[];
+    metrics: ReportMetrics | null;
 }
 
-interface BusinessMetrics {
-    // Volume metrics
-    totalOrders: number;
-    totalRevenue: number;
 
-    // Cost metrics
-    totalProductCost: number;
-    totalShippingFees: number;
-    totalPaymentFees: number;
-    totalFees: number;
-    marketingExpenses: number;
-    totalExpenses: number;
-
-    // Profit metrics
-    grossProfit: number;
-    netProfit: number;
-
-    // Calculated KPIs
-    aov: number;
-    productCostPercent: number;
-    grossProfitMargin: number;
-    grossProfitPerOrder: number;
-    netProfitMargin: number;
-    netProfitPerOrder: number;
-    roas: number;
-    adSpendPercent: number;
-    cpo: number;
-    feeImpactPercent: number;
-    breakEvenRoas: number;
-}
 
 export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
     orders,
-    earningsData,
-    expensesData,
-    expenses
+    metrics
 }) => {
-    if (!orders?.length || !earningsData || !expensesData) {
+    if (!orders?.length || !metrics) {
         return (
             <div className="bg-[#1C1F26] rounded-xl border border-gray-800 p-6">
                 <div className="flex items-center gap-3 mb-6 border-b border-gray-800 pb-4">
@@ -88,8 +41,35 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
         );
     }
 
-    // Calculate all metrics
-    const metrics = calculateBusinessMetrics(orders, expensesData, expenses);
+    // Calculate business-specific KPIs from centralized metrics
+    const businessMetrics = {
+        // Use metrics from centralized calculation
+        totalOrders: metrics.totalOrders,
+        totalRevenue: metrics.totalRevenue,
+        aov: metrics.averageOrderValue,
+        totalProductCost: metrics.totalProductCosts,
+        totalShippingFees: metrics.totalShippingFees,
+        totalPaymentFees: metrics.totalPaymentFees,
+        totalFees: metrics.totalFees,
+        marketingExpenses: metrics.marketingExpenses,
+        totalExpenses: metrics.expenses.totalExpenses,
+        grossProfit: metrics.grossProfit,
+        netProfit: metrics.netProfit,
+        productCostPercent: metrics.productCostPercent,
+        grossProfitMargin: metrics.grossProfitMargin,
+        grossProfitPerOrder: metrics.grossProfitPerOrder,
+        netProfitMargin: metrics.netProfitMargin,
+        netProfitPerOrder: metrics.netProfitPerOrder,
+        feeImpactPercent: metrics.feeImpactPercent,
+
+        // Calculate marketing-specific KPIs
+        roas: metrics.marketingExpenses > 0 ? metrics.totalRevenue / metrics.marketingExpenses : 0,
+        cpo: metrics.totalOrders > 0 ? metrics.marketingExpenses / metrics.totalOrders : 0,
+        adSpendPercent: metrics.totalRevenue > 0 ? (metrics.marketingExpenses / metrics.totalRevenue) * 100 : 0,
+        breakEvenRoas: metrics.marketingExpenses > 0
+            ? metrics.totalRevenue / (metrics.totalRevenue - metrics.netProfit)
+            : 0
+    };
 
     return (
         <div className="space-y-6">
@@ -111,7 +91,7 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
                 {/* Average Order Value */}
                 <MetricCard
                     label="Average Order Value"
-                    value={metrics.aov.toFixed(2)}
+                    value={businessMetrics.aov.toFixed(2)}
                     unit="SAR"
                     icon={<ShoppingCart className="h-5 w-5" />}
                     color="blue"
@@ -120,7 +100,7 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
                 {/* Total Orders */}
                 <MetricCard
                     label="Total Orders"
-                    value={metrics.totalOrders.toString()}
+                    value={businessMetrics.totalOrders.toString()}
                     unit="orders"
                     icon={<Target className="h-5 w-5" />}
                     color="green"
@@ -129,7 +109,7 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
                 {/* Total Revenue */}
                 <MetricCard
                     label="Total Revenue"
-                    value={metrics.totalRevenue.toFixed(2)}
+                    value={businessMetrics.totalRevenue.toFixed(2)}
                     unit="SAR"
                     icon={<DollarSign className="h-5 w-5" />}
                     color="emerald"
@@ -138,26 +118,26 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
                 {/* ROAS */}
                 <MetricCard
                     label="ROAS (Return on Ad Spend)"
-                    value={metrics.roas === Infinity ? '∞' : metrics.roas.toFixed(2)}
+                    value={businessMetrics.roas === Infinity ? '∞' : businessMetrics.roas.toFixed(2)}
                     unit="x"
                     icon={<Megaphone className="h-5 w-5" />}
                     color="purple"
-                    subtitle={metrics.marketingExpenses === 0 ? 'No ad spend' : undefined}
+                    subtitle={businessMetrics.marketingExpenses === 0 ? 'No ad spend' : undefined}
                 />
 
                 {/* Net Profit per Order */}
                 <MetricCard
                     label="Net Profit per Order"
-                    value={metrics.netProfitPerOrder.toFixed(2)}
+                    value={businessMetrics.netProfitPerOrder.toFixed(2)}
                     unit="SAR"
                     icon={<TrendingUp className="h-5 w-5" />}
-                    color={metrics.netProfitPerOrder >= 0 ? 'green' : 'red'}
+                    color={businessMetrics.netProfitPerOrder >= 0 ? 'green' : 'red'}
                 />
 
                 {/* Gross Profit Margin */}
                 <MetricCard
                     label="Gross Profit Margin"
-                    value={metrics.grossProfitMargin.toFixed(2)}
+                    value={businessMetrics.grossProfitMargin.toFixed(2)}
                     unit="%"
                     icon={<Percent className="h-5 w-5" />}
                     color="teal"
@@ -166,7 +146,7 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
                 {/* Ad Spend % of Revenue */}
                 <MetricCard
                     label="Ad Spend % of Revenue"
-                    value={metrics.adSpendPercent.toFixed(2)}
+                    value={businessMetrics.adSpendPercent.toFixed(2)}
                     unit="%"
                     icon={<Megaphone className="h-5 w-5" />}
                     color="orange"
@@ -175,7 +155,7 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
                 {/* Product Cost % */}
                 <MetricCard
                     label="Product Cost %"
-                    value={metrics.productCostPercent.toFixed(2)}
+                    value={businessMetrics.productCostPercent.toFixed(2)}
                     unit="%"
                     icon={<TrendingDown className="h-5 w-5" />}
                     color="amber"
@@ -184,7 +164,7 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
                 {/* Gross Profit per Order */}
                 <MetricCard
                     label="Gross Profit per Order"
-                    value={metrics.grossProfitPerOrder.toFixed(2)}
+                    value={businessMetrics.grossProfitPerOrder.toFixed(2)}
                     unit="SAR"
                     icon={<DollarSign className="h-5 w-5" />}
                     color="green"
@@ -193,7 +173,7 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
                 {/* Cost Per Order (CPO) */}
                 <MetricCard
                     label="Cost Per Order (CPO)"
-                    value={metrics.cpo.toFixed(2)}
+                    value={businessMetrics.cpo.toFixed(2)}
                     unit="SAR"
                     icon={<TrendingDown className="h-5 w-5" />}
                     color="orange"
@@ -202,16 +182,16 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
                 {/* Net Profit Margin */}
                 <MetricCard
                     label="Net Profit Margin"
-                    value={metrics.netProfitMargin.toFixed(2)}
+                    value={businessMetrics.netProfitMargin.toFixed(2)}
                     unit="%"
                     icon={<Percent className="h-5 w-5" />}
-                    color={metrics.netProfitMargin >= 0 ? 'green' : 'red'}
+                    color={businessMetrics.netProfitMargin >= 0 ? 'green' : 'red'}
                 />
 
                 {/* Fee Impact % */}
                 <MetricCard
                     label="Total Fee Impact"
-                    value={metrics.feeImpactPercent.toFixed(2)}
+                    value={businessMetrics.feeImpactPercent.toFixed(2)}
                     unit="%"
                     icon={<AlertCircle className="h-5 w-5" />}
                     color="red"
@@ -232,8 +212,8 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
                         {/* 1. Revenue */}
                         <FunnelStep
                             label="Total Revenue"
-                            value={metrics.totalRevenue}
-                            total={metrics.totalRevenue}
+                            value={businessMetrics.totalRevenue}
+                            total={businessMetrics.totalRevenue}
                             color="blue"
                             icon={<DollarSign className="h-4 w-4" />}
                             isTotal
@@ -242,8 +222,8 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
                         {/* Deduct Product Costs */}
                         <FunnelStep
                             label="Product Costs"
-                            value={metrics.totalProductCost}
-                            total={metrics.totalRevenue}
+                            value={businessMetrics.totalProductCost}
+                            total={businessMetrics.totalRevenue}
                             color="orange"
                             isDeduction
                             icon={<ShoppingBag className="h-4 w-4" />}
@@ -252,16 +232,16 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
                         {/* 2. Gross Profit */}
                         <FunnelStep
                             label="Gross Profit"
-                            value={metrics.grossProfit}
-                            total={metrics.totalRevenue}
+                            value={businessMetrics.grossProfit}
+                            total={businessMetrics.totalRevenue}
                             color="emerald"
                         />
 
                         {/* Deduct Fees */}
                         <FunnelStep
                             label="Shipping & Payment Fees"
-                            value={metrics.totalFees}
-                            total={metrics.totalRevenue}
+                            value={businessMetrics.totalFees}
+                            total={businessMetrics.totalRevenue}
                             color="red"
                             isDeduction
                             icon={<AlertCircle className="h-4 w-4" />}
@@ -270,8 +250,8 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
                         {/* Deduct Expenses */}
                         <FunnelStep
                             label="Operating Expenses"
-                            value={metrics.totalExpenses}
-                            total={metrics.totalRevenue}
+                            value={businessMetrics.totalExpenses}
+                            total={businessMetrics.totalRevenue}
                             color="red"
                             isDeduction
                             icon={<Megaphone className="h-4 w-4" />}
@@ -281,9 +261,9 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
                         <div className="pt-4 mt-2 border-t border-gray-800">
                             <FunnelStep
                                 label="True Net Profit"
-                                value={metrics.netProfit}
-                                total={metrics.totalRevenue}
-                                color={metrics.netProfit >= 0 ? "green" : "red"}
+                                value={businessMetrics.netProfit}
+                                total={businessMetrics.totalRevenue}
+                                color={businessMetrics.netProfit >= 0 ? "green" : "red"}
                                 isFinal
                                 icon={<CheckCircle2 className="h-4 w-4" />}
                             />
@@ -303,7 +283,7 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
                         <div className="bg-[#13151A] rounded-xl p-5 border border-gray-800">
                             <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Gross Profit</p>
                             <p className="text-2xl font-bold text-emerald-400">
-                                {metrics.grossProfit.toFixed(2)} <span className="text-sm text-gray-500 font-medium">SAR</span>
+                                {businessMetrics.grossProfit.toFixed(2)} <span className="text-sm text-gray-500 font-medium">SAR</span>
                             </p>
                             <p className="text-xs text-gray-500 mt-1">Revenue - Product Costs</p>
                         </div>
@@ -312,7 +292,7 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
                         <div className="bg-[#13151A] rounded-xl p-5 border border-gray-800">
                             <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Total Expenses</p>
                             <p className="text-2xl font-bold text-orange-400">
-                                {metrics.totalExpenses.toFixed(2)} <span className="text-sm text-gray-500 font-medium">SAR</span>
+                                {businessMetrics.totalExpenses.toFixed(2)} <span className="text-sm text-gray-500 font-medium">SAR</span>
                             </p>
                             <p className="text-xs text-gray-500 mt-1">All business expenses</p>
                         </div>
@@ -320,8 +300,8 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
                         {/* Net Profit */}
                         <div className="bg-[#13151A] rounded-xl p-5 border border-gray-800">
                             <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Net Profit</p>
-                            <p className={`text-2xl font-bold ${metrics.netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                {metrics.netProfit.toFixed(2)} <span className="text-sm text-gray-500 font-medium">SAR</span>
+                            <p className={`text-2xl font-bold ${businessMetrics.netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                {businessMetrics.netProfit.toFixed(2)} <span className="text-sm text-gray-500 font-medium">SAR</span>
                             </p>
                             <p className="text-xs text-gray-500 mt-1">Gross Profit - Fees - Expenses</p>
                         </div>
@@ -330,7 +310,7 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
             </div>
 
             {/* Marketing Performance */}
-            {metrics.marketingExpenses > 0 && (
+            {businessMetrics.marketingExpenses > 0 && (
                 <div className="bg-[#1C1F26] rounded-xl border border-gray-800 p-6">
                     <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
                         <Megaphone className="h-5 w-5 text-purple-400" />
@@ -341,28 +321,28 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
                         <div className="bg-[#13151A] rounded-xl p-5 border border-gray-800">
                             <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Marketing Spend</p>
                             <p className="text-xl font-bold text-white">
-                                {metrics.marketingExpenses.toFixed(2)} <span className="text-xs text-gray-500">SAR</span>
+                                {businessMetrics.marketingExpenses.toFixed(2)} <span className="text-xs text-gray-500">SAR</span>
                             </p>
                         </div>
 
                         <div className="bg-[#13151A] rounded-xl p-5 border border-gray-800">
                             <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">ROAS</p>
                             <p className="text-xl font-bold text-purple-400">
-                                {metrics.roas === Infinity ? '∞' : metrics.roas.toFixed(2)}x
+                                {businessMetrics.roas === Infinity ? '∞' : businessMetrics.roas.toFixed(2)}x
                             </p>
                         </div>
 
                         <div className="bg-[#13151A] rounded-xl p-5 border border-gray-800">
                             <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Break-even ROAS</p>
                             <p className="text-xl font-bold text-yellow-400">
-                                {metrics.breakEvenRoas.toFixed(2)}x
+                                {businessMetrics.breakEvenRoas.toFixed(2)}x
                             </p>
                         </div>
 
                         <div className="bg-[#13151A] rounded-xl p-5 border border-gray-800">
                             <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Ad Spend % Revenue</p>
                             <p className="text-xl font-bold text-orange-400">
-                                {metrics.adSpendPercent.toFixed(2)}%
+                                {businessMetrics.adSpendPercent.toFixed(2)}%
                             </p>
                         </div>
                     </div>
@@ -372,7 +352,7 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
             {/* Insights */}
             <div className="space-y-3">
                 {/* ROAS Warning */}
-                {metrics.roas < 3 && metrics.marketingExpenses > 0 && (
+                {businessMetrics.roas < 3 && businessMetrics.marketingExpenses > 0 && (
                     <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-4 flex items-start gap-3">
                         <AlertCircle className="h-5 w-5 text-orange-400 flex-shrink-0 mt-0.5" />
                         <div>
@@ -385,7 +365,7 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
                 )}
 
                 {/* High Ad Spend Warning */}
-                {metrics.adSpendPercent > 25 && (
+                {businessMetrics.adSpendPercent > 25 && (
                     <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 flex items-start gap-3">
                         <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
                         <div>
@@ -424,7 +404,7 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
                             <p className="text-xs text-gray-500 mb-1">Total Orders</p>
                             <div className="flex items-baseline gap-2">
                                 <p className="text-xl font-bold text-white">
-                                    {metrics.totalOrders.toLocaleString()}
+                                    {businessMetrics.totalOrders.toLocaleString()}
                                 </p>
                                 <span className="text-sm text-gray-500">orders</span>
                             </div>
@@ -433,7 +413,7 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
                             <p className="text-xs text-gray-500 mb-1">Total Revenue (Sales)</p>
                             <div className="flex items-baseline gap-2">
                                 <p className="text-xl font-bold text-white">
-                                    {metrics.totalRevenue.toFixed(2)}
+                                    {businessMetrics.totalRevenue.toFixed(2)}
                                 </p>
                                 <span className="text-sm text-gray-500">SAR</span>
                             </div>
@@ -451,7 +431,7 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
                             <p className="text-xs text-gray-500 mb-1">Total Product Cost</p>
                             <div className="flex items-baseline gap-2">
                                 <p className="text-xl font-bold text-white">
-                                    {metrics.totalProductCost.toFixed(2)}
+                                    {businessMetrics.totalProductCost.toFixed(2)}
                                 </p>
                                 <span className="text-sm text-gray-500">SAR</span>
                             </div>
@@ -460,7 +440,7 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
                             <p className="text-xs text-gray-500 mb-1">Total Shipping Fees</p>
                             <div className="flex items-baseline gap-2">
                                 <p className="text-xl font-bold text-white">
-                                    {metrics.totalShippingFees.toFixed(2)}
+                                    {businessMetrics.totalShippingFees.toFixed(2)}
                                 </p>
                                 <span className="text-sm text-gray-500">SAR</span>
                             </div>
@@ -469,7 +449,7 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
                             <p className="text-xs text-gray-500 mb-1">Total Payment Fees</p>
                             <div className="flex items-baseline gap-2">
                                 <p className="text-xl font-bold text-white">
-                                    {metrics.totalPaymentFees.toFixed(2)}
+                                    {businessMetrics.totalPaymentFees.toFixed(2)}
                                 </p>
                                 <span className="text-sm text-gray-500">SAR</span>
                             </div>
@@ -487,7 +467,7 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
                             <p className="text-xs text-gray-500 mb-1">Total Expenses</p>
                             <div className="flex items-baseline gap-2">
                                 <p className="text-xl font-bold text-white">
-                                    {metrics.totalExpenses.toFixed(2)}
+                                    {businessMetrics.totalExpenses.toFixed(2)}
                                 </p>
                                 <span className="text-sm text-gray-500">SAR</span>
                             </div>
@@ -505,7 +485,7 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
                             <p className="text-xs text-gray-500 mb-1">Other Expenses</p>
                             <div className="flex items-baseline gap-2">
                                 <p className="text-xl font-bold text-white">
-                                    {(metrics.totalExpenses - metrics.marketingExpenses).toFixed(2)}
+                                    {(businessMetrics.totalExpenses - metrics.marketingExpenses).toFixed(2)}
                                 </p>
                                 <span className="text-sm text-gray-500">SAR</span>
                             </div>
@@ -545,80 +525,6 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
         </div>
     );
 };
-
-// Helper function to calculate all business metrics
-function calculateBusinessMetrics(
-    orders: Order[],
-    expensesData: ExpensesData,
-    expenses: Expense[]
-): BusinessMetrics {
-    // Basic volume metrics
-    const totalOrders = orders.length;
-    const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
-
-    // Calculate product costs from orders
-    const totalProductCost = orders.reduce((sum, order) => {
-        return sum + order.items.reduce((itemSum, item) => {
-            return itemSum + (item.product.cost * item.quantity);
-        }, 0);
-    }, 0);
-
-    // Calculate fees
-    const totalShippingFees = orders.reduce((sum, order) => {
-        return sum + order.shippingMethod.cost;
-    }, 0);
-
-    const totalPaymentFees = orders.reduce((sum, order) => sum + order.paymentFees, 0);
-    const totalFees = totalShippingFees + totalPaymentFees;
-
-    // Marketing expenses (from expenses with category 'marketing')
-    const marketingExpenses = expenses
-        .filter(e => e.category === 'marketing')
-        .reduce((sum, e) => sum + e.amount, 0);
-
-    const totalExpenses = expensesData.totalExpenses;
-
-    // Profit calculations
-    const grossProfit = totalRevenue - totalProductCost;
-    const netProfit = grossProfit - totalFees - expensesData.totalExpenses;
-
-    // KPI calculations
-    const aov = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-    const productCostPercent = totalRevenue > 0 ? (totalProductCost / totalRevenue) * 100 : 0;
-    const grossProfitMargin = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
-    const grossProfitPerOrder = totalOrders > 0 ? grossProfit / totalOrders : 0;
-    const netProfitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
-    const netProfitPerOrder = totalOrders > 0 ? netProfit / totalOrders : 0;
-    const roas = marketingExpenses > 0 ? totalRevenue / marketingExpenses : Infinity;
-    const adSpendPercent = totalRevenue > 0 ? (marketingExpenses / totalRevenue) * 100 : 0;
-    const cpo = totalOrders > 0 ? totalExpenses / totalOrders : 0;
-    const feeImpactPercent = totalRevenue > 0 ? (totalFees / totalRevenue) * 100 : 0;
-    const breakEvenRoas = grossProfitMargin > 0 ? 100 / grossProfitMargin : 0;
-
-    return {
-        totalOrders,
-        totalRevenue,
-        totalProductCost,
-        totalShippingFees,
-        totalPaymentFees,
-        totalFees,
-        marketingExpenses,
-        totalExpenses,
-        grossProfit,
-        netProfit,
-        aov,
-        productCostPercent,
-        grossProfitMargin,
-        grossProfitPerOrder,
-        netProfitMargin,
-        netProfitPerOrder,
-        roas,
-        adSpendPercent,
-        cpo,
-        feeImpactPercent,
-        breakEvenRoas,
-    };
-}
 
 // Reusable MetricCard component
 interface MetricCardProps {

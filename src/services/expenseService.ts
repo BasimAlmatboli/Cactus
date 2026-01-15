@@ -51,19 +51,22 @@ export const saveExpense = async (expense: Omit<Expense, 'id'>): Promise<void> =
 };
 
 export const updateExpense = async (id: string, expense: Omit<Expense, 'id'>): Promise<void> => {
+  const updateData = {
+    date: expense.date,
+    category: expense.category,
+    description: expense.description,
+    amount: expense.amount,
+    owner: expense.owner,
+    basim_share_percentage: expense.basimSharePercentage,
+    yassir_share_percentage: expense.yassirSharePercentage,
+    include_tax: expense.includeTax,
+    amount_before_tax: expense.amountBeforeTax
+  };
+
   const { error } = await supabase
     .from('expenses')
-    .update({
-      date: expense.date,
-      category: expense.category,
-      description: expense.description,
-      amount: expense.amount,
-      owner: expense.owner,
-      basim_share_percentage: expense.basimSharePercentage,
-      yassir_share_percentage: expense.yassirSharePercentage,
-      include_tax: expense.includeTax,
-      amount_before_tax: expense.amountBeforeTax
-    } as any)
+    // @ts-ignore - Supabase types need to be regenerated after schema changes
+    .update(updateData)
     .eq('id', id);
 
   if (error) {

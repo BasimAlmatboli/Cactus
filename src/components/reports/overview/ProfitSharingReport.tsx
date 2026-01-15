@@ -1,54 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Order } from '../../../types';
 import { Users } from 'lucide-react';
-import { calculateTotalProfitShare } from '../../../utils/profitSharing';
+import { ReportMetrics } from '../../../utils/reportCalculations';
 
 interface ProfitSharingReportProps {
   orders: Order[];
+  metrics: ReportMetrics | null;
 }
 
-export const ProfitSharingReport: React.FC<ProfitSharingReportProps> = ({ orders }) => {
-  const [totalShares, setTotalShares] = useState<{
-    yassirShare: number;
-    basimShare: number;
-    totalProfit: number;
-  } | null>(null);
-
-  useEffect(() => {
-    const calculateShares = async () => {
-      if (!orders?.length) {
-        setTotalShares(null);
-        return;
-      }
-
-      const shares = { yassirShare: 0, basimShare: 0, totalProfit: 0 };
-
-      for (const order of orders) {
-        const discountAmount = order.discount
-          ? order.discount.type === 'percentage'
-            ? (order.subtotal * order.discount.value) / 100
-            : order.discount.value
-          : 0;
-
-        const profitSharing = await calculateTotalProfitShare(
-          order.items,
-          order.shippingCost,
-          order.paymentFees,
-          discountAmount,
-          order.isFreeShipping,
-          order.paymentMethod.customer_fee || 0
-        );
-
-        shares.yassirShare += profitSharing.totalYassirShare;
-        shares.basimShare += profitSharing.totalBasimShare;
-        shares.totalProfit += profitSharing.totalYassirShare + profitSharing.totalBasimShare;
-      }
-
-      setTotalShares(shares);
-    };
-
-    calculateShares();
-  }, [orders]);
+export const ProfitSharingReport: React.FC<ProfitSharingReportProps> = ({ orders, metrics }) => {
+  // Get profit shares from metrics
+  const totalShares = metrics?.profitShares;
 
   // Calculate percentages
   const yassirPercentage = totalShares ? (totalShares.yassirShare / totalShares.totalProfit) * 100 : 0;

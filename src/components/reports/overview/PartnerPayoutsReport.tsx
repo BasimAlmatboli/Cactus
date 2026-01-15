@@ -1,23 +1,16 @@
 import React from 'react';
 import { Order } from '../../../types';
 import { Wallet, Loader2 } from 'lucide-react';
-
-interface EarningsData {
-  yassirProductsCost: number;
-  basimProductsCost: number;
-  yassirTotalEarnings: number;
-  basimTotalEarnings: number;
-  combinedTotalEarnings: number;
-}
+import { ReportMetrics } from '../../../utils/reportCalculations';
 
 interface PartnerPayoutsReportProps {
   orders: Order[];
-  earningsData: EarningsData | null;
+  metrics: ReportMetrics | null;
 }
 
 export const PartnerPayoutsReport: React.FC<PartnerPayoutsReportProps> = ({
   orders,
-  earningsData
+  metrics
 }) => {
   if (!orders?.length) {
     return (
@@ -33,7 +26,7 @@ export const PartnerPayoutsReport: React.FC<PartnerPayoutsReportProps> = ({
     );
   }
 
-  if (!earningsData) {
+  if (!metrics) {
     return (
       <div className="bg-[#1C1F26] rounded-xl border border-gray-800 p-6 h-full">
         <div className="flex items-center gap-3 mb-6 border-b border-gray-800 pb-4">
@@ -65,11 +58,11 @@ export const PartnerPayoutsReport: React.FC<PartnerPayoutsReportProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <span className="text-xs text-gray-500 uppercase tracking-wide">Costs</span>
-              <span className="block text-lg font-medium text-gray-300">{earningsData.yassirProductsCost.toFixed(2)} SAR</span>
+              <span className="block text-lg font-medium text-gray-300">{metrics.earnings.yassirProductsCost.toFixed(2)} SAR</span>
             </div>
             <div>
               <span className="text-xs text-gray-500 uppercase tracking-wide">Total Payout</span>
-              <span className="block text-lg font-bold text-white">{earningsData.yassirTotalEarnings.toFixed(2)} SAR</span>
+              <span className="block text-lg font-bold text-white">{metrics.earnings.yassirTotalEarnings.toFixed(2)} SAR</span>
             </div>
           </div>
         </div>
@@ -80,11 +73,11 @@ export const PartnerPayoutsReport: React.FC<PartnerPayoutsReportProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <span className="text-xs text-gray-500 uppercase tracking-wide">Costs</span>
-              <span className="block text-lg font-medium text-gray-300">{earningsData.basimProductsCost.toFixed(2)} SAR</span>
+              <span className="block text-lg font-medium text-gray-300">{metrics.earnings.basimProductsCost.toFixed(2)} SAR</span>
             </div>
             <div>
               <span className="text-xs text-gray-500 uppercase tracking-wide">Total Payout</span>
-              <span className="block text-lg font-bold text-white">{earningsData.basimTotalEarnings.toFixed(2)} SAR</span>
+              <span className="block text-lg font-bold text-white">{metrics.earnings.basimTotalEarnings.toFixed(2)} SAR</span>
             </div>
           </div>
         </div>
@@ -98,7 +91,7 @@ export const PartnerPayoutsReport: React.FC<PartnerPayoutsReportProps> = ({
             <p className="text-xs text-purple-400/60">Based on {orders.length} orders</p>
           </div>
           <div className="text-3xl font-bold text-purple-300">
-            {earningsData.combinedTotalEarnings.toFixed(2)} <span className="text-lg text-purple-400/60 font-medium">SAR</span>
+            {metrics.earnings.combinedTotalEarnings.toFixed(2)} <span className="text-lg text-purple-400/60 font-medium">SAR</span>
           </div>
         </div>
       </div>

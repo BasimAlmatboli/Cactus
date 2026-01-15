@@ -2,40 +2,21 @@ import React from 'react';
 import { Order } from '../../../types';
 import { Expense } from '../../../types/expense';
 import { TrendingUp, Loader2, DollarSign, Receipt, Wallet, Copy } from 'lucide-react';
-
-interface EarningsData {
-    yassirProductsCost: number;
-    basimProductsCost: number;
-    yassirTotalEarnings: number;
-    basimTotalEarnings: number;
-    combinedTotalEarnings: number;
-}
-
-interface ExpensesData {
-    yassirExpenses: number;
-    basimExpenses: number;
-    totalExpenses: number;
-}
+import { ReportMetrics } from '../../../utils/reportCalculations';
 
 interface NetProfitReportProps {
     orders: Order[];
-    earningsData: EarningsData | null;
-    expensesData: ExpensesData | null;
+    metrics: ReportMetrics | null;
     expenses: Expense[];
 }
 
 export const NetProfitReport: React.FC<NetProfitReportProps> = ({
     orders,
-    earningsData,
-    expensesData,
+    metrics,
     expenses
 }) => {
-    // Calculate net profit from passed data
-    const netProfitData = earningsData && expensesData ? {
-        yassirNetProfit: earningsData.yassirTotalEarnings - expensesData.yassirExpenses,
-        basimNetProfit: earningsData.basimTotalEarnings - expensesData.basimExpenses,
-        combinedNetProfit: earningsData.combinedTotalEarnings - expensesData.totalExpenses,
-    } : null;
+    // Get net profit data from metrics
+    const netProfitData = metrics?.partnerNetProfit;
 
     // Calculate individual expense shares
     const yassirExpensesList = React.useMemo(() => {
@@ -60,7 +41,7 @@ export const NetProfitReport: React.FC<NetProfitReportProps> = ({
             .sort((a, b) => b.amount - a.amount);
     }, [expenses]);
 
-    if (!earningsData || !expensesData) {
+    if (!metrics) {
         return (
             <div className="bg-[#1C1F26] rounded-xl border border-gray-800 p-6">
                 <div className="flex items-center gap-3 mb-6 border-b border-gray-800 pb-4">
@@ -113,7 +94,7 @@ export const NetProfitReport: React.FC<NetProfitReportProps> = ({
                                 <span className="text-sm text-gray-400">Earnings</span>
                             </div>
                             <span className="text-base font-medium text-white">
-                                {earningsData.yassirTotalEarnings.toFixed(2)} SAR
+                                {metrics.earnings.yassirTotalEarnings.toFixed(2)} SAR
                             </span>
                         </div>
 
@@ -138,7 +119,7 @@ export const NetProfitReport: React.FC<NetProfitReportProps> = ({
                                 )}
                                 <div className="border-t border-gray-800 pt-2 mt-2 flex justify-between items-center">
                                     <span className="text-xs text-gray-500 font-medium">Total Expenses</span>
-                                    <span className="text-xs text-red-400 font-bold">-{expensesData.yassirExpenses.toFixed(2)} SAR</span>
+                                    <span className="text-xs text-red-400 font-bold">-{metrics.expenses.yassirExpenses.toFixed(2)} SAR</span>
                                 </div>
                             </div>
                         </div>
@@ -173,12 +154,12 @@ export const NetProfitReport: React.FC<NetProfitReportProps> = ({
 
                                 const text = `\u200Fتوزيع أرباح شهر ${month}:
 
-\u200F${earningsData.basimTotalEarnings.toFixed(2)} ر.س
+\u200F${metrics.earnings.basimTotalEarnings.toFixed(2)} ر.س
 
 \u200Fالتكاليف:
 ${expensesText}
 
-\u200Fالإجمالي: ${expensesData.basimExpenses.toFixed(2)} ر.س
+\u200Fالإجمالي: ${metrics.expenses.basimExpenses.toFixed(2)} ر.س
 
 \u200Fصافي أرباح باسم بعد خصم التكاليف:
 \u200F${netProfitData!.basimNetProfit.toFixed(2)} ر.س`;
@@ -200,7 +181,7 @@ ${expensesText}
                                 <span className="text-sm text-gray-400">Earnings</span>
                             </div>
                             <span className="text-base font-medium text-white">
-                                {earningsData.basimTotalEarnings.toFixed(2)} SAR
+                                {metrics.earnings.basimTotalEarnings.toFixed(2)} SAR
                             </span>
                         </div>
 
@@ -225,7 +206,7 @@ ${expensesText}
                                 )}
                                 <div className="border-t border-gray-800 pt-2 mt-2 flex justify-between items-center">
                                     <span className="text-xs text-gray-500 font-medium">Total Expenses</span>
-                                    <span className="text-xs text-red-400 font-bold">-{expensesData.basimExpenses.toFixed(2)} SAR</span>
+                                    <span className="text-xs text-red-400 font-bold">-{metrics.expenses.basimExpenses.toFixed(2)} SAR</span>
                                 </div>
                             </div>
                         </div>
@@ -253,13 +234,13 @@ ${expensesText}
                     <div>
                         <p className="text-xs text-emerald-400/60 uppercase tracking-wider mb-2">Total Earnings</p>
                         <p className="text-2xl font-bold text-emerald-300">
-                            {earningsData.combinedTotalEarnings.toFixed(2)} <span className="text-sm text-emerald-400/60 font-medium">SAR</span>
+                            {metrics.earnings.combinedTotalEarnings.toFixed(2)} <span className="text-sm text-emerald-400/60 font-medium">SAR</span>
                         </p>
                     </div>
                     <div>
                         <p className="text-xs text-red-400/60 uppercase tracking-wider mb-2">Total Expenses</p>
                         <p className="text-2xl font-bold text-red-300">
-                            {expensesData.totalExpenses.toFixed(2)} <span className="text-sm text-red-400/60 font-medium">SAR</span>
+                            {metrics.expenses.totalExpenses.toFixed(2)} <span className="text-sm text-red-400/60 font-medium">SAR</span>
                         </p>
                     </div>
                     <div>
