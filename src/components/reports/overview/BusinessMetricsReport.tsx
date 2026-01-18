@@ -200,110 +200,137 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
             </div>
 
             {/* Profitability Overview */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Profit Funnel */}
-                <div className="bg-[#1C1F26] rounded-xl border border-gray-800 p-6">
-                    <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-                        <Target className="h-5 w-5 text-blue-400" />
-                        Profit Funnel
-                    </h3>
+            {/* Profit Funnel */}
+            <div className="bg-[#1C1F26] rounded-xl border border-gray-800 p-6">
+                <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+                    <Target className="h-5 w-5 text-blue-400" />
+                    Profit Funnel
+                </h3>
 
-                    <div className="space-y-4">
-                        {/* 1. Revenue */}
+                <div className="space-y-4">
+                    {/* 1. Revenue */}
+                    <FunnelStep
+                        label="Total Revenue"
+                        value={businessMetrics.totalRevenue}
+                        total={businessMetrics.totalRevenue}
+                        color="blue"
+                        icon={<DollarSign className="h-4 w-4" />}
+                        isTotal
+                    />
+
+                    {/* Deduct Product Costs */}
+                    <FunnelStep
+                        label="Product Costs"
+                        value={businessMetrics.totalProductCost}
+                        total={businessMetrics.totalRevenue}
+                        color="orange"
+                        isDeduction
+                        icon={<ShoppingBag className="h-4 w-4" />}
+                    />
+
+                    {/* 2. Gross Profit */}
+                    <FunnelStep
+                        label="Gross Profit"
+                        value={businessMetrics.grossProfit}
+                        total={businessMetrics.totalRevenue}
+                        color="emerald"
+                    />
+
+                    {/* Deduct Fees */}
+                    <FunnelStep
+                        label="Shipping & Payment Fees"
+                        value={businessMetrics.totalFees}
+                        total={businessMetrics.totalRevenue}
+                        color="red"
+                        isDeduction
+                        icon={<AlertCircle className="h-4 w-4" />}
+                    />
+
+                    {/* Deduct Expenses */}
+                    <FunnelStep
+                        label="Operating Expenses"
+                        value={businessMetrics.totalExpenses}
+                        total={businessMetrics.totalRevenue}
+                        color="red"
+                        isDeduction
+                        icon={<Megaphone className="h-4 w-4" />}
+                    />
+
+                    {/* 3. Net Profit */}
+                    <div className="pt-4 mt-2 border-t border-gray-800">
                         <FunnelStep
-                            label="Total Revenue"
-                            value={businessMetrics.totalRevenue}
+                            label="True Net Profit"
+                            value={businessMetrics.netProfit}
                             total={businessMetrics.totalRevenue}
-                            color="blue"
-                            icon={<DollarSign className="h-4 w-4" />}
-                            isTotal
+                            color={businessMetrics.netProfit >= 0 ? "green" : "red"}
+                            isFinal
+                            icon={<CheckCircle2 className="h-4 w-4" />}
                         />
 
-                        {/* Deduct Product Costs */}
-                        <FunnelStep
-                            label="Product Costs"
-                            value={businessMetrics.totalProductCost}
-                            total={businessMetrics.totalRevenue}
-                            color="orange"
-                            isDeduction
-                            icon={<ShoppingBag className="h-4 w-4" />}
-                        />
+                        {/* Partner Net Profit Breakdown */}
+                        <div className="mt-6 space-y-4">
+                            {/* Yassir's Net Profit */}
+                            <div className="bg-[#13151A] rounded-lg p-4 border border-gray-700">
+                                <div className="flex items-center justify-between mb-3">
+                                    <h4 className="text-sm font-semibold text-gray-300">True Net Profit for Yassir</h4>
+                                    <span className={`text-lg font-bold ${(metrics.profitShares.yassirShare - metrics.expenses.yassirExpenses) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                        {(metrics.profitShares.yassirShare - metrics.expenses.yassirExpenses).toFixed(2)} SAR
+                                    </span>
+                                </div>
+                                <div className="space-y-2 text-xs">
+                                    <div className="flex justify-between text-gray-400">
+                                        <span>Profit Share:</span>
+                                        <span className="text-emerald-400">+{metrics.profitShares.yassirShare.toFixed(2)} SAR</span>
+                                    </div>
+                                    <div className="flex justify-between text-gray-400">
+                                        <span>Expenses:</span>
+                                        <span className="text-orange-400">-{metrics.expenses.yassirExpenses.toFixed(2)} SAR</span>
+                                    </div>
+                                </div>
+                            </div>
 
-                        {/* 2. Gross Profit */}
-                        <FunnelStep
-                            label="Gross Profit"
-                            value={businessMetrics.grossProfit}
-                            total={businessMetrics.totalRevenue}
-                            color="emerald"
-                        />
+                            {/* Basim's Net Profit */}
+                            <div className="bg-[#13151A] rounded-lg p-4 border border-gray-700">
+                                <div className="flex items-center justify-between mb-3">
+                                    <h4 className="text-sm font-semibold text-gray-300">True Net Profit for Basim</h4>
+                                    <span className={`text-lg font-bold ${(metrics.profitShares.basimShare - metrics.expenses.basimExpenses) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                        {(metrics.profitShares.basimShare - metrics.expenses.basimExpenses).toFixed(2)} SAR
+                                    </span>
+                                </div>
+                                <div className="space-y-2 text-xs">
+                                    <div className="flex justify-between text-gray-400">
+                                        <span>Profit Share:</span>
+                                        <span className="text-emerald-400">+{metrics.profitShares.basimShare.toFixed(2)} SAR</span>
+                                    </div>
+                                    <div className="flex justify-between text-gray-400">
+                                        <span>Expenses:</span>
+                                        <span className="text-orange-400">-{metrics.expenses.basimExpenses.toFixed(2)} SAR</span>
+                                    </div>
+                                </div>
+                            </div>
 
-                        {/* Deduct Fees */}
-                        <FunnelStep
-                            label="Shipping & Payment Fees"
-                            value={businessMetrics.totalFees}
-                            total={businessMetrics.totalRevenue}
-                            color="red"
-                            isDeduction
-                            icon={<AlertCircle className="h-4 w-4" />}
-                        />
-
-                        {/* Deduct Expenses */}
-                        <FunnelStep
-                            label="Operating Expenses"
-                            value={businessMetrics.totalExpenses}
-                            total={businessMetrics.totalRevenue}
-                            color="red"
-                            isDeduction
-                            icon={<Megaphone className="h-4 w-4" />}
-                        />
-
-                        {/* 3. Net Profit */}
-                        <div className="pt-4 mt-2 border-t border-gray-800">
-                            <FunnelStep
-                                label="True Net Profit"
-                                value={businessMetrics.netProfit}
-                                total={businessMetrics.totalRevenue}
-                                color={businessMetrics.netProfit >= 0 ? "green" : "red"}
-                                isFinal
-                                icon={<CheckCircle2 className="h-4 w-4" />}
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Key Metrics Summary */}
-                <div className="bg-[#1C1F26] rounded-xl border border-gray-800 p-6">
-                    <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-                        <TrendingUp className="h-5 w-5 text-green-400" />
-                        Profitability Overview
-                    </h3>
-
-                    <div className="grid grid-cols-1 gap-4">
-                        {/* Gross Profit */}
-                        <div className="bg-[#13151A] rounded-xl p-5 border border-gray-800">
-                            <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Gross Profit</p>
-                            <p className="text-2xl font-bold text-emerald-400">
-                                {businessMetrics.grossProfit.toFixed(2)} <span className="text-sm text-gray-500 font-medium">SAR</span>
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">Revenue - Product Costs</p>
-                        </div>
-
-                        {/* Total Expenses */}
-                        <div className="bg-[#13151A] rounded-xl p-5 border border-gray-800">
-                            <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Total Expenses</p>
-                            <p className="text-2xl font-bold text-orange-400">
-                                {businessMetrics.totalExpenses.toFixed(2)} <span className="text-sm text-gray-500 font-medium">SAR</span>
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">All business expenses</p>
-                        </div>
-
-                        {/* Net Profit */}
-                        <div className="bg-[#13151A] rounded-xl p-5 border border-gray-800">
-                            <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Net Profit</p>
-                            <p className={`text-2xl font-bold ${businessMetrics.netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                {businessMetrics.netProfit.toFixed(2)} <span className="text-sm text-gray-500 font-medium">SAR</span>
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">Gross Profit - Fees - Expenses</p>
+                            {/* Abbas Percentage */}
+                            <div className="mt-6 pt-4 border-t border-gray-700">
+                                <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg p-4 border border-purple-500/30">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <h4 className="text-sm font-semibold text-purple-300">Abbas Percentage (5%)</h4>
+                                        <span className="text-xl font-bold text-purple-400">
+                                            {((metrics.profitShares.yassirShare - metrics.expenses.yassirExpenses) * 0.05 +
+                                                (metrics.profitShares.basimShare - metrics.expenses.basimExpenses) * 0.05).toFixed(2)} SAR
+                                        </span>
+                                    </div>
+                                    <div className="space-y-2 text-xs">
+                                        <div className="flex justify-between text-gray-400">
+                                            <span>5% of Yassir's Net Profit:</span>
+                                            <span className="text-purple-300">+{((metrics.profitShares.yassirShare - metrics.expenses.yassirExpenses) * 0.05).toFixed(2)} SAR</span>
+                                        </div>
+                                        <div className="flex justify-between text-gray-400">
+                                            <span>5% of Basim's Net Profit:</span>
+                                            <span className="text-purple-300">+{((metrics.profitShares.basimShare - metrics.expenses.basimExpenses) * 0.05).toFixed(2)} SAR</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
