@@ -1,25 +1,30 @@
 import React from 'react';
 import { FileDown, Loader2 } from 'lucide-react';
-import { Order } from '../../types';
 import { generateReportsPDF } from '../../utils/pdf/generateReportsPDF';
 
 interface ExportReportsButtonProps {
-  orders: Order[];
-  reportsContainerRef: React.RefObject<HTMLDivElement>;
+  sectionRefs: React.RefObject<HTMLDivElement>[];
 }
 
 export const ExportReportsButton: React.FC<ExportReportsButtonProps> = ({
-  orders,
-  reportsContainerRef,
+  sectionRefs,
 }) => {
   const [isExporting, setIsExporting] = React.useState(false);
 
   const handleExport = async () => {
-    if (!reportsContainerRef.current) return;
+    // Collect specific registered containers
+    const containers = sectionRefs
+      .map((ref) => ref.current)
+      .filter((el): el is HTMLDivElement => el !== null);
+
+    if (containers.length === 0) {
+      console.warn('No report sections found to export.');
+      return;
+    }
 
     try {
       setIsExporting(true);
-      await generateReportsPDF(reportsContainerRef.current, orders);
+      await generateReportsPDF(containers);
     } catch (error) {
       console.error('Error exporting reports:', error);
       alert('Failed to export reports. Please try again.');
