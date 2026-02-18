@@ -33,7 +33,9 @@ export const Reports = () => {
   const [metrics, setMetrics] = useState<ReportMetrics | null>(null);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [activeSection, setActiveSection] = useState<string>('overview');
-  const reportsContainerRef = useRef<HTMLDivElement>(null);
+  const overviewRef = useRef<HTMLDivElement>(null);
+  const feeAnalysisRef = useRef<HTMLDivElement>(null);
+  const businessMetricsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadData();
@@ -89,7 +91,7 @@ export const Reports = () => {
       title: 'Reports Overview',
       icon: <BarChart3 className="h-5 w-5" />,
       component: (
-        <div ref={reportsContainerRef} className="space-y-6">
+        <div ref={overviewRef} className="space-y-6">
           <NetProfitReport
             orders={orders}
             metrics={metrics}
@@ -113,7 +115,7 @@ export const Reports = () => {
       title: 'Fee Analysis',
       icon: <DollarSign className="h-5 w-5" />,
       component: (
-        <div className="space-y-6">
+        <div ref={feeAnalysisRef} className="space-y-6">
           <div className="space-y-6">
             <ShippingFeeAnalysis
               orders={orders}
@@ -172,10 +174,12 @@ export const Reports = () => {
       title: 'Business Metrics',
       icon: <TrendingUp className="h-5 w-5" />,
       component: (
-        <BusinessMetricsReport
-          orders={orders}
-          metrics={metrics}
-        />
+        <div ref={businessMetricsRef}>
+          <BusinessMetricsReport
+            orders={orders}
+            metrics={metrics}
+          />
+        </div>
       ),
     },
   ];
@@ -253,18 +257,29 @@ export const Reports = () => {
               }
             </p>
           </div>
-          {activeSection === 'overview' && (
-            <ExportReportsButton
-              orders={orders}
-              reportsContainerRef={reportsContainerRef}
-            />
-          )}
+          <ExportReportsButton sectionRefs={[overviewRef, feeAnalysisRef, businessMetricsRef]} />
         </div>
 
-        {/* Content */}
-        <div>
-          {currentSection?.component}
-        </div>
+        {/* Content — all sections always rendered; inactive ones off-screen for PDF export */}
+        {sections.map((section) => {
+          const isActive = activeSection === section.id;
+          return (
+            <div
+              key={section.id}
+              ref={undefined}
+              style={isActive ? {} : {
+                position: 'absolute',
+                left: '-9999px',
+                top: 0,
+                width: '100%',
+                opacity: 0,
+                pointerEvents: 'none',
+              }}
+            >
+              {section.component}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
