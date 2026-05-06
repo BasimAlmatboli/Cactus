@@ -148,7 +148,7 @@ function InstructionsTab() {
                         <span className="text-purple-400 font-bold text-lg shrink-0">4.</span>
                         <div>
                             <p className="font-semibold text-white">تعديل خصم الـ Mug</p>
-                            <p className="text-gray-300">التأكد من تطبيق الخصم الصحيح لمنتجات Mug</p>
+                            <p className="text-gray-300">اتأكد انك حاطط الخصم فقط في عامود الخصم, لأنه بيكون الخصم + خصم العروض الخاصة, تأكد انك شايل خصم المج</p>
                         </div>
                     </div>
 
@@ -157,6 +157,17 @@ function InstructionsTab() {
                         <div>
                             <p className="font-semibold text-white">تعديل اسم شركة الشحن سمسا</p>
                             <p className="text-gray-300">تغيير اسم شركة شحن سمسا الـ 20 ريال إلى <code className="bg-gray-800 px-2 py-0.5 rounded text-blue-400">SMSA-Eco</code></p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 bg-yellow-900/20 border border-yellow-700/40 p-4 rounded-lg">
+                        <span className="text-purple-400 font-bold text-lg shrink-0">6.</span>
+                        <div>
+                            <p className="font-semibold text-white mb-1">تأكد من العملاء الي دفعوا من خلال المحفظة</p>
+                            <p className="text-gray-300">
+                                تأكد انك حاطط قيمة المبلغ الي دفعه العميل من المحفظة في عامود{' '}
+                                <code className="bg-gray-800 px-2 py-0.5 rounded text-yellow-400">الخصم</code>
+                            </p>
                         </div>
                     </div>
                 </div>

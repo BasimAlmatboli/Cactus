@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Expense } from '../../types/expense';
 import { expenseCategories } from '../../data/expenseCategories';
-import { X, Save } from 'lucide-react';
+import { X, Save, RefreshCw } from 'lucide-react';
 
 interface ExpenseEditModalProps {
     expense: Expense;
@@ -23,6 +23,7 @@ export const ExpenseEditModal: React.FC<ExpenseEditModalProps> = ({
     const [basimShare, setBasimShare] = useState(expense.basimSharePercentage);
     const [yassirShare, setYassirShare] = useState(expense.yassirSharePercentage);
     const [includeTax, setIncludeTax] = useState(expense.includeTax);
+    const [isReimbursement, setIsReimbursement] = useState(expense.isReimbursement ?? false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Reset form when expense changes
@@ -34,6 +35,7 @@ export const ExpenseEditModal: React.FC<ExpenseEditModalProps> = ({
         setBasimShare(expense.basimSharePercentage);
         setYassirShare(expense.yassirSharePercentage);
         setIncludeTax(expense.includeTax);
+        setIsReimbursement(expense.isReimbursement ?? false);
     }, [expense]);
 
     // Auto-calculate complementary percentage
@@ -79,6 +81,7 @@ export const ExpenseEditModal: React.FC<ExpenseEditModalProps> = ({
                 yassirSharePercentage: yassirShare,
                 includeTax,
                 amountBeforeTax: includeTax ? parseFloat(amount) : undefined,
+                isReimbursement,
                 date
             });
 
@@ -111,6 +114,51 @@ export const ExpenseEditModal: React.FC<ExpenseEditModalProps> = ({
 
                     {/* Form Content */}
                     <div className="p-6 space-y-6">
+
+                        {/* Reimbursement Toggle */}
+                        <div
+                            className={`rounded-lg p-5 border cursor-pointer transition-all ${
+                                isReimbursement
+                                    ? 'bg-emerald-900/20 border-emerald-500/40'
+                                    : 'bg-gray-800/20 border-gray-700/40 hover:border-gray-600/60'
+                            }`}
+                            onClick={() => setIsReimbursement(!isReimbursement)}
+                        >
+                            <label className="flex items-center justify-between cursor-pointer">
+                                <div className="flex items-start gap-3">
+                                    <div className={`p-2 rounded-lg mt-0.5 ${isReimbursement ? 'bg-emerald-500/20' : 'bg-gray-700/50'}`}>
+                                        <RefreshCw className={`h-4 w-4 ${isReimbursement ? 'text-emerald-400' : 'text-gray-500'}`} />
+                                    </div>
+                                    <div>
+                                        <h3 className={`text-sm font-semibold mb-1 flex items-center gap-2 ${isReimbursement ? 'text-emerald-300' : 'text-gray-300'}`}>
+                                            Reimbursement
+                                            {isReimbursement && (
+                                                <span className="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full">
+                                                    Active
+                                                </span>
+                                            )}
+                                        </h3>
+                                        <p className="text-xs text-gray-400">
+                                            {isReimbursement
+                                                ? 'This amount will be ADDED to the partner\'s distribution (reimbursing them)'
+                                                : 'I paid this from my own money — enable to get reimbursed'
+                                            }
+                                        </p>
+                                    </div>
+                                </div>
+                                <div
+                                    className={`relative w-12 h-6 rounded-full transition-all flex-shrink-0 ${
+                                        isReimbursement ? 'bg-emerald-500' : 'bg-gray-700'
+                                    }`}
+                                    onClick={(e) => { e.stopPropagation(); setIsReimbursement(!isReimbursement); }}
+                                >
+                                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all duration-200 ${
+                                        isReimbursement ? 'left-7' : 'left-1'
+                                    }`} />
+                                </div>
+                            </label>
+                        </div>
+
                         {/* Category */}
                         <div>
                             <label className="block text-sm font-medium text-gray-400 mb-2">
@@ -179,14 +227,14 @@ export const ExpenseEditModal: React.FC<ExpenseEditModalProps> = ({
                         <div className="bg-gray-800/30 rounded-lg p-5 border border-gray-700/50">
                             <h3 className="text-sm font-semibold text-gray-300 mb-4 flex items-center gap-2">
                                 <span className="w-1 h-4 bg-purple-500 rounded-full"></span>
-                                Owner Split Percentage
+                                {isReimbursement ? 'Who gets reimbursed?' : 'Owner Split Percentage'}
                             </h3>
 
                             <div className="grid grid-cols-2 gap-4 mb-4">
                                 {/* Basim Share */}
                                 <div>
                                     <label className="block text-xs font-medium text-gray-400 mb-2">
-                                        Basim Share (%)
+                                        Basim {isReimbursement ? 'Reimbursed' : 'Share'} (%)
                                     </label>
                                     <input
                                         type="number"
@@ -202,7 +250,7 @@ export const ExpenseEditModal: React.FC<ExpenseEditModalProps> = ({
                                 {/* Yasir Share */}
                                 <div>
                                     <label className="block text-xs font-medium text-gray-400 mb-2">
-                                        Yasir Share (%)
+                                        Yasir {isReimbursement ? 'Reimbursed' : 'Share'} (%)
                                     </label>
                                     <input
                                         type="number"
@@ -220,17 +268,17 @@ export const ExpenseEditModal: React.FC<ExpenseEditModalProps> = ({
                             <div>
                                 <div className="h-3 bg-gray-700/50 rounded-full overflow-hidden flex">
                                     <div
-                                        className="bg-blue-500 transition-all duration-300"
+                                        className={`transition-all duration-300 ${isReimbursement ? 'bg-emerald-500' : 'bg-blue-500'}`}
                                         style={{ width: `${basimShare}%` }}
                                     />
                                     <div
-                                        className="bg-purple-500 transition-all duration-300"
+                                        className={`transition-all duration-300 ${isReimbursement ? 'bg-teal-500' : 'bg-purple-500'}`}
                                         style={{ width: `${yassirShare}%` }}
                                     />
                                 </div>
                                 <div className="mt-2 flex justify-between text-xs">
-                                    <span className="text-blue-400 font-medium">Basim: {basimShare}%</span>
-                                    <span className="text-purple-400 font-medium">Yasir: {yassirShare}%</span>
+                                    <span className={`font-medium ${isReimbursement ? 'text-emerald-400' : 'text-blue-400'}`}>Basim: {basimShare}%</span>
+                                    <span className={`font-medium ${isReimbursement ? 'text-teal-400' : 'text-purple-400'}`}>Yasir: {yassirShare}%</span>
                                 </div>
                             </div>
                         </div>
@@ -287,7 +335,11 @@ export const ExpenseEditModal: React.FC<ExpenseEditModalProps> = ({
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-500 transition-all disabled:opacity-50"
+                            className={`flex items-center gap-2 px-6 py-2.5 text-white font-medium rounded-lg transition-all disabled:opacity-50 ${
+                                isReimbursement
+                                    ? 'bg-emerald-600 hover:bg-emerald-500'
+                                    : 'bg-blue-600 hover:bg-blue-500'
+                            }`}
                         >
                             <Save className="h-4 w-4" />
                             <span>{isSubmitting ? 'Saving...' : 'Save Changes'}</span>
