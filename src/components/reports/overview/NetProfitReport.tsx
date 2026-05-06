@@ -172,14 +172,25 @@ export const NetProfitReport: React.FC<NetProfitReportProps> = ({
                         {/* Divider */}
                         <div className="border-t border-gray-700/50"></div>
 
-                        {/* Net Distribution */}
+                        {/* Abbas 5% */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm">👤</span>
+                                <span className="text-sm text-purple-300">Abbas (5%)</span>
+                            </div>
+                            <span className="text-sm font-medium text-purple-400">
+                                -{(netProfitData!.yassirNetProfit * 0.05).toFixed(2)} SAR
+                            </span>
+                        </div>
+
+                        {/* Net Distribution (after Abbas) */}
                         <div className="flex items-center justify-between bg-blue-500/5 rounded-lg p-3 border border-blue-500/10">
                             <div className="flex items-center gap-2">
                                 <DollarSign className="h-5 w-5 text-blue-400" />
                                 <span className="text-sm font-semibold text-blue-300">Net Distribution</span>
                             </div>
-                            <span className={`text-xl font-bold ${netProfitData!.yassirNetProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                {netProfitData!.yassirNetProfit.toFixed(2)} SAR
+                            <span className={`text-xl font-bold ${(netProfitData!.yassirNetProfit * 0.95) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                {(netProfitData!.yassirNetProfit * 0.95).toFixed(2)} SAR
                             </span>
                         </div>
                     </div>
@@ -202,7 +213,7 @@ export const NetProfitReport: React.FC<NetProfitReportProps> = ({
                                         .join('\n')
                                     : '';
 
-                                const text = `\u200Fتوزيع أرباح شهر ${month}:\n\n\u200F${metrics.earnings.basimTotalEarnings.toFixed(2)} ر.س\n\n\u200Fالتكاليف:\n${expensesText}\n\n\u200Fالإجمالي: ${metrics.expenses.basimExpenses.toFixed(2)} ر.س${reimbText}\n\n\u200Fصافي أرباح باسم بعد خصم التكاليف:\n\u200F${netProfitData!.basimNetProfit.toFixed(2)} ر.س`;
+                                const text = `\u200Fتوزيع أرباح شهر ${month}:\n\n\u200F${metrics.earnings.basimTotalEarnings.toFixed(2)} ر.س\n\n\u200Fالتكاليف:\n${expensesText}\n\n\u200Fالإجمالي: ${metrics.expenses.basimExpenses.toFixed(2)} ر.س${reimbText}\n\n\u200Fصافي أرباح باسم بعد خصم التكاليف:\n\u200F${netProfitData!.basimNetProfit.toFixed(2)} ر.س\n\n\u200Fنسبة عباس (5%):\n\u200F-${(netProfitData!.basimNetProfit * 0.05).toFixed(2)} ر.س\n\n\u200Fصافي باسم بعد نسبة عباس:\n\u200F${(netProfitData!.basimNetProfit * 0.95).toFixed(2)} ر.س`;
 
                                 navigator.clipboard.writeText(text);
                             }}
@@ -275,14 +286,25 @@ export const NetProfitReport: React.FC<NetProfitReportProps> = ({
                         {/* Divider */}
                         <div className="border-t border-gray-700/50"></div>
 
-                        {/* Net Distribution */}
+                        {/* Abbas 5% */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm">👤</span>
+                                <span className="text-sm text-purple-300">Abbas (5%)</span>
+                            </div>
+                            <span className="text-sm font-medium text-purple-400">
+                                -{(netProfitData!.basimNetProfit * 0.05).toFixed(2)} SAR
+                            </span>
+                        </div>
+
+                        {/* Net Distribution (after Abbas) */}
                         <div className="flex items-center justify-between bg-green-500/5 rounded-lg p-3 border border-green-500/10">
                             <div className="flex items-center gap-2">
                                 <DollarSign className="h-5 w-5 text-green-400" />
                                 <span className="text-sm font-semibold text-green-300">Net Distribution</span>
                             </div>
-                            <span className={`text-xl font-bold ${netProfitData!.basimNetProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                {netProfitData!.basimNetProfit.toFixed(2)} SAR
+                            <span className={`text-xl font-bold ${(netProfitData!.basimNetProfit * 0.95) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                {(netProfitData!.basimNetProfit * 0.95).toFixed(2)} SAR
                             </span>
                         </div>
                     </div>
