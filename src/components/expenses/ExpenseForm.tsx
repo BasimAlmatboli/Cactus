@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Expense } from '../../types/expense';
 import { expenseCategories } from '../../data/expenseCategories';
 import { saveExpense } from '../../services/expenseService';
-import { Plus } from 'lucide-react';
+import { Plus, RefreshCw } from 'lucide-react';
 
 export const ExpenseForm: React.FC<{ onExpenseAdded: () => void }> = ({ onExpenseAdded }) => {
   const [category, setCategory] = useState<Expense['category']>('other');
@@ -12,6 +12,7 @@ export const ExpenseForm: React.FC<{ onExpenseAdded: () => void }> = ({ onExpens
   const [basimShare, setBasimShare] = useState(50);
   const [yassirShare, setYassirShare] = useState(50);
   const [includeTax, setIncludeTax] = useState(false);
+  const [isReimbursement, setIsReimbursement] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Auto-calculate complementary percentage
@@ -56,6 +57,7 @@ export const ExpenseForm: React.FC<{ onExpenseAdded: () => void }> = ({ onExpens
         yassirSharePercentage: yassirShare,
         includeTax,
         amountBeforeTax: includeTax ? parseFloat(amount) : undefined,  // Store base if tax applied
+        isReimbursement,
         date
       });
 
@@ -66,6 +68,7 @@ export const ExpenseForm: React.FC<{ onExpenseAdded: () => void }> = ({ onExpens
       setBasimShare(50);
       setYassirShare(50);
       setIncludeTax(false);
+      setIsReimbursement(false);
       setDate(new Date().toISOString().split('T')[0]);
 
       onExpenseAdded();
@@ -84,6 +87,50 @@ export const ExpenseForm: React.FC<{ onExpenseAdded: () => void }> = ({ onExpens
           <Plus className="h-6 w-6 text-blue-400" />
         </div>
         <h2 className="text-xl font-semibold text-white">Add New Expense</h2>
+      </div>
+
+      {/* Reimbursement Toggle — top of form so it's prominent */}
+      <div
+        className={`mb-6 rounded-lg p-5 border cursor-pointer transition-all ${
+          isReimbursement
+            ? 'bg-emerald-900/20 border-emerald-500/40'
+            : 'bg-gray-800/20 border-gray-700/40 hover:border-gray-600/60'
+        }`}
+        onClick={() => setIsReimbursement(!isReimbursement)}
+      >
+        <label className="flex items-center justify-between cursor-pointer">
+          <div className="flex items-start gap-3">
+            <div className={`p-2 rounded-lg mt-0.5 ${isReimbursement ? 'bg-emerald-500/20' : 'bg-gray-700/50'}`}>
+              <RefreshCw className={`h-4 w-4 ${isReimbursement ? 'text-emerald-400' : 'text-gray-500'}`} />
+            </div>
+            <div>
+              <h3 className={`text-sm font-semibold mb-1 flex items-center gap-2 ${isReimbursement ? 'text-emerald-300' : 'text-gray-300'}`}>
+                Reimbursement
+                {isReimbursement && (
+                  <span className="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full">
+                    Active
+                  </span>
+                )}
+              </h3>
+              <p className="text-xs text-gray-400">
+                {isReimbursement
+                  ? 'This amount will be ADDED to the partner\'s distribution (reimbursing them)'
+                  : 'I paid this from my own money — enable to get reimbursed'
+                }
+              </p>
+            </div>
+          </div>
+          <div
+            className={`relative w-12 h-6 rounded-full transition-all flex-shrink-0 ${
+              isReimbursement ? 'bg-emerald-500' : 'bg-gray-700'
+            }`}
+            onClick={(e) => { e.stopPropagation(); setIsReimbursement(!isReimbursement); }}
+          >
+            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all duration-200 ${
+              isReimbursement ? 'left-7' : 'left-1'
+            }`} />
+          </div>
+        </label>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -139,14 +186,14 @@ export const ExpenseForm: React.FC<{ onExpenseAdded: () => void }> = ({ onExpens
         <div className="md:col-span-2 bg-gray-800/30 rounded-lg p-5 border border-gray-700/50">
           <h3 className="text-sm font-semibold text-gray-300 mb-4 flex items-center gap-2">
             <span className="w-1 h-4 bg-purple-500 rounded-full"></span>
-            Owner Split Percentage
+            {isReimbursement ? 'Who gets reimbursed?' : 'Owner Split Percentage'}
           </h3>
 
           <div className="grid grid-cols-2 gap-4 mb-4">
             {/* Basim Share */}
             <div>
               <label className="block text-xs font-medium text-gray-400 mb-2">
-                Basim Share (%)
+                Basim {isReimbursement ? 'Reimbursed' : 'Share'} (%)
               </label>
               <input
                 type="number"
@@ -162,7 +209,7 @@ export const ExpenseForm: React.FC<{ onExpenseAdded: () => void }> = ({ onExpens
             {/* Yasir Share */}
             <div>
               <label className="block text-xs font-medium text-gray-400 mb-2">
-                Yasir Share (%)
+                Yasir {isReimbursement ? 'Reimbursed' : 'Share'} (%)
               </label>
               <input
                 type="number"
@@ -180,17 +227,17 @@ export const ExpenseForm: React.FC<{ onExpenseAdded: () => void }> = ({ onExpens
           <div>
             <div className="h-3 bg-gray-700/50 rounded-full overflow-hidden flex">
               <div
-                className="bg-blue-500 transition-all duration-300"
+                className={`transition-all duration-300 ${isReimbursement ? 'bg-emerald-500' : 'bg-blue-500'}`}
                 style={{ width: `${basimShare}%` }}
               />
               <div
-                className="bg-purple-500 transition-all duration-300"
+                className={`transition-all duration-300 ${isReimbursement ? 'bg-teal-500' : 'bg-purple-500'}`}
                 style={{ width: `${yassirShare}%` }}
               />
             </div>
             <div className="mt-2 flex justify-between text-xs">
-              <span className="text-blue-400 font-medium">Basim: {basimShare}%</span>
-              <span className="text-purple-400 font-medium">Yasir: {yassirShare}%</span>
+              <span className={`font-medium ${isReimbursement ? 'text-emerald-400' : 'text-blue-400'}`}>Basim: {basimShare}%</span>
+              <span className={`font-medium ${isReimbursement ? 'text-teal-400' : 'text-purple-400'}`}>Yasir: {yassirShare}%</span>
             </div>
           </div>
         </div>
@@ -237,13 +284,19 @@ export const ExpenseForm: React.FC<{ onExpenseAdded: () => void }> = ({ onExpens
       <button
         type="submit"
         disabled={isSubmitting}
-        className={`mt-8 w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-blue-600 text-white font-medium rounded-xl transition-all shadow-lg shadow-blue-900/20 ${isSubmitting
-          ? 'opacity-75 cursor-not-allowed'
-          : 'hover:bg-blue-500 hover:shadow-blue-600/30 hover:-translate-y-0.5'
-          }`}
+        className={`mt-8 w-full flex items-center justify-center gap-2 px-6 py-3.5 font-medium rounded-xl transition-all shadow-lg ${
+          isReimbursement
+            ? 'bg-emerald-600 text-white shadow-emerald-900/20 hover:bg-emerald-500 hover:shadow-emerald-600/30'
+            : 'bg-blue-600 text-white shadow-blue-900/20 hover:bg-blue-500 hover:shadow-blue-600/30'
+        } ${isSubmitting ? 'opacity-75 cursor-not-allowed' : 'hover:-translate-y-0.5'}`}
       >
-        <Plus className="h-5 w-5" />
-        <span>{isSubmitting ? 'Adding Expense...' : 'Add Expense'}</span>
+        {isReimbursement ? <RefreshCw className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
+        <span>
+          {isSubmitting
+            ? (isReimbursement ? 'Adding Reimbursement...' : 'Adding Expense...')
+            : (isReimbursement ? 'Add Reimbursement' : 'Add Expense')
+          }
+        </span>
       </button>
     </form >
   );

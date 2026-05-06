@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Expense } from '../../types/expense';
 import { expenseCategories } from '../../data/expenseCategories';
-import { Trash2, Loader2, Pencil } from 'lucide-react';
+import { Trash2, Loader2, Pencil, RefreshCw } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { ExpenseEditModal } from './ExpenseEditModal';
 
@@ -54,7 +54,10 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
     );
   }
 
-  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+  const regularExpenses = expenses.filter(e => !e.isReimbursement);
+  const reimbursements = expenses.filter(e => e.isReimbursement);
+  const totalExpenses = regularExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+  const totalReimbursements = reimbursements.reduce((sum, expense) => sum + expense.amount, 0);
 
   return (
     <>
@@ -84,13 +87,17 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
               {expenses.map((expense) => {
                 const category = expenseCategories.find(cat => cat.id === expense.category);
                 const IconComponent = (category ? Icons[category.icon as keyof typeof Icons] : Icons.Receipt) as Icons.LucideIcon;
+                const isReimb = expense.isReimbursement;
 
                 return (
-                  <tr key={expense.id} className="hover:bg-[#232730] transition-colors">
+                  <tr
+                    key={expense.id}
+                    className={`transition-colors ${isReimb ? 'hover:bg-emerald-900/10 bg-emerald-900/5' : 'hover:bg-[#232730]'}`}
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="p-2 bg-[#13151A] rounded-lg mr-3 border border-gray-800">
-                          <IconComponent className="h-4 w-4 text-gray-400" />
+                        <div className={`p-2 rounded-lg mr-3 border ${isReimb ? 'bg-emerald-900/20 border-emerald-800/40' : 'bg-[#13151A] border-gray-800'}`}>
+                          <IconComponent className={`h-4 w-4 ${isReimb ? 'text-emerald-400' : 'text-gray-400'}`} />
                         </div>
                         <span className="text-sm font-medium text-white">
                           {category?.name || 'Other'}
@@ -98,21 +105,29 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-300">
-                      {expense.description}
+                      <div className="flex items-center gap-2">
+                        {expense.description}
+                        {isReimb && (
+                          <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 rounded-full font-medium">
+                            <RefreshCw className="h-3 w-3" />
+                            Reimbursement
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-medium text-blue-400">{expense.basimSharePercentage}%</span>
+                          <span className={`text-xs font-medium ${isReimb ? 'text-emerald-400' : 'text-blue-400'}`}>{expense.basimSharePercentage}%</span>
                           <span className="text-gray-600">/</span>
-                          <span className="text-xs font-medium text-purple-400">{expense.yassirSharePercentage}%</span>
+                          <span className={`text-xs font-medium ${isReimb ? 'text-teal-400' : 'text-purple-400'}`}>{expense.yassirSharePercentage}%</span>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-white">
-                          {expense.amount.toFixed(2)} SAR
+                        <span className={`text-sm font-medium ${isReimb ? 'text-emerald-300' : 'text-white'}`}>
+                          {isReimb ? '+' : ''}{expense.amount.toFixed(2)} SAR
                         </span>
                         {expense.includeTax && (
                           <span className="text-xs px-2 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded">
@@ -144,6 +159,18 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
               })}
             </tbody>
             <tfoot className="bg-[#13151A] border-t border-gray-800">
+              {totalReimbursements > 0 && (
+                <tr>
+                  <td colSpan={3} className="px-6 py-3 text-sm font-medium text-emerald-400 flex items-center gap-1.5">
+                    <RefreshCw className="h-3.5 w-3.5" />
+                    Total Reimbursements
+                  </td>
+                  <td className="px-6 py-3 text-sm font-bold text-emerald-400">
+                    +{totalReimbursements.toFixed(2)} SAR
+                  </td>
+                  <td></td>
+                </tr>
+              )}
               <tr>
                 <td colSpan={3} className="px-6 py-4 text-sm font-medium text-gray-400">
                   Total Expenses

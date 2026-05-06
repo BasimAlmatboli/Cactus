@@ -58,6 +58,10 @@ export interface PartnerExpenses {
     yassirExpenses: number;
     basimExpenses: number;
     totalExpenses: number;
+    // Reimbursements: amounts paid by partner from own pocket → ADDED back to their distribution
+    yassirReimbursements: number;
+    basimReimbursements: number;
+    totalReimbursements: number;
 }
 
 /**

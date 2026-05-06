@@ -57,14 +57,17 @@ export function calculatePartnerEarnings(
 
 /**
  * Calculate Partner Net Profit
- * 
- * Net Profit = Earnings - Operating Expenses
- * This is the final amount available for distribution after all costs
- * 
+ *
+ * Net Profit = Earnings - Operating Expenses + Reimbursements
+ *
+ * Reimbursements are amounts the partner paid out-of-pocket for business expenses.
+ * They are ADDED to the distribution (not deducted) because the partner is being
+ * paid back for money they already spent.
+ *
  * @param earnings - Partner earnings
- * @param expenses - Partner expenses
+ * @param expenses - Partner expenses (includes reimbursement totals)
  * @returns Partner net profit breakdown
- * 
+ *
  * @example
  * const netProfit = calculatePartnerNetProfit(earnings, expenses);
  * // {
@@ -78,8 +81,8 @@ export function calculatePartnerNetProfit(
     expenses: PartnerExpenses
 ): PartnerNetProfit {
     return {
-        yassirNetProfit: earnings.yassirTotalEarnings - expenses.yassirExpenses,
-        basimNetProfit: earnings.basimTotalEarnings - expenses.basimExpenses,
-        combinedNetProfit: earnings.combinedTotalEarnings - expenses.totalExpenses
+        yassirNetProfit: earnings.yassirTotalEarnings - expenses.yassirExpenses + expenses.yassirReimbursements,
+        basimNetProfit: earnings.basimTotalEarnings - expenses.basimExpenses + expenses.basimReimbursements,
+        combinedNetProfit: earnings.combinedTotalEarnings - expenses.totalExpenses + expenses.totalReimbursements
     };
 }

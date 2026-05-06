@@ -1,7 +1,7 @@
 import React from 'react';
 import { Order } from '../../../types';
 import { Expense } from '../../../types/expense';
-import { TrendingUp, Loader2, DollarSign, Receipt, Wallet, Copy } from 'lucide-react';
+import { TrendingUp, Loader2, DollarSign, Receipt, Wallet, Copy, RefreshCw } from 'lucide-react';
 import { ReportMetrics } from '../../../utils/reportCalculations';
 
 interface NetProfitReportProps {
@@ -18,11 +18,11 @@ export const NetProfitReport: React.FC<NetProfitReportProps> = ({
     // Get net profit data from metrics
     const netProfitData = metrics?.partnerNetProfit;
 
-    // Calculate individual expense shares
+    // Regular expenses (deducted) per partner
     const yassirExpensesList = React.useMemo(() => {
         if (!expenses) return [];
         return expenses
-            .filter(e => e.yassirSharePercentage > 0)
+            .filter(e => e.yassirSharePercentage > 0 && !e.isReimbursement)
             .map(e => ({
                 description: e.description,
                 amount: e.amount * (e.yassirSharePercentage / 100)
@@ -33,7 +33,30 @@ export const NetProfitReport: React.FC<NetProfitReportProps> = ({
     const basimExpensesList = React.useMemo(() => {
         if (!expenses) return [];
         return expenses
-            .filter(e => e.basimSharePercentage > 0)
+            .filter(e => e.basimSharePercentage > 0 && !e.isReimbursement)
+            .map(e => ({
+                description: e.description,
+                amount: e.amount * (e.basimSharePercentage / 100)
+            }))
+            .sort((a, b) => b.amount - a.amount);
+    }, [expenses]);
+
+    // Reimbursements (added) per partner
+    const yassirReimbursementsList = React.useMemo(() => {
+        if (!expenses) return [];
+        return expenses
+            .filter(e => e.yassirSharePercentage > 0 && e.isReimbursement)
+            .map(e => ({
+                description: e.description,
+                amount: e.amount * (e.yassirSharePercentage / 100)
+            }))
+            .sort((a, b) => b.amount - a.amount);
+    }, [expenses]);
+
+    const basimReimbursementsList = React.useMemo(() => {
+        if (!expenses) return [];
+        return expenses
+            .filter(e => e.basimSharePercentage > 0 && e.isReimbursement)
             .map(e => ({
                 description: e.description,
                 amount: e.amount * (e.basimSharePercentage / 100)
@@ -98,36 +121,58 @@ export const NetProfitReport: React.FC<NetProfitReportProps> = ({
                             </span>
                         </div>
 
-                        {/* Expenses */}
-                        <div className="space-y-2 mb-4">
-                            <div className="flex items-center gap-2 mb-2">
-                                <Receipt className="h-4 w-4 text-red-400" />
-                                <span className="text-sm text-gray-400">Expenses by Description</span>
-                            </div>
-                            <div className="bg-[#0D0F12] rounded-lg p-3 space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
-                                {yassirExpensesList.length > 0 ? (
-                                    yassirExpensesList.map((expense, index) => (
+                        {/* Regular Expenses (deducted) */}
+                        {yassirExpensesList.length > 0 && (
+                            <div className="space-y-2 mb-2">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Receipt className="h-4 w-4 text-red-400" />
+                                    <span className="text-sm text-gray-400">Expenses</span>
+                                </div>
+                                <div className="bg-[#0D0F12] rounded-lg p-3 space-y-2 max-h-36 overflow-y-auto custom-scrollbar">
+                                    {yassirExpensesList.map((expense, index) => (
                                         <div key={index} className="flex justify-between items-start text-xs group">
                                             <span className="text-gray-400 group-hover:text-gray-300 transition-colors">{expense.description}</span>
                                             <span className="text-red-400 font-medium whitespace-nowrap ml-2">
                                                 -{expense.amount.toFixed(2)} SAR
                                             </span>
                                         </div>
-                                    ))
-                                ) : (
-                                    <p className="text-xs text-gray-500 italic">No expenses</p>
-                                )}
-                                <div className="border-t border-gray-800 pt-2 mt-2 flex justify-between items-center">
-                                    <span className="text-xs text-gray-500 font-medium">Total Expenses</span>
-                                    <span className="text-xs text-red-400 font-bold">-{metrics.expenses.yassirExpenses.toFixed(2)} SAR</span>
+                                    ))}
+                                    <div className="border-t border-gray-800 pt-2 mt-2 flex justify-between items-center">
+                                        <span className="text-xs text-gray-500 font-medium">Total Expenses</span>
+                                        <span className="text-xs text-red-400 font-bold">-{metrics.expenses.yassirExpenses.toFixed(2)} SAR</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
+
+                        {/* Reimbursements (added) */}
+                        {yassirReimbursementsList.length > 0 && (
+                            <div className="space-y-2 mb-2">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <RefreshCw className="h-4 w-4 text-emerald-400" />
+                                    <span className="text-sm text-gray-400">Reimbursements</span>
+                                </div>
+                                <div className="bg-emerald-900/10 border border-emerald-800/30 rounded-lg p-3 space-y-2 max-h-36 overflow-y-auto custom-scrollbar">
+                                    {yassirReimbursementsList.map((reimb, index) => (
+                                        <div key={index} className="flex justify-between items-start text-xs group">
+                                            <span className="text-gray-400 group-hover:text-gray-300 transition-colors">{reimb.description}</span>
+                                            <span className="text-emerald-400 font-medium whitespace-nowrap ml-2">
+                                                +{reimb.amount.toFixed(2)} SAR
+                                            </span>
+                                        </div>
+                                    ))}
+                                    <div className="border-t border-emerald-800/30 pt-2 mt-2 flex justify-between items-center">
+                                        <span className="text-xs text-gray-500 font-medium">Total Reimbursements</span>
+                                        <span className="text-xs text-emerald-400 font-bold">+{metrics.expenses.yassirReimbursements.toFixed(2)} SAR</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Divider */}
                         <div className="border-t border-gray-700/50"></div>
 
-                        {/* Net Profit */}
+                        {/* Net Distribution */}
                         <div className="flex items-center justify-between bg-blue-500/5 rounded-lg p-3 border border-blue-500/10">
                             <div className="flex items-center gap-2">
                                 <DollarSign className="h-5 w-5 text-blue-400" />
@@ -151,21 +196,15 @@ export const NetProfitReport: React.FC<NetProfitReportProps> = ({
                                 const expensesText = basimExpensesList
                                     .map((e, i) => `\u200F${i + 1}. ${e.description} (${e.amount.toFixed(2)} ر.س)`)
                                     .join('\n');
+                                const reimbText = basimReimbursementsList.length > 0
+                                    ? '\n\n\u200Fالمصاريف الشخصية (تُضاف):\n' + basimReimbursementsList
+                                        .map((r, i) => `\u200F${i + 1}. ${r.description} (+${r.amount.toFixed(2)} ر.س)`)
+                                        .join('\n')
+                                    : '';
 
-                                const text = `\u200Fتوزيع أرباح شهر ${month}:
-
-\u200F${metrics.earnings.basimTotalEarnings.toFixed(2)} ر.س
-
-\u200Fالتكاليف:
-${expensesText}
-
-\u200Fالإجمالي: ${metrics.expenses.basimExpenses.toFixed(2)} ر.س
-
-\u200Fصافي أرباح باسم بعد خصم التكاليف:
-\u200F${netProfitData!.basimNetProfit.toFixed(2)} ر.س`;
+                                const text = `\u200Fتوزيع أرباح شهر ${month}:\n\n\u200F${metrics.earnings.basimTotalEarnings.toFixed(2)} ر.س\n\n\u200Fالتكاليف:\n${expensesText}\n\n\u200Fالإجمالي: ${metrics.expenses.basimExpenses.toFixed(2)} ر.س${reimbText}\n\n\u200Fصافي أرباح باسم بعد خصم التكاليف:\n\u200F${netProfitData!.basimNetProfit.toFixed(2)} ر.س`;
 
                                 navigator.clipboard.writeText(text);
-                                // Optional: You might want to add a temporary "Copied!" state here if you used a useState
                             }}
                             className="p-1.5 hover:bg-green-500/20 rounded-lg transition-colors group"
                             title="Copy Arabic Report"
@@ -185,36 +224,58 @@ ${expensesText}
                             </span>
                         </div>
 
-                        {/* Expenses */}
-                        <div className="space-y-2 mb-4">
-                            <div className="flex items-center gap-2 mb-2">
-                                <Receipt className="h-4 w-4 text-red-400" />
-                                <span className="text-sm text-gray-400">Expenses by Description</span>
-                            </div>
-                            <div className="bg-[#0D0F12] rounded-lg p-3 space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
-                                {basimExpensesList.length > 0 ? (
-                                    basimExpensesList.map((expense, index) => (
+                        {/* Regular Expenses (deducted) */}
+                        {basimExpensesList.length > 0 && (
+                            <div className="space-y-2 mb-2">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Receipt className="h-4 w-4 text-red-400" />
+                                    <span className="text-sm text-gray-400">Expenses</span>
+                                </div>
+                                <div className="bg-[#0D0F12] rounded-lg p-3 space-y-2 max-h-36 overflow-y-auto custom-scrollbar">
+                                    {basimExpensesList.map((expense, index) => (
                                         <div key={index} className="flex justify-between items-start text-xs group">
                                             <span className="text-gray-400 group-hover:text-gray-300 transition-colors">{expense.description}</span>
                                             <span className="text-red-400 font-medium whitespace-nowrap ml-2">
                                                 -{expense.amount.toFixed(2)} SAR
                                             </span>
                                         </div>
-                                    ))
-                                ) : (
-                                    <p className="text-xs text-gray-500 italic">No expenses</p>
-                                )}
-                                <div className="border-t border-gray-800 pt-2 mt-2 flex justify-between items-center">
-                                    <span className="text-xs text-gray-500 font-medium">Total Expenses</span>
-                                    <span className="text-xs text-red-400 font-bold">-{metrics.expenses.basimExpenses.toFixed(2)} SAR</span>
+                                    ))}
+                                    <div className="border-t border-gray-800 pt-2 mt-2 flex justify-between items-center">
+                                        <span className="text-xs text-gray-500 font-medium">Total Expenses</span>
+                                        <span className="text-xs text-red-400 font-bold">-{metrics.expenses.basimExpenses.toFixed(2)} SAR</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
+
+                        {/* Reimbursements (added) */}
+                        {basimReimbursementsList.length > 0 && (
+                            <div className="space-y-2 mb-2">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <RefreshCw className="h-4 w-4 text-emerald-400" />
+                                    <span className="text-sm text-gray-400">Reimbursements</span>
+                                </div>
+                                <div className="bg-emerald-900/10 border border-emerald-800/30 rounded-lg p-3 space-y-2 max-h-36 overflow-y-auto custom-scrollbar">
+                                    {basimReimbursementsList.map((reimb, index) => (
+                                        <div key={index} className="flex justify-between items-start text-xs group">
+                                            <span className="text-gray-400 group-hover:text-gray-300 transition-colors">{reimb.description}</span>
+                                            <span className="text-emerald-400 font-medium whitespace-nowrap ml-2">
+                                                +{reimb.amount.toFixed(2)} SAR
+                                            </span>
+                                        </div>
+                                    ))}
+                                    <div className="border-t border-emerald-800/30 pt-2 mt-2 flex justify-between items-center">
+                                        <span className="text-xs text-gray-500 font-medium">Total Reimbursements</span>
+                                        <span className="text-xs text-emerald-400 font-bold">+{metrics.expenses.basimReimbursements.toFixed(2)} SAR</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Divider */}
                         <div className="border-t border-gray-700/50"></div>
 
-                        {/* Net Profit */}
+                        {/* Net Distribution */}
                         <div className="flex items-center justify-between bg-green-500/5 rounded-lg p-3 border border-green-500/10">
                             <div className="flex items-center gap-2">
                                 <DollarSign className="h-5 w-5 text-green-400" />
@@ -230,7 +291,7 @@ ${expensesText}
 
             {/* Combined Summary */}
             <div className="mt-6 bg-gradient-to-br from-emerald-900/20 to-teal-900/20 rounded-xl p-6 border border-emerald-500/20">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div>
                         <p className="text-xs text-emerald-400/60 uppercase tracking-wider mb-2">Total Earnings</p>
                         <p className="text-2xl font-bold text-emerald-300">
@@ -243,6 +304,16 @@ ${expensesText}
                             {metrics.expenses.totalExpenses.toFixed(2)} <span className="text-sm text-red-400/60 font-medium">SAR</span>
                         </p>
                     </div>
+                    {metrics.expenses.totalReimbursements > 0 && (
+                        <div>
+                            <p className="text-xs text-emerald-400/60 uppercase tracking-wider mb-2 flex items-center gap-1">
+                                <RefreshCw className="h-3 w-3" /> Reimbursements
+                            </p>
+                            <p className="text-2xl font-bold text-emerald-300">
+                                +{metrics.expenses.totalReimbursements.toFixed(2)} <span className="text-sm text-emerald-400/60 font-medium">SAR</span>
+                            </p>
+                        </div>
+                    )}
                     <div>
                         <p className="text-xs text-emerald-400/60 uppercase tracking-wider mb-2">Total Available for Distribution</p>
                         <p className={`text-2xl font-bold ${netProfitData!.combinedNetProfit >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>

@@ -9,6 +9,7 @@ export interface Expense {
   yassirSharePercentage: number; // Yasir's ownership percentage (0-100)
   includeTax: boolean; // Whether 15% VAT is included in amount
   amountBeforeTax?: number; // Original amount before tax (if tax is included)
+  isReimbursement: boolean; // If true, partner paid from own money → ADDS to their distribution
 }
 
 export interface ExpenseCategory {

@@ -24,7 +24,8 @@ export const getExpenses = async (): Promise<Expense[]> => {
     basimSharePercentage: exp.basim_share_percentage ?? 50,
     yassirSharePercentage: exp.yassir_share_percentage ?? 50,
     includeTax: exp.include_tax ?? false,
-    amountBeforeTax: exp.amount_before_tax
+    amountBeforeTax: exp.amount_before_tax,
+    isReimbursement: exp.is_reimbursement ?? false
   }));
 };
 
@@ -41,7 +42,8 @@ export const saveExpense = async (expense: Omit<Expense, 'id'>): Promise<void> =
       basim_share_percentage: expense.basimSharePercentage,
       yassir_share_percentage: expense.yassirSharePercentage,
       include_tax: expense.includeTax,
-      amount_before_tax: expense.amountBeforeTax
+      amount_before_tax: expense.amountBeforeTax,
+      is_reimbursement: expense.isReimbursement ?? false
     } as any); // Type assertion until Supabase types are regenerated
 
   if (error) {
@@ -60,7 +62,8 @@ export const updateExpense = async (id: string, expense: Omit<Expense, 'id'>): P
     basim_share_percentage: expense.basimSharePercentage,
     yassir_share_percentage: expense.yassirSharePercentage,
     include_tax: expense.includeTax,
-    amount_before_tax: expense.amountBeforeTax
+    amount_before_tax: expense.amountBeforeTax,
+    is_reimbursement: expense.isReimbursement ?? false
   };
 
   const { error } = await supabase

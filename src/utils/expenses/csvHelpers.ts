@@ -7,14 +7,22 @@ export const exportExpensesToCSV = (expenses: Expense[]): string => {
     'Date',
     'Category',
     'Description',
-    'Amount'
+    'Amount',
+    'Basim Share %',
+    'Yassir Share %',
+    'Include Tax',
+    'Is Reimbursement'
   ].join(',');
 
   const rows = expenses.map(expense => [
     expense.date,
     expense.category,
     `"${expense.description.replace(/"/g, '""')}"`,
-    expense.amount
+    expense.amount,
+    expense.basimSharePercentage,
+    expense.yassirSharePercentage,
+    expense.includeTax ? 'true' : 'false',
+    expense.isReimbursement ? 'true' : 'false'
   ].join(','));
 
   return [headers, ...rows].join('\n');
@@ -23,8 +31,7 @@ export const exportExpensesToCSV = (expenses: Expense[]): string => {
 export const importExpensesFromCSV = async (file: File): Promise<void> => {
   const text = await file.text();
   const lines = text.split('\n');
-  const headers = lines[0].split(',');
-  const rows = lines.slice(1);
+  const rows = lines.slice(1); // skip header
 
   for (const row of rows) {
     if (!row.trim()) continue;
@@ -33,34 +40,51 @@ export const importExpensesFromCSV = async (file: File): Promise<void> => {
     const getValue = (index: number) => values[index]?.replace(/"/g, '').trim() || '';
 
     try {
-      const expense = {
-        id: generateUUID(),
-        date: getValue(0),
-        category: getValue(1) as Expense['category'],
-        description: getValue(2),
-        amount: parseFloat(getValue(3))
-      };
+      const date = getValue(0);
+      const category = getValue(1) as Expense['category'];
+      const description = getValue(2);
+      const amount = parseFloat(getValue(3));
+      const basimSharePercentage = parseFloat(getValue(4)) || 50;
+      const yassirSharePercentage = parseFloat(getValue(5)) || 50;
+      const includeTax = getValue(6).toLowerCase() === 'true';
+      const isReimbursement = getValue(7).toLowerCase() === 'true';
 
       // Validate category
-      if (!['marketing', 'packaging', 'subscription', 'other'].includes(expense.category)) {
-        throw new Error(`Invalid category: ${expense.category}`);
+      if (!['marketing', 'packaging', 'subscription', 'other'].includes(category)) {
+        throw new Error(`Invalid category: ${category}`);
       }
 
       // Validate amount
-      if (isNaN(expense.amount)) {
+      if (isNaN(amount)) {
         throw new Error(`Invalid amount: ${getValue(3)}`);
       }
 
+      // Auto-determine owner
+      const owner: Expense['owner'] =
+        basimSharePercentage === yassirSharePercentage ? 'shared' :
+          basimSharePercentage > yassirSharePercentage ? 'basim' : 'yassir';
+
       const { error } = await supabase
         .from('expenses')
-        .insert(expense);
+        .insert({
+          id: generateUUID(),
+          date,
+          category,
+          description,
+          amount,
+          owner,
+          basim_share_percentage: basimSharePercentage,
+          yassir_share_percentage: yassirSharePercentage,
+          include_tax: includeTax,
+          is_reimbursement: isReimbursement
+        } as any);
 
       if (error) {
         throw new Error(`Failed to import expense: ${error.message}`);
       }
     } catch (error) {
       console.error('Error processing row:', error);
-      throw new Error(`Failed to process row: ${error.message}`);
+      throw new Error(`Failed to process row: ${(error as Error).message}`);
     }
   }
 };
