@@ -166,7 +166,7 @@ function InstructionsTab() {
                             <p className="font-semibold text-white mb-1">تأكد من العملاء الي دفعوا من خلال المحفظة</p>
                             <p className="text-gray-300">
                                 تأكد انك حاطط قيمة المبلغ الي دفعه العميل من المحفظة في عامود{' '}
-                                <code className="bg-gray-800 px-2 py-0.5 rounded text-yellow-400">الخصم</code>
+                                <code className="bg-gray-800 px-2 py-0.5 rounded text-yellow-400"> (CustomerWallet)الخصم</code>
                             </p>
                         </div>
                     </div>
