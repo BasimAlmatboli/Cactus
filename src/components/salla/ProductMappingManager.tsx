@@ -78,7 +78,11 @@ export default function ProductMappingManager() {
             setShowAddForm(false);
             await loadData();
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to add mapping');
+            if ((err as { code?: string })?.code === '23505') {
+                setError('A mapping with this product name and SKU already exists. To map another size of the same product, use a different SKU.');
+            } else {
+                setError(err instanceof Error ? err.message : 'Failed to add mapping');
+            }
         }
     }
 
@@ -141,7 +145,7 @@ export default function ProductMappingManager() {
                 <div>
                     <h2 className="text-2xl font-bold text-white">Product Mappings</h2>
                     <p className="text-gray-400 mt-1">
-                        Map Salla product names to your system products. Each Salla product can map to one system product.
+                        Map Salla product names to your system products. The same name can be mapped multiple times with different SKUs (e.g. size variants).
                     </p>
                 </div>
                 <button

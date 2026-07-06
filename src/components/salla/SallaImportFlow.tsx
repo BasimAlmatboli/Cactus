@@ -4,15 +4,14 @@ import { parseSallaCSVWithLog, validateSallaOrder, ParseLogEntry } from '../../u
 import {
     lookupProductByName,
     lookupShippingMethod,
-    lookupPaymentMethod,
-    fetchProductMappings
+    lookupPaymentMethod
 } from '../../services/sallaMappingService';
 
 import { saveOrder } from '../../services/orderService';
 import { useFreeShippingThreshold } from '../../hooks/useFreeShippingThreshold';
 import { generateUUID } from '../../utils/uuid';
 import { calculateCompleteOrder } from '../../utils/orderCalculations';
-import type { SallaOrder, Product, ShippingMethod, PaymentMethod, SallaProductMapping, OrderItem, Order } from '../../types';
+import type { SallaOrder, Product, ShippingMethod, PaymentMethod, OrderItem, Order } from '../../types';
 
 interface MappedOrder {
     sallaOrder: SallaOrder;
@@ -81,13 +80,8 @@ export default function SallaImportFlow() {
                 throw new Error('No orders found in the file');
             }
 
-            setLoadingStatus('Loading product mappings...');
+            setLoadingStatus('Mapping orders...');
             setLoadingProgress(10);
-
-            // Get all product mappings for quick lookup
-            const productMappings = await fetchProductMappings();
-            const mappingsByName = new Map<string, SallaProductMapping>();
-            productMappings.forEach(m => mappingsByName.set(m.salla_product_name, m));
 
             // Map each order with progress updates
             const mappedOrders: MappedOrder[] = [];
@@ -104,9 +98,9 @@ export default function SallaImportFlow() {
 
                 const mappedProducts = await Promise.all(
                     sallaOrder.products.map(async (p) => {
-                        const systemProduct = await lookupProductByName(p.name);
+                        const systemProduct = await lookupProductByName(p.name, p.sku);
                         if (!systemProduct) {
-                            allUnmappedProducts.add(p.name);
+                            allUnmappedProducts.add(p.sku ? `${p.name} — SKU: ${p.sku}` : p.name);
                         }
                         return {
                             sallaProduct: p,
