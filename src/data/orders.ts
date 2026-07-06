@@ -66,7 +66,10 @@ const transformSupabaseOrder = (supabaseOrder: any): Order => ({
   shippingMethod: supabaseOrder.shipping_method || { id: 'standard', name: 'Standard', cost: 0 },
   paymentMethod: supabaseOrder.payment_method || { id: 'mada', name: 'Mada' },
   subtotal: supabaseOrder.subtotal,
+  shippingCharged: supabaseOrder.shipping_charged
+    ?? (supabaseOrder.is_free_shipping ? 0 : supabaseOrder.shipping_cost),
   shippingCost: supabaseOrder.shipping_cost,
+  shippingSubsidy: supabaseOrder.shipping_subsidy,
   paymentFees: supabaseOrder.payment_fees,
   discount: supabaseOrder.discount || null,
   total: supabaseOrder.total,
@@ -83,7 +86,9 @@ const transformOrderForSupabase = (order: Order) => ({
   shipping_method: order.shippingMethod,
   payment_method: order.paymentMethod,
   subtotal: order.subtotal,
+  shipping_charged: order.shippingCharged,
   shipping_cost: order.shippingCost,
+  // shipping_subsidy is a generated column — never write it.
   payment_fees: order.paymentFees,
   discount: order.discount || null,
   total: order.total,

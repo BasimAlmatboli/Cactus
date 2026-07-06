@@ -8,6 +8,7 @@ import { calculateTotalRevenue } from './revenue';
 import {
     calculateTotalProductCosts,
     calculateTotalShippingFees,
+    calculateTotalShippingCharged,
     calculateTotalPaymentFees,
     calculateTotalFees,
     calculateShippingFeeData,
@@ -60,6 +61,8 @@ export async function calculateAllReportMetrics(
     // ==========================================
     const totalProductCosts = calculateTotalProductCosts(orders);
     const totalShippingFees = calculateTotalShippingFees(orders);
+    const totalShippingCharged = calculateTotalShippingCharged(orders);
+    const totalShippingSubsidy = totalShippingFees - totalShippingCharged;
     const totalPaymentFees = calculateTotalPaymentFees(orders);
     const totalFees = calculateTotalFees(totalShippingFees, totalPaymentFees);
 
@@ -125,6 +128,8 @@ export async function calculateAllReportMetrics(
         // Costs
         totalProductCosts,
         totalShippingFees,
+        totalShippingCharged,
+        totalShippingSubsidy,
         totalPaymentFees,
         totalFees,
 

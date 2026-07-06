@@ -36,7 +36,11 @@ export const transformSupabaseOrder = (supabaseOrder: SupabaseOrder): Order => (
   shippingMethod: supabaseOrder.shipping_method,
   paymentMethod: supabaseOrder.payment_method,
   subtotal: supabaseOrder.subtotal,
+  // Fallback keeps pre-migration rows consistent (free => 0, else carrier cost)
+  shippingCharged: supabaseOrder.shipping_charged
+    ?? (supabaseOrder.is_free_shipping ? 0 : supabaseOrder.shipping_cost),
   shippingCost: supabaseOrder.shipping_cost,
+  shippingSubsidy: supabaseOrder.shipping_subsidy,
   paymentFees: supabaseOrder.payment_fees,
   discount: supabaseOrder.discount,
   total: supabaseOrder.total,
@@ -79,7 +83,9 @@ export const transformOrderForSupabase = (order: Order): SupabaseOrder => ({
   shipping_method: order.shippingMethod,
   payment_method: order.paymentMethod,
   subtotal: order.subtotal,
+  shipping_charged: order.shippingCharged,
   shipping_cost: order.shippingCost,
+  // NOTE: shipping_subsidy is a generated column — do NOT write it here.
   payment_fees: order.paymentFees,
   discount: order.discount,
   total: order.total,

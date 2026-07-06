@@ -14,7 +14,7 @@ import {
     Database,
     ShoppingBag
 } from 'lucide-react';
-import { ReportMetrics } from '../../../utils/reportCalculations';
+import { ReportMetrics, calculateAbbasShare } from '../../../utils/reportCalculations';
 
 interface BusinessMetricsReportProps {
     orders: Order[];
@@ -315,18 +315,18 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
                                     <div className="flex items-center justify-between mb-3">
                                         <h4 className="text-sm font-semibold text-purple-300">Abbas Percentage (5%)</h4>
                                         <span className="text-xl font-bold text-purple-400">
-                                            {((metrics.profitShares.yassirShare - metrics.expenses.yassirExpenses) * 0.05 +
-                                                (metrics.profitShares.basimShare - metrics.expenses.basimExpenses) * 0.05).toFixed(2)} SAR
+                                            {(calculateAbbasShare(metrics.profitShares.yassirShare, metrics.expenses.yassirExpenses) +
+                                                calculateAbbasShare(metrics.profitShares.basimShare, metrics.expenses.basimExpenses)).toFixed(2)} SAR
                                         </span>
                                     </div>
                                     <div className="space-y-2 text-xs">
                                         <div className="flex justify-between text-gray-400">
                                             <span>5% of Yassir's Net Profit:</span>
-                                            <span className="text-purple-300">+{((metrics.profitShares.yassirShare - metrics.expenses.yassirExpenses) * 0.05).toFixed(2)} SAR</span>
+                                            <span className="text-purple-300">+{calculateAbbasShare(metrics.profitShares.yassirShare, metrics.expenses.yassirExpenses).toFixed(2)} SAR</span>
                                         </div>
                                         <div className="flex justify-between text-gray-400">
                                             <span>5% of Basim's Net Profit:</span>
-                                            <span className="text-purple-300">+{((metrics.profitShares.basimShare - metrics.expenses.basimExpenses) * 0.05).toFixed(2)} SAR</span>
+                                            <span className="text-purple-300">+{calculateAbbasShare(metrics.profitShares.basimShare, metrics.expenses.basimExpenses).toFixed(2)} SAR</span>
                                         </div>
                                     </div>
                                 </div>

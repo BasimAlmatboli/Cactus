@@ -16,6 +16,21 @@ export interface OrderCalculationInputs {
     discount: Discount | null;
     freeShippingThreshold: number;
     manualIsFreeShipping?: boolean; // Optional: Manual override for free shipping
+    /**
+     * Optional: amount actually charged to the customer for shipping (REVENUE side).
+     * Use this when the customer-facing shipping price differs from the carrier cost
+     * (e.g. Salla charged 14 SAR but RedBox costs 15 SAR, or a shipping promotion).
+     * When omitted, it defaults to the carrier cost (0 if free shipping), which
+     * preserves the original manual-order behavior.
+     */
+    shippingCharged?: number;
+    /**
+     * Optional: the actual per-order customer fee (e.g. real COD commission from Salla),
+     * overriding the payment method's configured `customer_fee`. Use this for imported
+     * orders where the source system already reports the real fee per order.
+     * When omitted, falls back to `paymentMethod.customer_fee` (manual-order behavior).
+     */
+    customerFeeOverride?: number;
 }
 
 /**
@@ -25,7 +40,9 @@ export interface OrderCalculationResult {
     subtotal: number;
     discountAmount: number;
     isFreeShipping: boolean;
-    actualShippingCost: number;
+    shippingCharged: number;      // Revenue side: what the customer pays for shipping
+    carrierShippingCost: number;  // Expense side: what the business pays the carrier
+    actualShippingCost: number;   // Deprecated alias of shippingCharged (kept for compatibility)
     customerFee: number;
     customerTotal: number;
     paymentFees: number;
@@ -85,19 +102,24 @@ export async function calculateCompleteOrder(
             inputs.freeShippingThreshold
         );
 
-    // 4. Calculate actual shipping cost
-    const actualShippingCost = calculateActualShippingCost(
-        inputs.shippingMethod.cost,
-        isFreeShipping
-    );
+    // 4. Determine the two shipping numbers (they are DIFFERENT concepts):
+    //    - carrierShippingCost = what WE pay the carrier (expense, always the method cost)
+    //    - shippingCharged     = what the CUSTOMER pays us for shipping (revenue)
+    const carrierShippingCost = inputs.shippingMethod.cost;
+    const shippingCharged = inputs.shippingCharged !== undefined
+        ? inputs.shippingCharged                                    // explicit (e.g. Salla / promo price)
+        : calculateActualShippingCost(carrierShippingCost, isFreeShipping); // default: carrier cost, 0 if free
 
-    // 5. Get customer fee (e.g., COD fee) - default to 0 if not set
-    const customerFee = inputs.paymentMethod.customer_fee || 0;
+    // 5. Get customer fee (e.g., COD fee). Imported orders pass the real per-order
+    //    fee via customerFeeOverride; manual orders fall back to the configured default.
+    const customerFee = inputs.customerFeeOverride !== undefined
+        ? inputs.customerFeeOverride
+        : (inputs.paymentMethod.customer_fee || 0);
 
-    // 6. Calculate customer total
+    // 6. Calculate customer total (uses what the customer is CHARGED, not carrier cost)
     const customerTotal = calculateCustomerTotal({
         subtotal,
-        shippingCost: actualShippingCost,
+        shippingCharged,
         discountAmount,
         customerFee,
     });
@@ -106,13 +128,15 @@ export async function calculateCompleteOrder(
     const paymentFees = calculatePaymentFees(inputs.paymentMethod, customerTotal);
 
     // 8. Calculate profit sharing
+    //    Revenue side uses shippingCharged; expense side uses carrierShippingCost.
     const profitShare = await calculateTotalProfitShare(
         inputs.orderItems,
-        inputs.shippingMethod.cost, // Use original cost for profit calculation
+        carrierShippingCost, // carrier cost = shipping EXPENSE
         paymentFees,
         discountAmount,
         isFreeShipping,
-        customerFee
+        customerFee,
+        shippingCharged      // shipping REVENUE (what the customer paid)
     );
 
     const netProfit = profitShare.totalYassirShare + profitShare.totalBasimShare;
@@ -121,7 +145,9 @@ export async function calculateCompleteOrder(
         subtotal,
         discountAmount,
         isFreeShipping,
-        actualShippingCost,
+        shippingCharged,
+        carrierShippingCost,
+        actualShippingCost: shippingCharged, // backward-compat alias
         customerFee,
         customerTotal,
         paymentFees,

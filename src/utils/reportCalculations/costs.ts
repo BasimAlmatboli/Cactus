@@ -38,6 +38,37 @@ export function calculateTotalShippingFees(orders: Order[]): number {
 }
 
 /**
+ * Calculate Total Shipping Charged (Revenue side)
+ *
+ * Sum of what customers actually paid for shipping across all orders.
+ * Falls back to (free ? 0 : carrier cost) for any pre-migration order
+ * missing shippingCharged.
+ *
+ * @param orders - Array of orders
+ * @returns Total shipping collected from customers
+ */
+export function calculateTotalShippingCharged(orders: Order[]): number {
+    return orders.reduce((sum, order) => {
+        const charged = order.shippingCharged
+            ?? (order.isFreeShipping ? 0 : order.shippingMethod.cost);
+        return sum + charged;
+    }, 0);
+}
+
+/**
+ * Calculate Total Shipping Subsidy
+ *
+ * The net shipping loss (or profit if negative): what we paid carriers
+ * minus what we collected from customers.
+ *
+ * @param orders - Array of orders
+ * @returns carrier cost - customer charged. Positive = subsidy/loss.
+ */
+export function calculateTotalShippingSubsidy(orders: Order[]): number {
+    return calculateTotalShippingFees(orders) - calculateTotalShippingCharged(orders);
+}
+
+/**
  * Calculate Total Payment Fees
  * 
  * Sum of payment gateway fees across all orders
@@ -76,7 +107,9 @@ export function calculateTotalFees(
  * @returns Detailed shipping fee data including breakdown by company
  */
 export function calculateShippingFeeData(orders: Order[]): {
-    totalShippingFees: number;
+    totalShippingFees: number;        // paid to carriers (expense)
+    totalShippingCharged: number;     // collected from customers (revenue)
+    totalShippingSubsidy: number;     // fees - charged (positive = subsidy/loss)
     freeShippingCount: number;
     paidShippingCount: number;
     averageShippingFee: number;
@@ -85,13 +118,17 @@ export function calculateShippingFeeData(orders: Order[]): {
     byCompany: Array<{
         companyName: string;
         orderCount: number;
-        totalFees: number;
+        totalFees: number;      // paid to carrier
+        totalCharged: number;   // collected from customer
+        totalSubsidy: number;   // totalFees - totalCharged
         averageFee: number;
     }>;
 } {
     if (!orders.length) {
         return {
             totalShippingFees: 0,
+            totalShippingCharged: 0,
+            totalShippingSubsidy: 0,
             freeShippingCount: 0,
             paidShippingCount: 0,
             averageShippingFee: 0,
@@ -102,11 +139,12 @@ export function calculateShippingFeeData(orders: Order[]): {
     }
 
     let totalShippingFees = 0;
+    let totalShippingCharged = 0;
     let freeShippingCount = 0;
     let paidShippingCount = 0;
     let totalRevenue = 0;
 
-    const companyMap = new Map<string, { orderCount: number; totalFees: number }>();
+    const companyMap = new Map<string, { orderCount: number; totalFees: number; totalCharged: number }>();
 
     orders.forEach(order => {
         if (order.isFreeShipping) {
@@ -116,13 +154,17 @@ export function calculateShippingFeeData(orders: Order[]): {
         }
 
         const actualShippingFee = order.shippingMethod.cost;
+        const shippingCharged = order.shippingCharged
+            ?? (order.isFreeShipping ? 0 : order.shippingMethod.cost);
         totalShippingFees += actualShippingFee;
+        totalShippingCharged += shippingCharged;
 
         const companyName = order.shippingMethod.name;
-        const existing = companyMap.get(companyName) || { orderCount: 0, totalFees: 0 };
+        const existing = companyMap.get(companyName) || { orderCount: 0, totalFees: 0, totalCharged: 0 };
         companyMap.set(companyName, {
             orderCount: existing.orderCount + 1,
-            totalFees: existing.totalFees + actualShippingFee
+            totalFees: existing.totalFees + actualShippingFee,
+            totalCharged: existing.totalCharged + shippingCharged
         });
 
         totalRevenue += order.total;
@@ -133,12 +175,16 @@ export function calculateShippingFeeData(orders: Order[]): {
             companyName,
             orderCount: data.orderCount,
             totalFees: data.totalFees,
+            totalCharged: data.totalCharged,
+            totalSubsidy: data.totalFees - data.totalCharged,
             averageFee: data.totalFees / data.orderCount
         }))
         .sort((a, b) => b.orderCount - a.orderCount);
 
     return {
         totalShippingFees,
+        totalShippingCharged,
+        totalShippingSubsidy: totalShippingFees - totalShippingCharged,
         freeShippingCount,
         paidShippingCount,
         averageShippingFee: orders.length > 0 ? totalShippingFees / orders.length : 0,

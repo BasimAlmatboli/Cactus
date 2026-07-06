@@ -16,11 +16,17 @@ export const useOrder = (initialOrder?: Order | null) => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(
     initialOrder?.paymentMethod || null
   );
+  // Revenue side: what the customer is charged for shipping. Independent of carrier cost.
+  const [shippingCharged, setShippingCharged] = useState<number>(
+    initialOrder?.shippingCharged ?? initialOrder?.shippingCost ?? 0
+  );
   const [isFreeShipping, setIsFreeShipping] = useState(initialOrder?.isFreeShipping || false);
   const [freeShippingManualMode, setFreeShippingManualMode] = useState(false);
   const [discount, setDiscount] = useState<Discount | null>(initialOrder?.discount || null);
   const [order, setOrder] = useState<Order | null>(initialOrder || null);
   const [currentOrderId, setCurrentOrderId] = useState<string | null>(initialOrder?.id || null);
+  // Preserve the original order date so editing never resets it to "now"
+  const [orderDate, setOrderDate] = useState<string>(initialOrder?.date || new Date().toISOString());
 
   // Get free shipping threshold from database
   const { threshold: freeShippingThreshold } = useFreeShippingThreshold();
@@ -32,13 +38,22 @@ export const useOrder = (initialOrder?: Order | null) => {
     setCustomerName(order.customerName || '');
     setOrderItems(order.items);
     setShippingMethod(order.shippingMethod);
+    setShippingCharged(order.shippingCharged ?? order.shippingCost ?? 0);
     setPaymentMethod(order.paymentMethod);
     setIsFreeShipping(order.isFreeShipping);
     setFreeShippingManualMode(false); // Reset to automatic mode when loading order
     setDiscount(order.discount);
+    setOrderDate(order.date); // ✅ Preserve the original order date
   };
 
-  // Function to update shipping cost
+  // Select a shipping method. Default the customer-charged price to the carrier
+  // cost so behavior matches the old single-number flow until the user overrides it.
+  const selectShippingMethod = (method: ShippingMethod) => {
+    setShippingMethod(method);
+    setShippingCharged(method.cost);
+  };
+
+  // Function to update the carrier cost (expense side). Does NOT touch shippingCharged.
   const updateShippingCost = (cost: number) => {
     if (shippingMethod) {
       setShippingMethod({
@@ -55,11 +70,13 @@ export const useOrder = (initialOrder?: Order | null) => {
     setCustomerName('');
     setOrderItems([]);
     setShippingMethod(null);
+    setShippingCharged(0);
     setPaymentMethod(null);
     setIsFreeShipping(false);
     setFreeShippingManualMode(false); // Reset to automatic mode
     setDiscount(null);
     setOrder(null);
+    setOrderDate(new Date().toISOString()); // Reset date to now for new orders
   };
 
   // Wrapper to track when user manually changes free shipping
@@ -80,6 +97,8 @@ export const useOrder = (initialOrder?: Order | null) => {
           discount,
           freeShippingThreshold,
           manualIsFreeShipping: freeShippingManualMode ? isFreeShipping : undefined,
+          // Customer pays 0 for shipping when free; otherwise the entered price.
+          shippingCharged: isFreeShipping ? 0 : shippingCharged,
         });
 
         // Only update free shipping automatically if not in manual mode
@@ -92,12 +111,13 @@ export const useOrder = (initialOrder?: Order | null) => {
           id: currentOrderId || generateUUID(),
           orderNumber,
           customerName: customerName || undefined,
-          date: initialOrder?.date || new Date().toISOString(),
+          date: orderDate, // ✅ Uses preserved original date; never resets to "now" on edit
           items: orderItems,
           shippingMethod,
           paymentMethod,
           subtotal: result.subtotal,
-          shippingCost: shippingMethod.cost, // Store original cost (not actual)
+          shippingCharged: result.shippingCharged, // What the customer paid for shipping (revenue)
+          shippingCost: shippingMethod.cost,        // What the business pays the carrier (expense)
           paymentFees: result.paymentFees,
           discount,
           total: result.customerTotal, // What customer pays
@@ -110,7 +130,7 @@ export const useOrder = (initialOrder?: Order | null) => {
     };
 
     calculateOrder();
-  }, [orderItems, shippingMethod, paymentMethod, isFreeShipping, discount, orderNumber, customerName, currentOrderId, initialOrder, freeShippingThreshold, freeShippingManualMode]);
+  }, [orderItems, shippingMethod, shippingCharged, paymentMethod, isFreeShipping, discount, orderNumber, customerName, currentOrderId, orderDate, freeShippingThreshold, freeShippingManualMode]);
 
   return {
     orderNumber,
@@ -120,7 +140,9 @@ export const useOrder = (initialOrder?: Order | null) => {
     orderItems,
     setOrderItems,
     shippingMethod,
-    setShippingMethod,
+    setShippingMethod: selectShippingMethod,
+    shippingCharged,
+    setShippingCharged,
     paymentMethod,
     setPaymentMethod,
     isFreeShipping,

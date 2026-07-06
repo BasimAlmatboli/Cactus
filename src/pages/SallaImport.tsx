@@ -119,41 +119,13 @@ function InstructionsTab() {
                     <div className="flex items-start gap-3 bg-gray-900/30 p-4 rounded-lg">
                         <span className="text-purple-400 font-bold text-lg shrink-0">2.</span>
                         <div>
-                            <p className="font-semibold text-white mb-1">تعديل تكلفة الشحن</p>
-                            <p className="text-gray-300 mb-2">لازم تحط التكلفة الحقيقية:</p>
-                            <ul className="text-gray-300 space-y-1 mr-4">
-                                <li>• ريدبوكس: 15 ريال</li>
-                                <li>• سمسا: 30 ريال</li>
-                            </ul>
-                            <div className="mt-2 bg-gray-800/50 px-3 py-1.5 rounded border border-gray-700 inline-block">
-                                <code className="text-blue-400 text-sm">Alt, E, S, D, Enter</code>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex items-start gap-3 bg-gray-900/30 p-4 rounded-lg">
-                        <span className="text-purple-400 font-bold text-lg shrink-0">3.</span>
-                        <div>
-                            <p className="font-semibold text-white mb-1">تعديل إجمالي الطلب لطلبات الدفع عند الاستلام</p>
-                            <p className="text-gray-300 mb-2">اطرح عمولة الدفع من إجمالي الطلب</p>
-                            <div className="bg-gray-800/50 p-3 rounded border border-gray-700">
-                                <p className="text-gray-400 text-sm mb-1">مثال:</p>
-                                <p className="text-gray-300">إجمالي الطلب: <span className="line-through text-red-400">128</span> → <span className="text-green-400 font-semibold">118</span> ريال</p>
-                                <p className="text-gray-400 text-sm">(بعد طرح عمولة 10 ريال)</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex items-start gap-3 bg-gray-900/30 p-4 rounded-lg">
-                        <span className="text-purple-400 font-bold text-lg shrink-0">4.</span>
-                        <div>
                             <p className="font-semibold text-white">تعديل خصم الـ Mug</p>
                             <p className="text-gray-300">اتأكد انك حاطط الخصم فقط في عامود الخصم, لأنه بيكون الخصم + خصم العروض الخاصة, تأكد انك شايل خصم المج</p>
                         </div>
                     </div>
 
                     <div className="flex items-start gap-3 bg-gray-900/30 p-4 rounded-lg">
-                        <span className="text-purple-400 font-bold text-lg shrink-0">5.</span>
+                        <span className="text-purple-400 font-bold text-lg shrink-0">3.</span>
                         <div>
                             <p className="font-semibold text-white">تعديل اسم شركة الشحن سمسا</p>
                             <p className="text-gray-300">تغيير اسم شركة شحن سمسا الـ 20 ريال إلى <code className="bg-gray-800 px-2 py-0.5 rounded text-blue-400">SMSA-Eco</code></p>
@@ -161,7 +133,7 @@ function InstructionsTab() {
                     </div>
 
                     <div className="flex items-start gap-3 bg-yellow-900/20 border border-yellow-700/40 p-4 rounded-lg">
-                        <span className="text-purple-400 font-bold text-lg shrink-0">6.</span>
+                        <span className="text-purple-400 font-bold text-lg shrink-0">4.</span>
                         <div>
                             <p className="font-semibold text-white mb-1">تأكد من العملاء الي دفعوا من خلال المحفظة</p>
                             <p className="text-gray-300">

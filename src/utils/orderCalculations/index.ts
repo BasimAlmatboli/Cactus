@@ -34,7 +34,7 @@ export {
     determineIsFreeShipping,
     calculateActualShippingCost
 } from './shipping';
-export { calculateCustomerTotal } from './customerTotal';
+export { calculateCustomerTotal, getOrderCustomerFee } from './customerTotal';
 export { calculatePaymentFees } from './fees';
 
 // Complete order calculation (orchestrator)

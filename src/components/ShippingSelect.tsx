@@ -8,6 +8,8 @@ interface ShippingSelectProps {
   isFreeShipping: boolean;
   onFreeShippingChange: (value: boolean) => void;
   onShippingCostChange: (cost: number) => void;
+  customerShippingPrice: number;
+  onCustomerShippingPriceChange: (price: number) => void;
 }
 
 export const ShippingSelect: React.FC<ShippingSelectProps> = ({
@@ -16,6 +18,8 @@ export const ShippingSelect: React.FC<ShippingSelectProps> = ({
   isFreeShipping,
   onFreeShippingChange,
   onShippingCostChange,
+  customerShippingPrice,
+  onCustomerShippingPriceChange,
 }) => {
   const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,37 +87,77 @@ export const ShippingSelect: React.FC<ShippingSelectProps> = ({
               </span>
             </div>
             <div className="flex items-center space-x-4">
-              {selected?.id === method.id && (
-                <div className="flex items-center bg-[#0F1115] rounded-lg border border-gray-700 px-3 py-1.5">
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={selected.cost}
-                    onChange={(e) => onShippingCostChange(parseFloat(e.target.value) || 0)}
-                    className="w-20 bg-transparent text-right text-white focus:outline-none"
-                  />
-                  <span className="ml-2 text-gray-500 text-sm">SAR</span>
-                </div>
-              )}
-              {selected?.id !== method.id && (
-                <div className="text-right">
-                  {isFreeShipping ? (
-                    <div className="flex flex-col items-end">
-                      <span className="text-green-400 font-medium">Free</span>
-                      <span className="text-xs text-gray-500 line-through">
-                        {method.cost} SAR
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-gray-400">{method.cost} SAR</span>
-                  )}
-                </div>
-              )}
+              <div className="text-right">
+                {isFreeShipping ? (
+                  <div className="flex flex-col items-end">
+                    <span className="text-green-400 font-medium">Free</span>
+                    <span className="text-xs text-gray-500 line-through">
+                      {method.cost} SAR
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-gray-400">{method.cost} SAR</span>
+                )}
+              </div>
             </div>
           </label>
         ))}
       </div>
+
+      {/* Shipping pricing: customer-charged (revenue) vs carrier cost (expense) */}
+      {selected && (
+        <div className="bg-[#1C1F26] border border-gray-800 rounded-xl p-4 space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-1">
+                Customer pays (shipping)
+              </label>
+              <div className={`flex items-center bg-[#0F1115] rounded-lg border border-gray-700 px-3 py-2 ${isFreeShipping ? 'opacity-50' : ''}`}>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  disabled={isFreeShipping}
+                  value={isFreeShipping ? 0 : customerShippingPrice}
+                  onChange={(e) => onCustomerShippingPriceChange(parseFloat(e.target.value) || 0)}
+                  className="w-full bg-transparent text-white focus:outline-none disabled:cursor-not-allowed"
+                />
+                <span className="ml-2 text-gray-500 text-sm">SAR</span>
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-1">
+                Carrier cost (you pay)
+              </label>
+              <div className="flex items-center bg-[#0F1115] rounded-lg border border-gray-700 px-3 py-2">
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={selected.cost}
+                  onChange={(e) => onShippingCostChange(parseFloat(e.target.value) || 0)}
+                  className="w-full bg-transparent text-white focus:outline-none"
+                />
+                <span className="ml-2 text-gray-500 text-sm">SAR</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Live subsidy / margin hint */}
+          {(() => {
+            const charged = isFreeShipping ? 0 : customerShippingPrice;
+            const subsidy = selected.cost - charged;
+            if (Math.abs(subsidy) < 0.01) return null;
+            return (
+              <div className={`text-xs ${subsidy > 0 ? 'text-orange-400' : 'text-green-400'}`}>
+                {subsidy > 0
+                  ? `You subsidize ${subsidy.toFixed(2)} SAR of shipping on this order.`
+                  : `Shipping profit of ${Math.abs(subsidy).toFixed(2)} SAR on this order.`}
+              </div>
+            );
+          })()}
+        </div>
+      )}
     </div>
   );
 };

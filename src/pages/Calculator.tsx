@@ -26,6 +26,8 @@ export const Calculator = () => {
     setOrderItems,
     shippingMethod,
     setShippingMethod,
+    shippingCharged,
+    setShippingCharged,
     paymentMethod,
     setPaymentMethod,
     isFreeShipping,
@@ -137,9 +139,6 @@ export const Calculator = () => {
     );
   }
 
-  // Calculate total paid by customer
-  const totalPaidByCustomer = order ? (order.subtotal + (order.isFreeShipping ? 0 : order.shippingCost) - (order.discount ? (order.discount.type === 'percentage' ? (order.subtotal * order.discount.value / 100) : order.discount.value) : 0)) : 0;
-
   return (
     <div className="pt-2 pb-32">
       <div className="max-w-[1600px] px-6">
@@ -194,6 +193,8 @@ export const Calculator = () => {
                 isFreeShipping={isFreeShipping}
                 onFreeShippingChange={setIsFreeShipping}
                 onShippingCostChange={handleShippingCostChange}
+                customerShippingPrice={shippingCharged}
+                onCustomerShippingPriceChange={setShippingCharged}
               />
             </div>
 

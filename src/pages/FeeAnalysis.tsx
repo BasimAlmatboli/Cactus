@@ -3,24 +3,12 @@ import { getOrders } from '../data/orders';
 import { Order } from '../types';
 import { ShippingFeeAnalysis } from '../components/reports/ShippingFeeAnalysis';
 import { PaymentFeeAnalysis } from '../components/reports/PaymentFeeAnalysis';
+import {
+    calculateShippingFeeData,
+    calculatePaymentFeeData,
+} from '../utils/reportCalculations';
+import type { ShippingFeeData, PaymentFeeData } from '../utils/reportCalculations/types';
 import { Loader2 } from 'lucide-react';
-
-interface ShippingFeeData {
-    totalShippingFees: number;
-    freeShippingCount: number;
-    paidShippingCount: number;
-    averageShippingFee: number;
-    totalRevenue: number;
-    feesAsPercentOfRevenue: number;
-}
-
-interface PaymentFeeData {
-    totalPaymentFees: number;
-    averagePaymentFee: number;
-    totalRevenue: number;
-    feesAsPercentOfRevenue: number;
-    averageFeePercentage: number;
-}
 
 export const FeeAnalysis = () => {
     const [orders, setOrders] = useState<Order[]>([]);
@@ -57,46 +45,11 @@ export const FeeAnalysis = () => {
             return;
         }
 
-        let totalShippingFees = 0;
-        let totalPaymentFees = 0;
-        let freeShippingCount = 0;
-        let paidShippingCount = 0;
-        let totalRevenue = 0;
-
-        ordersList.forEach(order => {
-            // Shipping fees
-            if (order.isFreeShipping) {
-                freeShippingCount++;
-            } else {
-                paidShippingCount++;
-                totalShippingFees += order.shippingCost;
-            }
-
-            // Payment fees
-            totalPaymentFees += order.paymentFees;
-
-            // Revenue (total from order)
-            totalRevenue += order.total;
-        });
-
-        // Shipping fee data
-        setShippingFeeData({
-            totalShippingFees,
-            freeShippingCount,
-            paidShippingCount,
-            averageShippingFee: paidShippingCount > 0 ? totalShippingFees / paidShippingCount : 0,
-            totalRevenue,
-            feesAsPercentOfRevenue: totalRevenue > 0 ? (totalShippingFees / totalRevenue) * 100 : 0,
-        });
-
-        // Payment fee data
-        setPaymentFeeData({
-            totalPaymentFees,
-            averagePaymentFee: totalPaymentFees / ordersList.length,
-            totalRevenue,
-            feesAsPercentOfRevenue: totalRevenue > 0 ? (totalPaymentFees / totalRevenue) * 100 : 0,
-            averageFeePercentage: totalRevenue > 0 ? (totalPaymentFees / totalRevenue) * 100 : 0,
-        });
+        // ✅ Use centralized calculations (single source of truth).
+        // These now include shipping collected (revenue), paid (carrier cost),
+        // subsidy, and the per-company breakdown.
+        setShippingFeeData(calculateShippingFeeData(ordersList));
+        setPaymentFeeData(calculatePaymentFeeData(ordersList));
     };
 
     if (isLoading) {

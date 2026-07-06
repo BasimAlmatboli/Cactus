@@ -29,7 +29,7 @@ interface ImportState {
     orders: MappedOrder[];
     unmappedProductNames: string[];
     importProgress: number;
-    importResults: { success: number; failed: number; errors: string[] };
+    importResults: { success: number; failed: number; errors: string[]; warnings: string[] };
     parseLog: ParseLogEntry[];
     parseSummary: { totalRows: number; successfulRows: number; failedRows: number; delimiter: string } | null;
 }
@@ -43,7 +43,7 @@ export default function SallaImportFlow() {
         orders: [],
         unmappedProductNames: [],
         importProgress: 0,
-        importResults: { success: 0, failed: 0, errors: [] },
+        importResults: { success: 0, failed: 0, errors: [], warnings: [] },
         parseLog: [],
         parseSummary: null,
     });
@@ -139,7 +139,7 @@ export default function SallaImportFlow() {
                 orders: mappedOrders,
                 unmappedProductNames: Array.from(allUnmappedProducts),
                 importProgress: 0,
-                importResults: { success: 0, failed: 0, errors: [] },
+                importResults: { success: 0, failed: 0, errors: [], warnings: [] },
             }));
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to parse file');
@@ -179,9 +179,21 @@ export default function SallaImportFlow() {
         let success = 0;
         let failed = 0;
         const errors: string[] = [];
+        const warnings: string[] = [];
 
         for (let i = 0; i < state.orders.length; i++) {
             const order = state.orders[i];
+
+            // Skip orders that failed validation (e.g. empty products, invalid total)
+            // validationErrors are set by validateSallaOrder() during the parse phase
+            if (order.validationErrors.length > 0) {
+                failed++;
+                errors.push(
+                    `Order ${order.sallaOrder.orderNumber} skipped: ${order.validationErrors.join(', ')}`
+                );
+                setState(s => ({ ...s, importProgress: Math.round(((i + 1) / state.orders.length) * 100) }));
+                continue;
+            }
 
             try {
                 // 1. Create order items
@@ -209,13 +221,31 @@ export default function SallaImportFlow() {
 
                 // ✅ USE CENTRALIZED CALCULATION FUNCTION
                 // All business logic is now in ONE place: orderCalculations/completeOrder.ts
+                // Salla is the source of truth for what the customer paid, so we pass the
+                // customer-charged shipping (sallaOrder.shippingCost) as `shippingCharged`,
+                // and the real per-order COD commission (sallaOrder.codCommission) as
+                // customerFeeOverride instead of the payment method's static configured fee.
+                // The carrier cost (shippingMethod.cost) is used only for profit/expense.
                 const result = await calculateCompleteOrder({
                     orderItems: orderItems as OrderItem[],
                     shippingMethod: order.shippingMethod,
                     paymentMethod: order.paymentMethod,
                     discount,
                     freeShippingThreshold,
+                    shippingCharged: order.sallaOrder.shippingCost, // revenue side, from Salla
+                    customerFeeOverride: order.sallaOrder.codCommission, // real per-order fee, from Salla
                 });
+
+                // 🔎 Reconciliation: our computed total must match what Salla says the
+                // customer actually paid. A mismatch means product prices / mappings drifted
+                // from Salla — surface it instead of silently storing a wrong number.
+                const sallaTotal = order.sallaOrder.orderTotal;
+                const delta = Math.round((result.customerTotal - sallaTotal) * 100) / 100;
+                if (Math.abs(delta) > 0.01) {
+                    const msg = `Order ${order.sallaOrder.orderNumber}: system total ${result.customerTotal.toFixed(2)} ≠ Salla total ${sallaTotal.toFixed(2)} (Δ ${delta > 0 ? '+' : ''}${delta.toFixed(2)} SAR). Imported anyway — check product prices/mappings.`;
+                    console.warn(msg);
+                    warnings.push(msg);
+                }
 
                 // 3. Construct Order Object from calculation result
                 const newOrder: Order = {
@@ -230,14 +260,18 @@ export default function SallaImportFlow() {
                     paymentMethod: order.paymentMethod!, // Full object with all properties
 
                     subtotal: result.subtotal,
-                    shippingCost: order.shippingMethod!.cost, // Store original cost (match Calculator)
+                    shippingCharged: result.shippingCharged,   // What Salla charged the customer (revenue)
+                    shippingCost: order.shippingMethod!.cost,   // What we pay the carrier (expense)
                     paymentFees: result.paymentFees,
 
                     discount: discount, // Use the discount object we created
 
                     total: result.customerTotal,
                     netProfit: result.netProfit,
-                    isFreeShipping: result.isFreeShipping,
+                    // Ground truth: did the customer actually pay nothing for shipping?
+                    // (Salla's charged amount, not our internal free-shipping-threshold check —
+                    // an order can cross the threshold while Salla still charged for shipping.)
+                    isFreeShipping: Math.abs(result.shippingCharged) < 0.01,
                 };
 
                 // 8. Save Order using Service
@@ -272,7 +306,7 @@ export default function SallaImportFlow() {
         setState(s => ({
             ...s,
             step: 'complete',
-            importResults: { success, failed, errors },
+            importResults: { success, failed, errors, warnings },
         }));
     }
 
@@ -283,7 +317,7 @@ export default function SallaImportFlow() {
             orders: [],
             unmappedProductNames: [],
             importProgress: 0,
-            importResults: { success: 0, failed: 0, errors: [] },
+            importResults: { success: 0, failed: 0, errors: [], warnings: [] },
             parseLog: [],
             parseSummary: null,
         });
@@ -610,10 +644,24 @@ export default function SallaImportFlow() {
             </div>
             {state.importResults.errors.length > 0 && (
                 <div className="bg-red-900/20 border border-red-700/50 rounded-lg p-4 text-left max-w-lg mx-auto">
-                    <p className="text-red-300 font-medium mb-2">Errors:</p>
-                    {state.importResults.errors.slice(0, 5).map((e, i) => (
-                        <p key={i} className="text-red-400 text-sm">• {e}</p>
-                    ))}
+                    <p className="text-red-300 font-medium mb-2">Errors ({state.importResults.errors.length}):</p>
+                    <div className="max-h-64 overflow-y-auto space-y-1 pr-1">
+                        {state.importResults.errors.map((e, i) => (
+                            <p key={i} className="text-red-400 text-sm">• {e}</p>
+                        ))}
+                    </div>
+                </div>
+            )}
+            {state.importResults.warnings.length > 0 && (
+                <div className="bg-orange-900/20 border border-orange-700/50 rounded-lg p-4 text-left max-w-lg mx-auto">
+                    <p className="text-orange-300 font-medium mb-2">
+                        Warnings ({state.importResults.warnings.length}) — imported, but review these:
+                    </p>
+                    <div className="max-h-64 overflow-y-auto space-y-1 pr-1">
+                        {state.importResults.warnings.map((w, i) => (
+                            <p key={i} className="text-orange-400 text-sm">• {w}</p>
+                        ))}
+                    </div>
                 </div>
             )}
             <button onClick={reset} className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">

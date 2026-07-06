@@ -14,7 +14,9 @@ export interface VolumeMetrics {
  */
 export interface CostMetrics {
     totalProductCosts: number;
-    totalShippingFees: number;
+    totalShippingFees: number;        // paid to carriers (expense)
+    totalShippingCharged: number;     // collected from customers (revenue)
+    totalShippingSubsidy: number;     // fees - charged (positive = subsidy/loss)
     totalPaymentFees: number;
     totalFees: number;
 }
@@ -85,7 +87,9 @@ export interface ReportMetrics {
 
     // Costs
     totalProductCosts: number;
-    totalShippingFees: number;
+    totalShippingFees: number;        // paid to carriers (expense)
+    totalShippingCharged: number;     // collected from customers (revenue)
+    totalShippingSubsidy: number;     // fees - charged (positive = subsidy/loss)
     totalPaymentFees: number;
     totalFees: number;
 
@@ -133,7 +137,9 @@ export interface ReportCalculationInput {
 export interface ShippingCompanyBreakdown {
     companyName: string;
     orderCount: number;
-    totalFees: number;
+    totalFees: number;      // paid to carrier
+    totalCharged: number;   // collected from customer
+    totalSubsidy: number;   // totalFees - totalCharged
     averageFee: number;
 }
 
@@ -151,7 +157,9 @@ export interface PaymentMethodBreakdown {
  * Detailed Shipping Fee Data
  */
 export interface ShippingFeeData {
-    totalShippingFees: number;
+    totalShippingFees: number;        // paid to carriers (expense)
+    totalShippingCharged: number;     // collected from customers (revenue)
+    totalShippingSubsidy: number;     // fees - charged (positive = subsidy/loss)
     freeShippingCount: number;
     paidShippingCount: number;
     averageShippingFee: number;

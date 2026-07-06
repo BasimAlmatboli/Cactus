@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Package, Truck, CreditCard, Tag, Receipt, User, Hash } from 'lucide-react';
 import { Order } from '../../types';
 import { calculateTotalProfitShare } from '../../utils/profitSharing';
+import { getOrderCustomerFee } from '../../utils/orderCalculations';
 
 interface OrderDetailsModalProps {
   order: Order | null;
@@ -30,7 +31,8 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onC
         order.paymentFees,
         discountAmount,
         order.isFreeShipping,
-        order.paymentMethod.customer_fee || 0
+        getOrderCustomerFee(order),
+        order.shippingCharged  // revenue side (what customer paid for shipping)
       );
       setProfitSharing(result);
     };
@@ -133,7 +135,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onC
                     {order.isFreeShipping ? (
                       <span className="text-green-400 font-medium">Free Shipping</span>
                     ) : (
-                      `${order.shippingCost} SAR`
+                      `${order.shippingCharged} SAR`
                     )}
                   </div>
                 </div>
@@ -197,7 +199,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onC
                       {order.isFreeShipping ? (
                         <span className="text-green-400">Free</span>
                       ) : (
-                        `${order.shippingCost.toFixed(2)} SAR`
+                        `${order.shippingCharged.toFixed(2)} SAR`
                       )}
                     </span>
                   </div>

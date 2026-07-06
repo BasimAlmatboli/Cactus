@@ -1,5 +1,6 @@
 import { Order } from '../../types';
 import { calculateTotalProfitShare } from '../profitSharing/profit';
+import { getOrderCustomerFee } from '../orderCalculations';
 
 /**
  * Export orders to CSV with comprehensive financial data
@@ -11,13 +12,14 @@ import { calculateTotalProfitShare } from '../profitSharing/profit';
  * 4. Payment Method
  * 5. Products (JSON format: [["name", qty, "sku"], ...])
  * 6. Subtotal
- * 7. Shipping Cost
- * 8. Discount
- * 9. Total
- * 10. Payment Fee
- * 11. Order Profit
- * 12. Basim Order Profit
- * 13. Yasir Order Profit
+ * 7. Shipping Charged (revenue: what the customer paid for shipping)
+ * 8. Shipping Cost (expense: what we paid the carrier)
+ * 9. Discount
+ * 10. Total
+ * 11. Payment Fee
+ * 12. Order Profit
+ * 13. Basim Order Profit
+ * 14. Yasir Order Profit
  */
 export const exportOrdersToCSV = async (orders: Order[]): Promise<string> => {
   const headers = [
@@ -27,6 +29,7 @@ export const exportOrdersToCSV = async (orders: Order[]): Promise<string> => {
     'Payment Method',
     'Products',
     'Subtotal',
+    'Shipping Charged',
     'Shipping Cost',
     'Discount',
     'Total',
@@ -51,7 +54,8 @@ export const exportOrdersToCSV = async (orders: Order[]): Promise<string> => {
         order.paymentFees,
         discountAmount,
         order.isFreeShipping,
-        order.paymentMethod.customer_fee || 0
+        getOrderCustomerFee(order),
+        order.shippingCharged  // revenue side (what customer paid for shipping)
       );
 
       // Format products as JSON array matching Salla import format
@@ -78,6 +82,7 @@ export const exportOrdersToCSV = async (orders: Order[]): Promise<string> => {
         escapeCSV(order.paymentMethod.name),
         escapeCSV(productsJson),
         order.subtotal.toFixed(2),
+        order.shippingCharged.toFixed(2),
         order.shippingCost.toFixed(2),
         discountValue,
         order.total.toFixed(2),

@@ -1,4 +1,5 @@
 import { SallaOrder, SallaProduct } from '../types';
+import { parseSallaMoney } from './parseSallaMoney';
 
 /**
  * Parse Salla CSV format
@@ -343,11 +344,28 @@ function parseSallaCSVRow(columns: string[], rowNumber: number, log: ParseLogEnt
     }
 
     // Parse numeric values from correct columns
-    const cartSubtotal = parseFloat(columns[2]) || 0;
-    const discount = parseFloat(columns[3]) || 0;
-    const shippingCost = parseFloat(columns[4]) || 0;
-    const codCommission = parseFloat(columns[6]) || 0;
-    const orderTotal = parseFloat(columns[7]) || 0;
+    // parseSallaMoney handles: commas ("1,234"), Arabic digits ("١٢٣٤"), currency text ("SAR 25")
+    let cartSubtotal = 0;
+    let discount = 0;
+    let shippingCost = 0;
+    let codCommission = 0;
+    let orderTotal = 0;
+
+    try {
+        cartSubtotal  = parseSallaMoney(columns[2]);                        // required
+        discount      = parseSallaMoney(columns[3], { allowEmpty: true });  // optional: no discount = 0
+        shippingCost  = parseSallaMoney(columns[4], { allowEmpty: true });  // optional: free shipping = 0
+        codCommission = parseSallaMoney(columns[6], { allowEmpty: true });  // optional: only for COD
+        orderTotal    = parseSallaMoney(columns[7]);                        // required
+    } catch (e) {
+        log.push({
+            rowNumber,
+            status: 'warning',
+            message: `Money parsing failed: ${e instanceof Error ? e.message : 'Unknown error'}. ` +
+                     `Raw values — subtotal: "${columns[2]}", discount: "${columns[3]}", ` +
+                     `shipping: "${columns[4]}", total: "${columns[7]}"`,
+        });
+    }
 
     // Clean shipping company name (remove surrounding quotes if present)
     const shippingCompany = cleanShippingName(columns[9].trim());
@@ -361,8 +379,8 @@ function parseSallaCSVRow(columns: string[], rowNumber: number, log: ParseLogEnt
     } catch (e) {
         log.push({
             rowNumber,
-            status: 'warning',
-            message: `Products JSON parsing issue: ${e instanceof Error ? e.message : 'Unknown'}. Raw value: "${skusJson.slice(0, 100)}"`,
+            status: 'error',
+            message: `Products JSON parsing failed — order will be skipped: ${e instanceof Error ? e.message : 'Unknown'}. Raw value: "${skusJson.slice(0, 100)}"`,
         });
         products = [];
     }

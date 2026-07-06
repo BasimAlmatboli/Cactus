@@ -59,7 +59,9 @@ export interface Order {
   shippingMethod: ShippingMethod;
   paymentMethod: PaymentMethod;
   subtotal: number;
-  shippingCost: number;
+  shippingCharged: number;   // Revenue side: what the customer paid for shipping (0 if free)
+  shippingCost: number;      // Expense side: what the business pays the carrier
+  shippingSubsidy?: number;  // Derived (DB generated): shippingCost - shippingCharged. Read-only.
   paymentFees: number;
   discount: Discount | null;
   total: number;
