@@ -331,7 +331,6 @@ export const BusinessMetricsReport: React.FC<BusinessMetricsReportProps> = ({
                                     </div>
                                 </div>
                             </div>
-                            </div>
                         </div>
                     </div>
                 </div>
