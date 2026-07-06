@@ -35,7 +35,8 @@ export async function calculateTotalProfitShares(
             order.paymentFees,
             discountAmount,
             order.isFreeShipping,
-            order.paymentMethod.customer_fee || 0
+            order.paymentMethod.customer_fee || 0,
+            order.shippingCharged  // revenue side (what customer paid for shipping)
         );
 
         shares.yassirShare += profitSharing.totalYassirShare;

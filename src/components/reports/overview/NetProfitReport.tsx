@@ -2,7 +2,7 @@ import React from 'react';
 import { Order } from '../../../types';
 import { Expense } from '../../../types/expense';
 import { TrendingUp, Loader2, DollarSign, Receipt, Wallet, Copy, RefreshCw } from 'lucide-react';
-import { ReportMetrics } from '../../../utils/reportCalculations';
+import { ReportMetrics, calculateAbbasShare } from '../../../utils/reportCalculations';
 
 interface NetProfitReportProps {
     orders: Order[];
@@ -17,6 +17,14 @@ export const NetProfitReport: React.FC<NetProfitReportProps> = ({
 }) => {
     // Get net profit data from metrics
     const netProfitData = metrics?.partnerNetProfit;
+
+    // Abbas 5% — centralized function from utils/reportCalculations/abbas.ts
+    const yassirAbbasAmount = metrics
+        ? calculateAbbasShare(metrics.profitShares.yassirShare, metrics.expenses.yassirExpenses)
+        : 0;
+    const basimAbbasAmount = metrics
+        ? calculateAbbasShare(metrics.profitShares.basimShare, metrics.expenses.basimExpenses)
+        : 0;
 
     // Regular expenses (deducted) per partner
     const yassirExpensesList = React.useMemo(() => {
@@ -179,7 +187,7 @@ export const NetProfitReport: React.FC<NetProfitReportProps> = ({
                                 <span className="text-sm text-purple-300">Abbas (5%)</span>
                             </div>
                             <span className="text-sm font-medium text-purple-400">
-                                -{(netProfitData!.yassirNetProfit * 0.05).toFixed(2)} SAR
+                                -{yassirAbbasAmount.toFixed(2)} SAR
                             </span>
                         </div>
 
@@ -189,8 +197,8 @@ export const NetProfitReport: React.FC<NetProfitReportProps> = ({
                                 <DollarSign className="h-5 w-5 text-blue-400" />
                                 <span className="text-sm font-semibold text-blue-300">Net Distribution</span>
                             </div>
-                            <span className={`text-xl font-bold ${(netProfitData!.yassirNetProfit * 0.95) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                {(netProfitData!.yassirNetProfit * 0.95).toFixed(2)} SAR
+                            <span className={`text-xl font-bold ${(netProfitData!.yassirNetProfit - yassirAbbasAmount) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                {(netProfitData!.yassirNetProfit - yassirAbbasAmount).toFixed(2)} SAR
                             </span>
                         </div>
                     </div>
@@ -213,7 +221,7 @@ export const NetProfitReport: React.FC<NetProfitReportProps> = ({
                                         .join('\n')
                                     : '';
 
-                                const text = `\u200Fتوزيع أرباح شهر ${month}:\n\n\u200F${metrics.earnings.basimTotalEarnings.toFixed(2)} ر.س\n\n\u200Fالتكاليف:\n${expensesText}\n\n\u200Fالإجمالي: ${metrics.expenses.basimExpenses.toFixed(2)} ر.س${reimbText}\n\n\u200Fصافي أرباح باسم بعد خصم التكاليف:\n\u200F${netProfitData!.basimNetProfit.toFixed(2)} ر.س\n\n\u200Fنسبة عباس (5%):\n\u200F-${(netProfitData!.basimNetProfit * 0.05).toFixed(2)} ر.س\n\n\u200Fصافي باسم بعد نسبة عباس:\n\u200F${(netProfitData!.basimNetProfit * 0.95).toFixed(2)} ر.س`;
+                                const text = `\u200Fتوزيع أرباح شهر ${month}:\n\n\u200F${metrics.earnings.basimTotalEarnings.toFixed(2)} ر.س\n\n\u200Fالتكاليف:\n${expensesText}\n\n\u200Fالإجمالي: ${metrics.expenses.basimExpenses.toFixed(2)} ر.س${reimbText}\n\n\u200Fصافي أرباح باسم بعد خصم التكاليف:\n\u200F${netProfitData!.basimNetProfit.toFixed(2)} ر.س\n\n\u200Fنسبة عباس (5%):\n\u200F-${basimAbbasAmount.toFixed(2)} ر.س\n\n\u200Fصافي باسم بعد نسبة عباس:\n\u200F${(netProfitData!.basimNetProfit - basimAbbasAmount).toFixed(2)} ر.س`;
 
                                 navigator.clipboard.writeText(text);
                             }}
@@ -293,7 +301,7 @@ export const NetProfitReport: React.FC<NetProfitReportProps> = ({
                                 <span className="text-sm text-purple-300">Abbas (5%)</span>
                             </div>
                             <span className="text-sm font-medium text-purple-400">
-                                -{(netProfitData!.basimNetProfit * 0.05).toFixed(2)} SAR
+                                -{basimAbbasAmount.toFixed(2)} SAR
                             </span>
                         </div>
 
@@ -303,8 +311,8 @@ export const NetProfitReport: React.FC<NetProfitReportProps> = ({
                                 <DollarSign className="h-5 w-5 text-green-400" />
                                 <span className="text-sm font-semibold text-green-300">Net Distribution</span>
                             </div>
-                            <span className={`text-xl font-bold ${(netProfitData!.basimNetProfit * 0.95) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                {(netProfitData!.basimNetProfit * 0.95).toFixed(2)} SAR
+                            <span className={`text-xl font-bold ${(netProfitData!.basimNetProfit - basimAbbasAmount) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                {(netProfitData!.basimNetProfit - basimAbbasAmount).toFixed(2)} SAR
                             </span>
                         </div>
                     </div>
@@ -337,9 +345,9 @@ export const NetProfitReport: React.FC<NetProfitReportProps> = ({
                         </div>
                     )}
                     <div>
-                        <p className="text-xs text-emerald-400/60 uppercase tracking-wider mb-2">Total Available for Distribution</p>
-                        <p className={`text-2xl font-bold ${netProfitData!.combinedNetProfit >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
-                            {netProfitData!.combinedNetProfit.toFixed(2)} <span className="text-sm text-emerald-400/60 font-medium">SAR</span>
+                        <p className="text-xs text-emerald-400/60 uppercase tracking-wider mb-2">Total Available for Distribution (after Abbas)</p>
+                        <p className={`text-2xl font-bold ${(netProfitData!.combinedNetProfit - yassirAbbasAmount - basimAbbasAmount) >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
+                            {(netProfitData!.combinedNetProfit - yassirAbbasAmount - basimAbbasAmount).toFixed(2)} <span className="text-sm text-emerald-400/60 font-medium">SAR</span>
                         </p>
                     </div>
                 </div>

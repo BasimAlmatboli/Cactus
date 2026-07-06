@@ -35,20 +35,21 @@
  * 
  * @param params - Object containing all calculation components
  * @param params.subtotal - Sum of all products
- * @param params.shippingCost - Actual shipping cost (0 if free)
+ * @param params.shippingCharged - Shipping amount charged to the customer (0 if free).
+ *                                 This is the REVENUE side, NOT the carrier cost.
  * @param params.discountAmount - Discount to apply
  * @param params.customerFee - Additional fee charged to customer (e.g., COD fee)
  * @returns Final amount customer must pay
  */
 export function calculateCustomerTotal(params: {
     subtotal: number;
-    shippingCost: number;
+    shippingCharged: number;
     discountAmount: number;
     customerFee: number;
 }): number {
     return (
         params.subtotal +
-        params.shippingCost -
+        params.shippingCharged -
         params.discountAmount +
         params.customerFee
     );

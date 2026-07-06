@@ -30,7 +30,8 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onC
         order.paymentFees,
         discountAmount,
         order.isFreeShipping,
-        order.paymentMethod.customer_fee || 0
+        order.paymentMethod.customer_fee || 0,
+        order.shippingCharged  // revenue side (what customer paid for shipping)
       );
       setProfitSharing(result);
     };
@@ -133,7 +134,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onC
                     {order.isFreeShipping ? (
                       <span className="text-green-400 font-medium">Free Shipping</span>
                     ) : (
-                      `${order.shippingCost} SAR`
+                      `${order.shippingCharged} SAR`
                     )}
                   </div>
                 </div>
@@ -197,7 +198,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onC
                       {order.isFreeShipping ? (
                         <span className="text-green-400">Free</span>
                       ) : (
-                        `${order.shippingCost.toFixed(2)} SAR`
+                        `${order.shippingCharged.toFixed(2)} SAR`
                       )}
                     </span>
                   </div>

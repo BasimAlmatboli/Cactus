@@ -66,14 +66,16 @@ export const calculateItemProfit = async (
   paymentFees: number,
   manualDiscountAmount: number,
   isFreeShipping: boolean,
-  customerFee: number = 0
+  customerFee: number = 0,
+  shippingCharged?: number
 ): Promise<ItemProfitDetails> => {
   const itemSubtotal = item.product.sellingPrice * item.quantity;
   const revenueProportion = calculateRevenueProportion(itemSubtotal, totalSubtotal);
 
-  // Calculate total (only add shipping if it's not free)
-  const shippingToAdd = isFreeShipping ? 0 : shippingCost;
-  const total = itemSubtotal + (shippingToAdd * revenueProportion) + (customerFee * revenueProportion);
+  // Shipping REVENUE = what the customer was charged. Falls back to the old
+  // behavior (carrier cost, 0 if free) when not explicitly provided.
+  const shippingRevenue = shippingCharged ?? (isFreeShipping ? 0 : shippingCost);
+  const total = itemSubtotal + (shippingRevenue * revenueProportion) + (customerFee * revenueProportion);
 
   // Calculate cost
   const cost = calculateItemCost(item.product.cost, item.quantity);
@@ -154,15 +156,17 @@ export const calculateTotalProfitShare = async (
   paymentFees: number,
   manualDiscountAmount: number,
   isFreeShipping: boolean = false,
-  customerFee: number = 0
+  customerFee: number = 0,
+  shippingCharged?: number
 ): Promise<TotalProfitShare> => {
   const totalSubtotal = items.reduce(
     (sum, item) => sum + (item.product.sellingPrice * item.quantity),
     0
   );
 
-  // Only add shipping and customer fee to total if shipping is not free
-  const totalWithShipping = totalSubtotal + (isFreeShipping ? 0 : shippingCost) + customerFee;
+  // Shipping REVENUE side. Defaults to old behavior when not provided.
+  const shippingRevenue = shippingCharged ?? (isFreeShipping ? 0 : shippingCost);
+  const totalWithShipping = totalSubtotal + shippingRevenue + customerFee;
 
   const itemShares = await Promise.all(
     items.map(item =>
@@ -173,7 +177,8 @@ export const calculateTotalProfitShare = async (
         paymentFees,
         manualDiscountAmount,
         isFreeShipping,
-        customerFee
+        customerFee,
+        shippingRevenue
       )
     )
   );

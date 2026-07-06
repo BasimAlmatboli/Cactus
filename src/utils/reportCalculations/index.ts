@@ -25,6 +25,7 @@ export * from './profit';
 export * from './expenses';
 export * from './profitSharing';
 export * from './earnings';
+export * from './abbas';
 
 // Export main orchestrator
 export * from './complete';

@@ -34,7 +34,9 @@ export interface SupabaseOrder {
     [key: string]: any; // Allow extra fields like fees
   };
   subtotal: number;
-  shipping_cost: number;
+  shipping_charged: number;    // Revenue side: what the customer paid for shipping
+  shipping_cost: number;       // Expense side: what the business pays the carrier
+  shipping_subsidy?: number;   // Generated column (shipping_cost - shipping_charged). Never write this.
   payment_fees: number;
   discount: {
     type: 'percentage' | 'fixed';

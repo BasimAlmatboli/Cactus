@@ -3,7 +3,9 @@ import { Order } from '../../../types';
 import { Ship, TrendingUp, TrendingDown, DollarSign, Package } from 'lucide-react';
 
 interface ShippingFeeData {
-    totalShippingFees: number;
+    totalShippingFees: number;        // paid to carriers (expense)
+    totalShippingCharged: number;     // collected from customers (revenue)
+    totalShippingSubsidy: number;     // fees - charged (positive = subsidy/loss)
     freeShippingCount: number;
     paidShippingCount: number;
     averageShippingFee: number;
@@ -13,6 +15,8 @@ interface ShippingFeeData {
         companyName: string;
         orderCount: number;
         totalFees: number;
+        totalCharged: number;
+        totalSubsidy: number;
         averageFee: number;
     }>;
 }
@@ -53,52 +57,56 @@ export const ShippingFeeAnalysis: React.FC<ShippingFeeAnalysisProps> = ({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                {/* Total Shipping Fees */}
+                {/* Collected from customers (revenue) */}
                 <div className="bg-[#13151A] rounded-xl p-5 border border-gray-800">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs text-gray-500 uppercase tracking-wider">Total Fees Paid</span>
+                        <span className="text-xs text-gray-500 uppercase tracking-wider">Collected from Customers</span>
+                        <TrendingUp className="h-4 w-4 text-green-400" />
+                    </div>
+                    <p className="text-2xl font-bold text-green-400">
+                        {shippingFeeData.totalShippingCharged.toFixed(2)}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">SAR revenue</p>
+                </div>
+
+                {/* Paid to carriers (expense) */}
+                <div className="bg-[#13151A] rounded-xl p-5 border border-gray-800">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs text-gray-500 uppercase tracking-wider">Paid to Carriers</span>
                         <DollarSign className="h-4 w-4 text-red-400" />
                     </div>
                     <p className="text-2xl font-bold text-white">
                         {shippingFeeData.totalShippingFees.toFixed(2)}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">SAR</p>
+                    <p className="text-xs text-gray-500 mt-1">SAR cost</p>
                 </div>
 
-                {/* Average Shipping Fee */}
+                {/* Net subsidy / margin */}
                 <div className="bg-[#13151A] rounded-xl p-5 border border-gray-800">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs text-gray-500 uppercase tracking-wider">Avg Per Order</span>
-                        <TrendingUp className="h-4 w-4 text-blue-400" />
+                        <span className="text-xs text-gray-500 uppercase tracking-wider">
+                            {shippingFeeData.totalShippingSubsidy >= 0 ? 'Shipping Subsidy' : 'Shipping Profit'}
+                        </span>
+                        <TrendingDown className={`h-4 w-4 ${shippingFeeData.totalShippingSubsidy >= 0 ? 'text-orange-400' : 'text-green-400'}`} />
                     </div>
-                    <p className="text-2xl font-bold text-white">
-                        {shippingFeeData.averageShippingFee.toFixed(2)}
+                    <p className={`text-2xl font-bold ${shippingFeeData.totalShippingSubsidy >= 0 ? 'text-orange-400' : 'text-green-400'}`}>
+                        {Math.abs(shippingFeeData.totalShippingSubsidy).toFixed(2)}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">SAR</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                        SAR {shippingFeeData.totalShippingSubsidy >= 0 ? 'loss' : 'gain'}
+                    </p>
                 </div>
 
                 {/* Fees as % of Revenue */}
                 <div className="bg-[#13151A] rounded-xl p-5 border border-gray-800">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs text-gray-500 uppercase tracking-wider">% of Revenue</span>
-                        <TrendingDown className="h-4 w-4 text-orange-400" />
+                        <span className="text-xs text-gray-500 uppercase tracking-wider">Cost % of Revenue</span>
+                        <Ship className="h-4 w-4 text-blue-400" />
                     </div>
                     <p className="text-2xl font-bold text-white">
                         {shippingFeeData.feesAsPercentOfRevenue.toFixed(2)}%
                     </p>
                     <p className="text-xs text-gray-500 mt-1">Impact</p>
-                </div>
-
-                {/* Total Orders */}
-                <div className="bg-[#13151A] rounded-xl p-5 border border-gray-800">
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs text-gray-500 uppercase tracking-wider">Total Orders</span>
-                        <Ship className="h-4 w-4 text-green-400" />
-                    </div>
-                    <p className="text-2xl font-bold text-white">
-                        {orders.length}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">Orders</p>
                 </div>
             </div>
 
@@ -119,13 +127,21 @@ export const ShippingFeeAnalysis: React.FC<ShippingFeeAnalysisProps> = ({
                                         <p className="text-xs text-gray-500 mt-1">{company.orderCount} orders</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-lg font-bold text-blue-400">{company.totalFees.toFixed(2)} SAR</p>
-                                        <p className="text-xs text-gray-500">Total fees</p>
+                                        <p className={`text-lg font-bold ${company.totalSubsidy >= 0 ? 'text-orange-400' : 'text-green-400'}`}>
+                                            {company.totalSubsidy >= 0 ? '-' : '+'}{Math.abs(company.totalSubsidy).toFixed(2)} SAR
+                                        </p>
+                                        <p className="text-xs text-gray-500">{company.totalSubsidy >= 0 ? 'Subsidy' : 'Profit'}</p>
                                     </div>
                                 </div>
-                                <div className="flex justify-between items-center pt-3 border-t border-gray-700/30">
-                                    <span className="text-xs text-gray-400">Average per order</span>
-                                    <span className="text-sm font-medium text-white">{company.averageFee.toFixed(2)} SAR</span>
+                                <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-700/30">
+                                    <div>
+                                        <span className="text-xs text-gray-500 block">Collected</span>
+                                        <span className="text-sm font-medium text-green-400">{company.totalCharged.toFixed(2)} SAR</span>
+                                    </div>
+                                    <div className="text-right">
+                                        <span className="text-xs text-gray-500 block">Paid to carrier</span>
+                                        <span className="text-sm font-medium text-white">{company.totalFees.toFixed(2)} SAR</span>
+                                    </div>
                                 </div>
                             </div>
                         ))}

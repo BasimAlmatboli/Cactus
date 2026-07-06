@@ -25,7 +25,8 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({ order }) => {
         order.paymentFees,
         discountAmount,
         order.isFreeShipping,
-        order.paymentMethod.customer_fee || 0
+        order.paymentMethod.customer_fee || 0,
+        order.shippingCharged  // revenue side (what customer paid for shipping)
       );
       setProfitSharing(result);
     };
@@ -101,7 +102,7 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({ order }) => {
                   </span>
                 </>
               ) : (
-                <span className="text-white">{order.shippingCost.toFixed(2)} SAR</span>
+                <span className="text-white">{order.shippingCharged.toFixed(2)} SAR</span>
               )}
             </div>
           </div>
