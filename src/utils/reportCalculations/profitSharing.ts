@@ -1,5 +1,6 @@
 import { Order } from '../../types';
 import { calculateTotalProfitShare } from '../profitSharing';
+import { getOrderCustomerFee } from '../orderCalculations';
 import { PartnerProfitShares } from './types';
 
 /**
@@ -35,7 +36,7 @@ export async function calculateTotalProfitShares(
             order.paymentFees,
             discountAmount,
             order.isFreeShipping,
-            order.paymentMethod.customer_fee || 0,
+            getOrderCustomerFee(order),
             order.shippingCharged  // revenue side (what customer paid for shipping)
         );
 

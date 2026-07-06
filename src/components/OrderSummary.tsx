@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Order } from '../types';
 import { calculateTotalProfitShare } from '../utils/profitSharing';
+import { getOrderCustomerFee } from '../utils/orderCalculations';
 import { EarningsReport } from './EarningsReport';
 
 
@@ -25,7 +26,7 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({ order }) => {
         order.paymentFees,
         discountAmount,
         order.isFreeShipping,
-        order.paymentMethod.customer_fee || 0,
+        getOrderCustomerFee(order),
         order.shippingCharged  // revenue side (what customer paid for shipping)
       );
       setProfitSharing(result);

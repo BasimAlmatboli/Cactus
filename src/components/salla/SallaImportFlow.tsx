@@ -184,6 +184,17 @@ export default function SallaImportFlow() {
         for (let i = 0; i < state.orders.length; i++) {
             const order = state.orders[i];
 
+            // Skip orders that failed validation (e.g. empty products, invalid total)
+            // validationErrors are set by validateSallaOrder() during the parse phase
+            if (order.validationErrors.length > 0) {
+                failed++;
+                errors.push(
+                    `Order ${order.sallaOrder.orderNumber} skipped: ${order.validationErrors.join(', ')}`
+                );
+                setState(s => ({ ...s, importProgress: Math.round(((i + 1) / state.orders.length) * 100) }));
+                continue;
+            }
+
             try {
                 // 1. Create order items
                 const orderItems = order.mappedProducts.map(p => ({
@@ -211,7 +222,9 @@ export default function SallaImportFlow() {
                 // ✅ USE CENTRALIZED CALCULATION FUNCTION
                 // All business logic is now in ONE place: orderCalculations/completeOrder.ts
                 // Salla is the source of truth for what the customer paid, so we pass the
-                // customer-charged shipping (sallaOrder.shippingCost) as `shippingCharged`.
+                // customer-charged shipping (sallaOrder.shippingCost) as `shippingCharged`,
+                // and the real per-order COD commission (sallaOrder.codCommission) as
+                // customerFeeOverride instead of the payment method's static configured fee.
                 // The carrier cost (shippingMethod.cost) is used only for profit/expense.
                 const result = await calculateCompleteOrder({
                     orderItems: orderItems as OrderItem[],
@@ -220,6 +233,7 @@ export default function SallaImportFlow() {
                     discount,
                     freeShippingThreshold,
                     shippingCharged: order.sallaOrder.shippingCost, // revenue side, from Salla
+                    customerFeeOverride: order.sallaOrder.codCommission, // real per-order fee, from Salla
                 });
 
                 // 🔎 Reconciliation: our computed total must match what Salla says the
@@ -630,10 +644,12 @@ export default function SallaImportFlow() {
             </div>
             {state.importResults.errors.length > 0 && (
                 <div className="bg-red-900/20 border border-red-700/50 rounded-lg p-4 text-left max-w-lg mx-auto">
-                    <p className="text-red-300 font-medium mb-2">Errors:</p>
-                    {state.importResults.errors.slice(0, 5).map((e, i) => (
-                        <p key={i} className="text-red-400 text-sm">• {e}</p>
-                    ))}
+                    <p className="text-red-300 font-medium mb-2">Errors ({state.importResults.errors.length}):</p>
+                    <div className="max-h-64 overflow-y-auto space-y-1 pr-1">
+                        {state.importResults.errors.map((e, i) => (
+                            <p key={i} className="text-red-400 text-sm">• {e}</p>
+                        ))}
+                    </div>
                 </div>
             )}
             {state.importResults.warnings.length > 0 && (
@@ -641,9 +657,11 @@ export default function SallaImportFlow() {
                     <p className="text-orange-300 font-medium mb-2">
                         Warnings ({state.importResults.warnings.length}) — imported, but review these:
                     </p>
-                    {state.importResults.warnings.slice(0, 5).map((w, i) => (
-                        <p key={i} className="text-orange-400 text-sm">• {w}</p>
-                    ))}
+                    <div className="max-h-64 overflow-y-auto space-y-1 pr-1">
+                        {state.importResults.warnings.map((w, i) => (
+                            <p key={i} className="text-orange-400 text-sm">• {w}</p>
+                        ))}
+                    </div>
                 </div>
             )}
             <button onClick={reset} className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">

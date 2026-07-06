@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Package, Truck, CreditCard, Tag, Receipt, User, Hash } from 'lucide-react';
 import { Order } from '../../types';
 import { calculateTotalProfitShare } from '../../utils/profitSharing';
+import { getOrderCustomerFee } from '../../utils/orderCalculations';
 
 interface OrderDetailsModalProps {
   order: Order | null;
@@ -30,7 +31,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onC
         order.paymentFees,
         discountAmount,
         order.isFreeShipping,
-        order.paymentMethod.customer_fee || 0,
+        getOrderCustomerFee(order),
         order.shippingCharged  // revenue side (what customer paid for shipping)
       );
       setProfitSharing(result);

@@ -24,6 +24,13 @@ export interface OrderCalculationInputs {
      * preserves the original manual-order behavior.
      */
     shippingCharged?: number;
+    /**
+     * Optional: the actual per-order customer fee (e.g. real COD commission from Salla),
+     * overriding the payment method's configured `customer_fee`. Use this for imported
+     * orders where the source system already reports the real fee per order.
+     * When omitted, falls back to `paymentMethod.customer_fee` (manual-order behavior).
+     */
+    customerFeeOverride?: number;
 }
 
 /**
@@ -103,8 +110,11 @@ export async function calculateCompleteOrder(
         ? inputs.shippingCharged                                    // explicit (e.g. Salla / promo price)
         : calculateActualShippingCost(carrierShippingCost, isFreeShipping); // default: carrier cost, 0 if free
 
-    // 5. Get customer fee (e.g., COD fee) - default to 0 if not set
-    const customerFee = inputs.paymentMethod.customer_fee || 0;
+    // 5. Get customer fee (e.g., COD fee). Imported orders pass the real per-order
+    //    fee via customerFeeOverride; manual orders fall back to the configured default.
+    const customerFee = inputs.customerFeeOverride !== undefined
+        ? inputs.customerFeeOverride
+        : (inputs.paymentMethod.customer_fee || 0);
 
     // 6. Calculate customer total (uses what the customer is CHARGED, not carrier cost)
     const customerTotal = calculateCustomerTotal({

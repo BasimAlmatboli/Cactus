@@ -1,5 +1,6 @@
 import { Order } from '../../types';
 import { calculateTotalProfitShare } from '../profitSharing/profit';
+import { getOrderCustomerFee } from '../orderCalculations';
 
 /**
  * Export orders to CSV with comprehensive financial data
@@ -53,7 +54,7 @@ export const exportOrdersToCSV = async (orders: Order[]): Promise<string> => {
         order.paymentFees,
         discountAmount,
         order.isFreeShipping,
-        order.paymentMethod.customer_fee || 0,
+        getOrderCustomerFee(order),
         order.shippingCharged  // revenue side (what customer paid for shipping)
       );
 

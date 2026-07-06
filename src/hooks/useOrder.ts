@@ -25,6 +25,8 @@ export const useOrder = (initialOrder?: Order | null) => {
   const [discount, setDiscount] = useState<Discount | null>(initialOrder?.discount || null);
   const [order, setOrder] = useState<Order | null>(initialOrder || null);
   const [currentOrderId, setCurrentOrderId] = useState<string | null>(initialOrder?.id || null);
+  // Preserve the original order date so editing never resets it to "now"
+  const [orderDate, setOrderDate] = useState<string>(initialOrder?.date || new Date().toISOString());
 
   // Get free shipping threshold from database
   const { threshold: freeShippingThreshold } = useFreeShippingThreshold();
@@ -41,6 +43,7 @@ export const useOrder = (initialOrder?: Order | null) => {
     setIsFreeShipping(order.isFreeShipping);
     setFreeShippingManualMode(false); // Reset to automatic mode when loading order
     setDiscount(order.discount);
+    setOrderDate(order.date); // ✅ Preserve the original order date
   };
 
   // Select a shipping method. Default the customer-charged price to the carrier
@@ -73,6 +76,7 @@ export const useOrder = (initialOrder?: Order | null) => {
     setFreeShippingManualMode(false); // Reset to automatic mode
     setDiscount(null);
     setOrder(null);
+    setOrderDate(new Date().toISOString()); // Reset date to now for new orders
   };
 
   // Wrapper to track when user manually changes free shipping
@@ -107,7 +111,7 @@ export const useOrder = (initialOrder?: Order | null) => {
           id: currentOrderId || generateUUID(),
           orderNumber,
           customerName: customerName || undefined,
-          date: initialOrder?.date || new Date().toISOString(),
+          date: orderDate, // ✅ Uses preserved original date; never resets to "now" on edit
           items: orderItems,
           shippingMethod,
           paymentMethod,
@@ -126,7 +130,7 @@ export const useOrder = (initialOrder?: Order | null) => {
     };
 
     calculateOrder();
-  }, [orderItems, shippingMethod, shippingCharged, paymentMethod, isFreeShipping, discount, orderNumber, customerName, currentOrderId, initialOrder, freeShippingThreshold, freeShippingManualMode]);
+  }, [orderItems, shippingMethod, shippingCharged, paymentMethod, isFreeShipping, discount, orderNumber, customerName, currentOrderId, orderDate, freeShippingThreshold, freeShippingManualMode]);
 
   return {
     orderNumber,

@@ -1,6 +1,8 @@
+import type { Order } from '../../types';
+
 /**
  * Calculate Customer Total (Final Amount Customer Pays)
- * 
+ *
  * Formula: subtotal + shipping - discount + customerFee
  * 
  * Step-by-step breakdown:
@@ -53,4 +55,24 @@ export function calculateCustomerTotal(params: {
         params.discountAmount +
         params.customerFee
     );
+}
+
+/**
+ * Recover the actual customer fee that was used to build a saved order's total.
+ *
+ * This is the inverse of calculateCustomerTotal(). It exists because imported
+ * (Salla) orders use the real per-order fee (e.g. actual COD commission) instead
+ * of the payment method's configured `customer_fee`, so `order.paymentMethod.customer_fee`
+ * no longer reliably describes what was actually charged on a given saved order.
+ * Deriving it from the order's own stored numbers is always correct, for both
+ * manual and imported orders, with no schema changes or backfill required.
+ */
+export function getOrderCustomerFee(order: Order): number {
+    const discountAmount = order.discount
+        ? order.discount.type === 'percentage'
+            ? (order.subtotal * order.discount.value) / 100
+            : order.discount.value
+        : 0;
+
+    return Math.round((order.total - order.subtotal - order.shippingCharged + discountAmount) * 100) / 100;
 }
