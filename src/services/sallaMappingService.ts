@@ -153,17 +153,32 @@ export async function deletePaymentMapping(id: string): Promise<void> {
 }
 
 /**
- * Look up system product by Salla product name
+ * Look up system product by Salla product name and (optionally) SKU.
+ *
+ * A product name can have multiple mappings, one per SKU (size variants).
+ * Match priority:
+ * 1. Exact (name, SKU) match
+ * 2. Catch-all mapping for the name with no SKU
+ * 3. If the name has exactly one mapping, use it regardless of SKU
  */
-export async function lookupProductByName(sallaProductName: string): Promise<Product | null> {
-    // First get mapping
-    const { data: mapping, error: mappingError } = await supabase
+export async function lookupProductByName(
+    sallaProductName: string,
+    sallaSku?: string | null
+): Promise<Product | null> {
+    const { data: rows, error: mappingError } = await supabase
         .from('salla_product_mappings')
-        .select('system_product_id')
-        .eq('salla_product_name', sallaProductName)
-        .single();
+        .select('system_product_id, salla_sku')
+        .eq('salla_product_name', sallaProductName);
 
-    if (mappingError || !mapping) return null;
+    if (mappingError || !rows || rows.length === 0) return null;
+
+    const sku = sallaSku?.trim() || null;
+    const mapping =
+        (sku ? rows.find(r => r.salla_sku === sku) : undefined) ??
+        rows.find(r => !r.salla_sku) ??
+        (rows.length === 1 ? rows[0] : undefined);
+
+    if (!mapping) return null;
 
     // Then fetch product details
     const { data: product, error: productError } = await supabase
